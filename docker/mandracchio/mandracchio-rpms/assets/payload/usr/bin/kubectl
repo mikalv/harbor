@@ -1,0 +1,7 @@
+#!/bin/sh
+exec docker run \
+      -t \
+      --rm \
+      --net=host \
+      -v /:/rootfs:ro \
+      port/undercloud-kubectl:latest /usr/bin/kubectl "$@"

@@ -1,0 +1,4 @@
+#!/bin/sh
+docker stop kubelet || true
+#(docker ps | awk '{ if ($NF ~ "^k8s_") print $1 }' | xargs -l1 docker stop) || true
+docker rm -v -f kubelet || true

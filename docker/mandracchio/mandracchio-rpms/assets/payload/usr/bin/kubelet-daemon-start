@@ -1,0 +1,31 @@
+#!/bin/sh
+
+KUBELET_IMAGE=docker.io/port/system-kubelet:latest
+
+mkdir -p /etc/harbor
+touch /etc/harbor/kube.env
+touch /etc/harbor/kube-status
+touch /etc/harbor/kube_openstack_config
+
+docker pull ${KUBELET_IMAGE} || true
+docker rm -v -f kubelet || true
+
+exec docker run \
+      --name kubelet \
+      -d \
+      --restart=always \
+      --volume=/:/rootfs:ro \
+      --volume=/dev/net:/dev/net:rw \
+      --volume=/var/run/netns:/var/run/netns:rw \
+      --volume=/var/run/openvswitch:/var/run/openvswitch:rw \
+      --volume=/sys:/sys:ro \
+      --volume=/var/lib/docker/:/var/lib/docker:rw \
+      --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
+      --volume=/var/run:/var/run:rw \
+      --volume=/etc/harbor/kube.env:/etc/harbor/kube.env:ro \
+      --volume=/etc/harbor/kube-status:/etc/harbor/kube-status:rw \
+      --volume=/etc/harbor/kube_openstack_config:/etc/harbor/kube_openstack_config:rw \
+      --net=host \
+      --privileged=true \
+      --pid=host \
+      ${KUBELET_IMAGE} /kubelet

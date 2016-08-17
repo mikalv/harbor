@@ -1,0 +1,40 @@
+[Unit]
+Description=Docker Application Container Engine
+Documentation=https://docs.docker.com
+After=network.target
+
+[Service]
+Type=notify
+
+ExecStartPre=-/sbin/rmmod vport_geneve
+ExecStartPre=-/sbin/rmmod vport_vxlan
+ExecStartPre=-/sbin/rmmod openvswitch
+ExecStartPre=-/sbin/rmmod gre
+ExecStartPre=-/sbin/rmmod vxlan
+ExecStartPre=-/sbin/rmmod nf_nat_ipv6
+ExecStartPre=-/sbin/rmmod nf_conntrack_ipv6
+
+ExecStartPre=-/sbin/modprobe libcrc32c
+ExecStartPre=-/sbin/modprobe nf_conntrack_ipv6
+ExecStartPre=-/sbin/modprobe nf_nat_ipv6
+ExecStartPre=-/sbin/modprobe gre
+ExecStartPre=-/sbin/modprobe openvswitch
+ExecStartPre=-/sbin/modprobe vxlan
+ExecStartPre=-/sbin/modprobe vport-geneve
+ExecStartPre=-/sbin/modprobe vport-vxlan
+
+ExecStartPre=-/sbin/modprobe overlay
+ExecStartPre=-/sbin/modprobe dm-multipath
+
+ExecStart=/usr/bin/docker-daemon
+# set mountflags to shared to that containers can be used to mount filesystems on the host
+MountFlags=shared
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
+TimeoutStartSec=0
+# set delegate yes so that systemd does not reset the cgroups of docker containers
+Delegate=yes
+
+[Install]
+WantedBy=multi-user.target

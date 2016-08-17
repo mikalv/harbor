@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+source /etc/harbor/docker.env
+DOCKER_IP=$(ip -f inet -o addr show ${DOCKER_DEV}|cut -d\  -f 7 | cut -d/ -f 1)
+exec docker daemon \
+     -s overlay \
+     -H unix:///var/run/docker.sock \
+     -H tcp://${DOCKER_IP}:${DOCKER_PORT} \
+     --cluster-advertise=${DOCKER_DEV}:${DOCKER_PORT} \
+     --cluster-store etcd://127.0.0.1:4001

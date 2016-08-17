@@ -9,4 +9,23 @@ This repo contains the Dockerfiles and build scripts for the Harbor platform con
 
 ## Builds / Release
 
-The built images from this repository may be found at the Port.direct [docker hub](https://hub.docker.com/u/port/). Releases are split into two streams: 'latest' and 'stable'. 'Latest' builds for the Port.direct continuous release, while stable tracks the upstream OpenStack Release schedule and will only receive critical security updates following a release. It is strongly recommend that unless you have very specific requirements to use the the 'latest' release stream for the best experience. 
+To build the images in this rep requires docker to be listening (without tls!) on 172.17.0.1, this allows the post-process scripts for Mandracchio to run and also for some build-scripts to in turn run 'sub-builds' to reduce the final image size and remove the requirement for development tools like gcc et al. to be installed within the containers. SELinux should be set to a maximum enforcement level of 'Permissive' as otherwise some things can freak out (notably SElinux labeling inside a container)
+
+The built images from this repository may be found at the Port.direct [docker hub](https://hub.docker.com/u/port/). Releases are split into two streams: 'latest' and 'stable'. 'Latest' builds for the Port.direct continuous release, while stable tracks the upstream OpenStack Release schedule and will only receive critical security updates following a release. It is strongly recommend that unless you have very specific requirements to use the the 'latest' release stream for the best experience.
+
+
+### OpenvSwitch
+
+Building containers that provide OpenvSwitch support require that a local OVS repo is running on the build host, this can be started with the following command:
+
+```bash
+docker run -d --name openvswitch-repo -p 172.17.0.1:80:80/tcp docker.io/port/openvswitch-rpm:latest
+```
+
+### Mandracchio
+
+Currently the build scripts do not push the build Mandracchio RPM-OSTREE image to the docker hub;this image can be manually pushed with the following command:
+
+```bash
+docker push port/mandracchio-repo:latest
+```

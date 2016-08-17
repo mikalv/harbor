@@ -1,0 +1,7 @@
+#!/bin/sh
+exec docker run \
+     -t \
+     --rm \
+     --net=host \
+     -v /var/run/openvswitch:/var/run/openvswitch:rw \
+     docker.io/port/ovs:latest ovs-ofctl "$@"
