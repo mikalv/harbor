@@ -21,11 +21,3 @@ Building containers that provide OpenvSwitch support require that a local OVS re
 ```bash
 docker run -d --name openvswitch-repo -p 172.17.0.1:80:80/tcp docker.io/port/openvswitch-rpm:latest
 ```
-
-### Mandracchio
-
-Currently the build scripts do not push the build Mandracchio RPM-OSTREE image to the docker hub;this image can be manually pushed with the following command:
-
-```bash
-docker push port/mandracchio-repo:latest
-```
