@@ -1,5 +1,21 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%mandracchio-base:%%DOCKER_TAG%%
+FROM centos:latest
 MAINTAINER Port Direct <support@port.direct>
+
+ENV OS_DISTRO="HarborOS" \
+    OPENSTACK_COMPONENT="mandracchio-repo" \
+    LC_ALL="en_US.UTF-8" \
+    container=docker \
+    DOCKER_HOST="172.17.0.1:2375"
+
+LABEL license="Apache 2.0" \
+      vendor="Harbor OpenStack"
+
+RUN yum update -y && \
+    yum upgrade -y && \
+    yum install -y \
+        httpd \
+        docker && \
+    yum clean all
 
 RUN ( docker rm -f mandracchio-build-rpms || true ) && \
     docker run \
