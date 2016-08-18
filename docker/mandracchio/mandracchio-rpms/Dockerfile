@@ -36,10 +36,11 @@ RUN yum install -y \
     chmod -R 0777 /srv/repo/atomic-host/7/{SRPMS,i386,x86_64,noarch} && \
     useradd user
 
-ADD ./assets /opt/harbor/assets
-RUN /bin/cp -rf /opt/harbor/assets/* /
+CMD ["/start.sh"]
 
-RUN cd /tmp && \
+ADD ./assets /opt/harbor/assets
+RUN /bin/cp -rf /opt/harbor/assets/* / && \
+    cd /tmp && \
     export PACKAGE_NAME="harbor-assets" && \
     export PACKAGE_VERSION="0.1" && \
     export PACKAGE_ARCH="x86_64" && \
@@ -48,6 +49,7 @@ RUN cd /tmp && \
     fpm \
       -s dir \
       -t rpm \
+    	--after-install /opt/post-install.sh \
       --name $PACKAGE_NAME \
       --log info \
       --verbose \
@@ -57,7 +59,7 @@ RUN cd /tmp && \
       --epoch 1 \
       --license "Apache 2.0" \
       --vendor "Harbor OpenStack" \
-      --description "installation package for atomic hosts" \
+      --description "${PACKAGE_NAME} package for Harbor Atomic Host" \
       --url $PACKAGE_URL \
       --maintainer "Port Direct" \
     /payload && \
@@ -66,5 +68,3 @@ RUN cd /tmp && \
     cd /srv/repo/atomic-host/7/$PACKAGE_ARCH && \
       createrepo . && \
     mv /srv/repo/atomic-host/7/$PACKAGE_ARCH/* /usr/share/nginx/html/
-
-CMD ["/start.sh"]
