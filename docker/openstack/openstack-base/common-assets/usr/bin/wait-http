@@ -1,0 +1,6 @@
+#!/bin/sh
+[ -n "$1" ] && \
+    until curl -o /dev/null -sIf http://${1}; do \
+    sleep 1 && echo .;
+  done;
+exit $?
