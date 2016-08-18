@@ -4,12 +4,13 @@ MAINTAINER Port Direct <support@port.direct>
 ENV OS_DISTRO="HarborOS" \
     OPENSTACK_COMPONENT="base-alpine" \
     LC_ALL="en_US.UTF-8" \
-    container=docker
+    container=docker \
+    OS_REPO_BRANCH="master"
 
 LABEL license="Apache 2.0" \
       vendor="Harbor OpenStack"
 
-ADD ./common-assets /opt/harbor/common-assets
+COPY ./common-assets /opt/harbor/common-assets
 
 RUN apk add --no-cache --virtual core-deps \
       python \

@@ -4,13 +4,14 @@ MAINTAINER Port Direct <support@port.direct>
 ENV OS_DISTRO="HarborOS" \
     OPENSTACK_COMPONENT="base-centos" \
     LC_ALL="en_US.UTF-8" \
-    container=docker
+    container=docker \
+    OS_REPO_BRANCH="master"
 
 LABEL license="Apache 2.0" \
       vendor="Harbor OpenStack"
 
-ADD ./common-assets /opt/harbor/common-assets
-ADD ./assets/ /opt/harbor/assets
+COPY ./common-assets /opt/harbor/common-assets
+COPY ./assets/ /opt/harbor/assets
 RUN cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
     cp -rf /opt/harbor/assets/* / && \
