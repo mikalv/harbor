@@ -1,5 +1,10 @@
 FROM fedora:latest
 
+MAINTAINER Port Direct <support@port.direct>
+
+LABEL license="Apache 2.0" \
+      vendor="Port Direct"
+
 ENV HARBOR_COMPONENT="freeipa" \
     OS_COMP="freeipa" \
     OS_REPO_URL="https://github.com/freeipa/freeipa.git" \

@@ -1,17 +1,22 @@
 FROM fedora:latest
+
 MAINTAINER Port Direct <support@port.direct>
+
+LABEL license="Apache 2.0" \
+      vendor="Port Direct"
 
 ENV OS_DISTRO="HarborOS" \
     HARBOR_COMPONENT="freeipa-server" \
     container=docker \
     OS_REPO_BRANCH="master"
 
-LABEL license="Apache 2.0" \
-      vendor="Harbor Ipsilon"
-
+COPY ./common-assets /opt/harbor/common-assets
 
 COPY ./assets/ /opt/harbor/assets
-RUN cp -rf /opt/harbor/assets/* / && \
+
+RUN cp -rf /opt/harbor/common-assets/* / && \
+    rm -rf /opt/harbor/common-assets && \
+    cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     dnf install -y \
         'dnf-command(config-manager)' && \
@@ -24,11 +29,7 @@ RUN cp -rf /opt/harbor/assets/* / && \
         freeipa-server-dns \
         bind \
         bind-dyndb-ldap && \
-    dnf clean all
-
-COPY ./common-assets /opt/harbor/common-assets
-RUN cp -rf /opt/harbor/common-assets/* / && \
-    rm -rf /opt/harbor/common-assets && \
+    dnf clean all && \
     (cd /lib/systemd/system/sysinit.target.wants/; for i in *; do [ $i == systemd-tmpfiles-setup.service ] || rm -f $i; done); \
     rm -f /lib/systemd/system/multi-user.target.wants/*;\
     rm -f /etc/systemd/system/*.wants/*;\
@@ -44,7 +45,6 @@ RUN cp -rf /opt/harbor/common-assets/* / && \
     ln -s /etc/systemd/system/dummy-service.service /etc/systemd/system/fedora-domainname.service && \
     systemctl set-default container-up.target && \
     systemctl enable container-configure-first.service
-
 
 VOLUME [ "/sys/fs/cgroup" , "/run", "/tmp" , "/run/lock" , "/etc/os-config" ]
 
