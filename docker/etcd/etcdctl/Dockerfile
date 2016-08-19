@@ -1,0 +1,16 @@
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%etcd-base:%%DOCKER_TAG%%
+
+ENV HARBOR_ETCD_COMPONENT="etcdctl"
+
+COPY ./assets /opt/harbor/assets
+
+RUN apk add --no-cache --virtual build-deps \
+        ca-certificates \
+        openssl \
+        tar && \
+    wget https://github.com/coreos/etcd/releases/download/${HARBOR_ETCD_RELEASE_VERSION}/etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz && \
+    tar xzvf etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz && \
+    mv etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64/${HARBOR_ETCD_COMPONENT} /bin/ && \
+    apk del build-deps && \
+    rm -Rf etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64* && \
+    cp -rf /opt/harbor/assets/* /
