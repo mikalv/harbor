@@ -1,0 +1,6 @@
+[harbor-ipsilon]
+name=Harbor Ipsilon
+baseurl=http://172.17.0.1:82/
+enabled=1
+gpgcheck=0
+skip_if_unavailable=1

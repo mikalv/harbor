@@ -22,6 +22,16 @@ Building containers that provide OpenvSwitch support require that a local OVS re
 docker run -d --name openvswitch-repo -p 172.17.0.1:80:80/tcp port/openvswitch-rpm:latest
 ```
 
+
+### FreeIPA Server && Ipsilon-API
+
+Building containers that provide the FreeIPA Server or Ipsilon API a local repo is running on the build host, this can be started with the following command:
+
+```bash
+docker run -d --name freeipa-repo -p 172.17.0.1:83:80/tcp port/freeipa-rpm:latest
+```
+
+
 ### Ipsilon-API
 
 Building containers that provide the Ipsilon API a local repo is running on the build host, this can be started with the following command:
