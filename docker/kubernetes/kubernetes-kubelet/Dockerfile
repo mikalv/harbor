@@ -4,15 +4,13 @@ ENV LC_ALL="en_US.UTF-8" \
     HARBOR_COMPONENT="kubernetes" \
     KUBE_COMPONENT="kubelet" \
     KURYR_REPO="https://github.com/portdirect/kuryr.git" \
-    KURYR_BRANCH="k8s"
+    KURYR_BRANCH="k8s" \
+    HARBOR_KUBECTL_IMAGE="docker.io/port/kubectl:latest"
 
 COPY ./assets/ /opt/harbor/assets
 
 RUN cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
-    yum install -y \
-        centos-release-gluster37 \
-        centos-release-openstack-mitaka && \
     yum install -y \
         openvswitch \
         python34 \
@@ -27,8 +25,7 @@ RUN cp -rf /opt/harbor/assets/* / && \
     chmod 0440 /etc/sudoers && \
     curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubelet > /usr/bin/kubelet && \
     chmod +x /usr/bin/kubelet && \
-    curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubectl > /usr/bin/kubectl && \
-    chmod +x /usr/bin/kubectl && \
+    mkdir -p /etc/kubernetes/manifests && \
     yum install -y \
       git \
       gcc && \
@@ -36,7 +33,8 @@ RUN cp -rf /opt/harbor/assets/* / && \
     git clone --depth 1 ${KURYR_REPO} -b ${KURYR_BRANCH} /opt/kuryr  && \
     pip3 install /opt/kuryr && \
     yum history -y undo $(yum history list gcc | tail -2 | head -1 | awk '{ print $1}') && \
-    yum clean all
+    yum clean all && \
+    container-base-systemd-reset.sh
 
 # What a horrible hack. Whats going on here?
 RUN /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
@@ -44,6 +42,5 @@ RUN /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unb
 ADD ./assets /opt/harbor/assets
 RUN cp -rf /opt/harbor/assets/* / && \
     mkdir -p /etc/kubernetes/manifests
-
 
 CMD ["/kubelet"]

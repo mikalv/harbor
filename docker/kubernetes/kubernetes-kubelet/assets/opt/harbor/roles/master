@@ -1,5 +1,6 @@
 #!/bin/sh
 set -e
+set -x
 export KUBE_STATUS="$(cat /etc/harbor/kube-status)"
 . /opt/harbor/scripts/environment-variables
 . /opt/harbor/scripts/helper-manifests

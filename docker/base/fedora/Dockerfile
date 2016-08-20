@@ -21,5 +21,10 @@ RUN cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/assets && \
     dnf update -y && \
     dnf upgrade -y && \
+    dnf install -y \
+        findutils \
+        iproute && \
     dnf clean all && \
     container-base-systemd-reset.sh
+
+ENTRYPOINT ["/init"]

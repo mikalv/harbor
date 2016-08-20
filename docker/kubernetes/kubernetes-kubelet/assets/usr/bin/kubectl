@@ -1,0 +1,2 @@
+#!/bin/sh
+docker exec -t --rm --net=host ${HARBOR_KUBECTL_IMAGE} "$@"

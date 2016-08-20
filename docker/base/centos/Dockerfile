@@ -23,5 +23,10 @@ RUN cp -rf /opt/harbor/common-assets/* / && \
         epel-release && \
     yum update -y && \
     yum upgrade -y && \
+    yum install -y \
+        findutils \
+        iproute && \
     yum clean all && \
     container-base-systemd-reset.sh
+
+ENTRYPOINT ["/init"]

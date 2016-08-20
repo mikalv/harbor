@@ -1,12 +1,5 @@
-#!/bin/bash
-
-if [ "${SECURE_CONFIG}" == "True" ] ; then
-  ################################################################################
-  echo "${OS_DISTRO}: Sourcing local environment variables"
-  ################################################################################
-  source /etc/os-container.env
-fi
-
+#!/bin/sh
+source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 
 # Set some generally useful defaults.
@@ -19,10 +12,10 @@ MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
 # undefined.
 check_required_vars() {
     for var in $*; do
-        if [ -z "${!var}" ]; then
-            echo "ERROR: missing $var" >&2
-            exit 1
-        fi
+      if [ -z "${var:+1}" ]; then
+        echo "ERROR: missing $var" >&2
+        exit 1
+      fi
     done
 }
 
@@ -119,7 +112,7 @@ check_for_os_service_endpoint() {
 
     check_required_vars $host_var
 
-    local endpoint="https://${!host_var}/$api_version"
+    local endpoint="https://${host_var}/$api_version"
 
     curl -sf -o /dev/null "$endpoint" || {
         echo "ERROR: $name is not available @ $endpoint" >&2

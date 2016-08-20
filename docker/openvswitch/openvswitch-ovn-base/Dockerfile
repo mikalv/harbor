@@ -4,4 +4,5 @@ ENV HARBOR_COMPONENT="openvswitch-ovn-base"
 
 RUN yum install -y \
         openvswitch-ovn-host && \
-    yum clean all
+    yum clean all && \
+    container-base-systemd-reset.sh

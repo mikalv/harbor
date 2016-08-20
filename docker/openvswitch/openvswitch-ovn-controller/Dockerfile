@@ -8,4 +8,5 @@ RUN cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
         openvswitch-ovn-host && \
-    yum clean all
+    yum clean all && \
+    container-base-systemd-reset.sh

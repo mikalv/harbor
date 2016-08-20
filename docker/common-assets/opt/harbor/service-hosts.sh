@@ -1,7 +1,4 @@
-#!/bin/bash
-
-
-
+#!/bin/sh
 : ${OS_DOMAIN:="kube.local"}
 
 # ECTD Settings
