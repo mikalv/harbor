@@ -1,16 +1,6 @@
-FROM alpine:latest
-MAINTAINER Port Direct <support@port.direct>
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
-ENV OS_DISTRO="HarborOS" \
-    OPENSTACK_COMPONENT="base-alpine" \
-    LC_ALL="en_US.UTF-8" \
-    container=docker \
-    OS_REPO_BRANCH="master"
-
-LABEL license="Apache 2.0" \
-      vendor="Harbor OpenStack"
-
-COPY ./common-assets /opt/harbor/common-assets
+ENV OPENSTACK_COMPONENT="base-alpine"
 
 RUN apk add --no-cache --virtual core-deps \
       python \
@@ -23,6 +13,4 @@ RUN apk add --no-cache --virtual core-deps \
     pip --no-cache-dir install --upgrade pip setuptools && \
     pip --no-cache-dir install crudini && \
     pip --no-cache-dir install PyMySQL && \
-    pip --no-cache-dir install python-memcached && \
-    cp -rf /opt/harbor/common-assets/* / && \
-    rm -rf /opt/harbor/common-assets
+    pip --no-cache-dir install python-memcached

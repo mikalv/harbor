@@ -1,23 +1,13 @@
-FROM centos:latest
-MAINTAINER Port Direct <support@port.direct>
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
-ENV OS_DISTRO="HarborOS" \
-    OPENSTACK_COMPONENT="base-centos" \
-    LC_ALL="en_US.UTF-8" \
-    container=docker \
-    OS_REPO_BRANCH="master"
+ENV OPENSTACK_COMPONENT="base-centos" \
+    LC_ALL="en_US.UTF-8"
 
-LABEL license="Apache 2.0" \
-      vendor="Harbor OpenStack"
-
-COPY ./common-assets /opt/harbor/common-assets
 COPY ./assets/ /opt/harbor/assets
-RUN cp -rf /opt/harbor/common-assets/* / && \
-    rm -rf /opt/harbor/common-assets && \
-    cp -rf /opt/harbor/assets/* / && \
+
+RUN cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
-        epel-release \
         centos-release-gluster37 \
         centos-release-openstack-mitaka && \
     yum update -y && \
@@ -27,6 +17,7 @@ RUN cp -rf /opt/harbor/common-assets/* / && \
         curl \
         python-pip && \
     yum clean all && \
+    container-base-systemd-reset.sh && \
     chmod 0640 /etc/sudoers && \
     sed -i '/Defaults    requiretty/s/^/#/' /etc/sudoers && \
     chmod 0440 /etc/sudoers && \

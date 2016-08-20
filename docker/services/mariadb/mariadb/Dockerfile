@@ -1,0 +1,12 @@
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
+
+ENV HARBOR_COMPONENT="mariadb" \
+    HARBOR_ETCD_COMPONENT="server"
+
+COPY ./assets /opt/harbor/assets
+
+RUN apk add --no-cache --virtual run-deps \
+        mariadb && \
+    cp -rf /opt/harbor/assets/* /
+
+CMD ["/start.sh"]

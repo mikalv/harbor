@@ -15,9 +15,9 @@
 # limitations under the License.
 
 mark_exit_code () {
-	exit_code=$?
-	echo $exit_code > /run/ipa/exit_code
-	exit $exit_code
+  exit_code=$?
+  echo $exit_code > /run/ipa/exit_code
+  exit $exit_code
 }
 mkdir -p /run/ipa
 trap mark_exit_code ERR EXIT
@@ -26,10 +26,10 @@ set -e
 
 
 ################################################################################
-echo "${OS_DISTRO}: Generating local environment file from secrets_dir"
+echo "${OS_DISTRO}: Generating local environment file from HARBOR_SECRETS_DIR"
 ################################################################################
-SECRETS_DIR=/etc/os-config
-find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
+: ${HARBOR_SECRETS_DIR:="/run/secrets"}
+find $HARBOR_SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
 
 ################################################################################
 echo "${OS_DISTRO}: Running Container Start Script"
@@ -37,10 +37,10 @@ echo "${OS_DISTRO}: Running Container Start Script"
 /start.sh
 
 if true ; then
-	echo "Container configured."
-	else
-		ret=$?
-		echo "Container configuration failed." >&2
-		exit $ret
-	fi
+  echo "Container configured."
+  else
+    ret=$?
+    echo "Container configuration failed." >&2
+    exit $ret
+  fi
 exit

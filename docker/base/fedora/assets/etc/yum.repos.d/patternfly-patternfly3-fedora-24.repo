@@ -1,0 +1,8 @@
+[patternfly-patternfly3]
+name=Copr repo for patternfly3 owned by patternfly
+baseurl=https://copr-be.cloud.fedoraproject.org/results/patternfly/patternfly3/fedora-$releasever-$basearch/
+skip_if_unavailable=True
+gpgcheck=1
+gpgkey=https://copr-be.cloud.fedoraproject.org/results/patternfly/patternfly3/pubkey.gpg
+enabled=1
+enabled_metadata=1
