@@ -1,0 +1,82 @@
+#!/bin/sh
+echo "$OS_DISTRO: Loading enviornment"
+LOCAL_ENV=/tmp/harbor.env
+rm -f ${LOCAL_ENV}
+touch ${LOCAL_ENV}
+
+cfg_auth=/etc/harbor/auth.conf
+cfg_images=/etc/harbor/images.conf
+cfg_network=/etc/harbor/network.conf
+cfg_node=/etc/harbor/node.conf
+cfg_roles=/etc/harbor/roles.conf
+
+echo "$OS_DISTRO: cfg_images=$cfg_images"
+for CONF_SECTION in DEFAULT freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    IMAGE_REPO=$(crudini --get $cfg_images ${CONF_SECTION} repo)
+    IMAGE_NAMESPACE=$(crudini --get $cfg_images ${CONF_SECTION} namespace)
+    IMAGE_TAG=$(crudini --get $cfg_images ${CONF_SECTION} tag)
+    IMAGE_PULL_POLICY=$(crudini --get $cfg_images ${CONF_SECTION} pull_policy)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} IMAGE_PULL_POLICY"
+    echo "IMAGE_PULL_POLICY=${IMAGE_PULL_POLICY}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_images ${CONF_SECTION}); do
+        IMAGE_NAME="$(crudini --get $cfg_images ${CONF_SECTION} ${COMPONENT})"
+        VALUE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+        NAME="$(echo IMAGE_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+docker network create --driver bridge --subnet 10.20.0.0/24 freeipa
+
+docker run \
+--name="freeipa.novalocal" \
+--hostname="freeipa.novalocal" \
+--dns="8.8.8.8" \
+--net=freeipa \
+--ip="10.20.0.10" \
+-t \
+-d \
+-v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+-v="/run" \
+-v="/var/lib/harbor/freeipa/freeipa.novalocal:/data:rw" \
+--security-opt="seccomp=unconfined" \
+-e PASSWORD="Password123" \
+port/freeipa-server
+
+[DEFAULT]
+repo = docker.io
+namespace = port
+tag = latest
+pull_policy = Always
+
+[kubernetes]
+kubelet = kubernetes-kubelet
+kubectl = kubectl
+api = kubernetes-api
+scheduler = kubernetes-scheduler
+controller = kubernetes-controller-manager
+kube2sky = kubernetes-kube2sky
+
+[openvswitch]
+ovsdb = openvswitch-ovsdb
+vswitchd = openvswitch-vswitchd
+ovn_ovsdb_nb = openvswitch-ovn-ovsdb-nb
+ovn_ovsdb_sb = openvswitch-ovn-ovsdb-sb
+ovn_controller = openvswitch-ovn-controller
+ovn_northd = openvswitch-ovn-northd
+
+[etcd]
+server = etcd
+
+[freeipa]
+server = freeipa-server

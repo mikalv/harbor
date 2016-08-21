@@ -1,0 +1,124 @@
+#!/bin/sh
+set -x
+source /usr/bin/load-environment
+export OS_DOMAIN=${OS_DOMAIN}
+echo "OS_DOMAIN=${OS_DOMAIN}"
+source /opt/harbor/service-hosts.sh
+
+SERVICE_HOST_LIST=" NODE_ETCD_SERVICE_HOST \
+                    DOCKER_ETCD_SERVICE_HOST \
+                    KUBE_ETCD_SERVICE_HOST \
+                    OPENSTACK_ETCD_SERVICE_HOST \
+                    MARIADB_SERVICE_HOST \
+                    MONGODB_SERVICE_HOST \
+                    RABBITMQ_SERVICE_HOST \
+                    KEYSTONE_PUBLIC_SERVICE_HOST \
+                    KEYSTONE_OLD_PUBLIC_SERVICE_HOST \
+                    GLANCE_API_SERVICE_HOST \
+                    GLANCE_REGISTRY_SERVICE_HOST \
+                    NOVA_API_SERVICE_HOST \
+                    NEUTRON_API_SERVICE_HOST \
+                    SWIFT_API_SERVICE_HOST \
+                    CINDER_API_SERVICE_HOST \
+                    HEAT_API_SERVICE_HOST \
+                    HEAT_API_CFN_SERVICE_HOST \
+                    HEAT_API_CLOUDWATCH_SERVICE_HOST \
+                    CEILOMETER_API_SERVICE_HOST \
+                    GNOCCHI_API_SERVICE_HOST \
+                    MAGNUM_API_SERVICE_HOST \
+                    BARBICAN_API_SERVICE_HOST \
+                    TROVE_API_SERVICE_HOST \
+                    MANILA_API_SERVICE_HOST \
+                    DESIGNATE_API_SERVICE_HOST"
+
+
+KUBE_MANIFESTS_DIR=/etc/kubernetes/manifests
+TEMPLATE_MANIFESTS_DIR=/etc/harbor/manifests
+MANIFESTS_WORK_DIR=/tmp/harbor/manifests
+
+
+HARBOR_KUBE_OPENSTACK_CONFIG=/run/harbor/kube_openstack/config
+mkdir -p /run/harbor/kube_openstack
+LOCAL_ENV_LIST="$LOCAL_ENV_LIST HARBOR_KUBE_OPENSTACK_CONFIG"
+
+HARBOR_HOSTS_FILE=/var/run/harbor/hosts
+mkdir -p /var/run/harbor
+LOCAL_ENV_LIST="$LOCAL_ENV_LIST HARBOR_HOSTS_FILE"
+
+prep_manifest () {
+  manifest_group=$1
+  manifest=$2
+  MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
+  MANIFEST_FILE="$KUBE_MANIFESTS_DIR/$manifest_group-$manifest"
+  mkdir -p $MANIFESTS_WORK_DIR/$manifest_group
+  cat $TEMPLATE_MANIFESTS_DIR/$manifest_group/$manifest > $MANIFEST_WORK_FILE
+  for LOCAL_ENV in $LOCAL_ENV_LIST; do
+    LOCAL_ENV_VALUE=$(set | grep ^$LOCAL_ENV= | awk -F "$LOCAL_ENV=" '{ print $2 }')
+    echo $MANIFEST_WORK_FILE {{ $LOCAL_ENV }} $LOCAL_ENV_VALUE
+    sed -i "s&{{ $LOCAL_ENV }}&${LOCAL_ENV_VALUE}&g" $MANIFEST_WORK_FILE
+  done
+  for SERVICE_HOST in $SERVICE_HOST_LIST KUBERNETES_SERVICE_HOST; do
+    LOCAL_ENV_VALUE=$(set | grep ^$SERVICE_HOST= | awk -F "$SERVICE_HOST=" '{ print $2 }')
+    sed -i "s&{{ $SERVICE_HOST }}&${LOCAL_ENV_VALUE}&g" $MANIFEST_WORK_FILE
+  done
+  cat $MANIFEST_WORK_FILE > $MANIFEST_FILE
+}
+
+
+
+list_manifests () {
+  MANIFEST_GROUP=$1
+  COMPONENTS="$(ls ${TEMPLATE_MANIFESTS_DIR}/${MANIFEST_GROUP} | tr '\n' ' ' )"
+  echo $COMPONENTS
+}
+
+prep_manifests () {
+  MANIFEST_GROUP=$1
+  MANIFESTS="$(list_manifests $1)"
+  for MANIFEST in $MANIFESTS; do
+    prep_manifest $MANIFEST_GROUP $MANIFEST
+  done
+}
+
+
+create_harbor_service_hosts () {
+  cat > $HARBOR_HOSTS_FILE <<EOF
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+${NODE_NETWORK_DEFAULT_IP} $(hostname -s) $(hostname -s).${OS_DOMAIN}
+
+127.0.0.1 ${KUBERNETES_SERVICE_HOST}
+EOF
+  for SERVICE_HOST in $SERVICE_HOST_LIST; do
+    LOCAL_ENV_VALUE=$(set | grep ^$SERVICE_HOST= | awk -F "$SERVICE_HOST=" '{ print $2 }')
+    echo "${NODE_NETWORK_DEFAULT_IP} $LOCAL_ENV_VALUE" >> $HARBOR_HOSTS_FILE
+  done
+}
+
+
+
+
+create_kube_openstack_config () {
+  rm -rf $HARBOR_KUBE_OPENSTACK_CONFIG
+  cat > $HARBOR_KUBE_OPENSTACK_CONFIG <<EOF
+[Global]
+auth-url="http://${KEYSTONE_PUBLIC_SERVICE_HOST}:5000/v2.0"
+Username="${AUTH_KUBERNETES_KEYSTONE_USER}"
+Password="${AUTH_KUBERNETES_KEYSTONE_PASSWORD}"
+tenant-name="${AUTH_KUBERNETES_KEYSTONE_PROJECT}"
+EOF
+}
+
+
+create_harbor_service_hosts
+cat $HARBOR_HOSTS_FILE > /etc/hosts
+
+create_kube_openstack_config
+
+prep_manifests openvswitch
+prep_manifests etcd-master
+prep_manifests kube-master
+
+
+echo "BOOTSTRAPPED"> $KUBE_STATUS_FILE

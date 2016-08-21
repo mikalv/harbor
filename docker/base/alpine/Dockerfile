@@ -18,6 +18,7 @@ RUN cp -rf /opt/harbor/common-assets/* / && \
     apk upgrade --no-cache && \
     apk add --no-cache --virtual base-deps \
         findutils \
-        curl
+        curl \
+        bash
 
 ENTRYPOINT ["/init"]

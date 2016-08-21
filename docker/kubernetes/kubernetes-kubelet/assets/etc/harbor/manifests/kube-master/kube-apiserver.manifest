@@ -10,14 +10,14 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-apiserver
-    image: docker.io/port/system-hyperkube:latest
+    image: {{ IMAGE_KUBERNETES_API }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     command:
-      - /hyperkube
-      - apiserver
-      - --service-cluster-ip-range=10.10.0.0/24
-      - --insecure-bind-address=0.0.0.0
+      - kube-apiserver
+      - --service-cluster-ip-range={{ NETWORK_KUBE_KUBE_SVC_RANGE }}
+      - --insecure-bind-address=127.0.0.1
       - --insecure-port=8080
-      - --etcd-servers=http://127.0.0.1:1401
+      - --etcd-servers=http://{{ KUBE_ETCD_SERVICE_HOST }}:1401
       - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
       - --client-ca-file=/srv/kubernetes/ca.crt
       - --basic-auth-file=/srv/kubernetes/basic_auth.csv
@@ -31,7 +31,12 @@ spec:
     volumeMounts:
       - mountPath: /srv/kubernetes
         name: kube-data
+      - mountPath: /etc/hosts
+        name: harbor-hosts
   volumes:
     - name: kube-data
       hostPath:
         path: /var/lib/harbor/kube
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

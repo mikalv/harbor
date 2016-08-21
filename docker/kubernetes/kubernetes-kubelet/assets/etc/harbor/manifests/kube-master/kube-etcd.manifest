@@ -10,7 +10,8 @@ spec:
   hostNetwork: true
   containers:
   - name: kube-etcd
-    image: docker.io/port/system-etcd:latest
+    image: {{ IMAGE_ETCD_SERVER }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     ports:
     - containerPort: 1401
       hostPort: 1401
@@ -23,21 +24,26 @@ spec:
     - -data-dir
     - /var/etcd/data
     - -listen-peer-urls
-    - http://{{ETCD_SERVICE_HOST}}:1701
+    - http://{{ KUBE_ETCD_SERVICE_HOST }}:1701
     - --initial-advertise-peer-urls
-    - http://{{ETCD_SERVICE_HOST}}:1701
+    - http://{{ KUBE_ETCD_SERVICE_HOST }}:1701
     - --initial-cluster
-    - default=http://{{ETCD_SERVICE_HOST}}:1701
+    - default=http://{{ KUBE_ETCD_SERVICE_HOST }}:1701
     - -listen-client-urls
-    - http://127.0.0.1:1401
+    - http://{{ KUBE_ETCD_SERVICE_HOST }}:1401
     - -advertise-client-urls
-    - http://127.0.0.1:1401
+    - http://{{ KUBE_ETCD_SERVICE_HOST }}:1401
     - -initial-cluster-token
     - kube-etcd
     volumeMounts:
       - mountPath: /var/etcd
         name: etcd-kube
+      - mountPath: /etc/hosts
+        name: harbor-hosts
   volumes:
     - name: etcd-kube
       hostPath:
-        path: "/var/lib/harbor/kube/etcd"
+        path: /var/lib/harbor/kube/etcd
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

@@ -1,6 +1,6 @@
-#!/bin/bash
-
+#!/bin/sh
 # Copyright 2014--2016 Jan Pazdziora
+# Copyright 2016--2016 Port Direct
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -28,8 +28,8 @@ set -e
 ################################################################################
 echo "${OS_DISTRO}: Generating local environment file from HARBOR_SECRETS_DIR"
 ################################################################################
-: ${HARBOR_SECRETS_DIR:="/run/secrets"}
-find $HARBOR_SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
+: ${SECRETS_DIR:="/run/secrets"}
+find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
 
 ################################################################################
 echo "${OS_DISTRO}: Running Container Start Script"

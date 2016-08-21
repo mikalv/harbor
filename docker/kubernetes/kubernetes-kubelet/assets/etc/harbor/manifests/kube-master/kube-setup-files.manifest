@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    harbor-app: kube-setup-files
+    version: v0.1.0
+  name: kube-setup-files
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-setup-files
+    image: docker.io/port/system-hyperkube:latest
+    command:
+    - /setup-files.sh
+    - IP:{{ NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_KUBE }},DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.{{ OS_DOMAIN }}
+    volumeMounts:
+      - mountPath: /data
+        name: kube-data
+      - mountPath: /etc/hosts
+        name: harbor-hosts
+  volumes:
+    - name: kube-data
+      hostPath:
+        path: /var/lib/harbor/kube
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

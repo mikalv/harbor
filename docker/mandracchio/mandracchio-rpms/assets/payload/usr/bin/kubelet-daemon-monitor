@@ -1,2 +1,3 @@
 #!/bin/sh
-exec docker wait kubelet
+: ${CONTAINER_NAME:="kubelet"}
+exec docker wait ${CONTAINER_NAME}

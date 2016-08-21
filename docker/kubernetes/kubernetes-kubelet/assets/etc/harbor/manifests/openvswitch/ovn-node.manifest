@@ -10,22 +10,22 @@ spec:
   hostNetwork: true
   containers:
   - name: node-ovsdb-server
-    image: docker.io/port/ovs:latest
+    image: {{ IMAGE_OPENVSWITCH_OVSDB }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     ports:
       - containerPort: 6640
         hostPort: 6640
         name: ovs-db
-    command:
-      - /start-node-ovsdb.sh
     volumeMounts:
       - mountPath: /var/run/openvswitch
         name: var-run-openvswitch
       - mountPath: /var/lib/ovn
         name: var-lib-ovn
+      - mountPath: /etc/hosts
+        name: harbor-hosts
   - name: node-ovs-vswitchd
-    image: docker.io/port/ovs:latest
-    command:
-      - /start-node-vswitchd.sh
+    image: {{ IMAGE_OPENVSWITCH_VSWITCHD }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     volumeMounts:
       - mountPath: /var/run/openvswitch
         name: var-run-openvswitch
@@ -35,20 +35,23 @@ spec:
         name: var-run-netns
       - mountPath: /dev/net
         name: dev-net
+      - mountPath: /etc/hosts
+        name: harbor-hosts
     securityContext:
       privileged: true
   - name: node-ovn-controller
-    image: docker.io/port/ovs:latest
+    image: {{ IMAGE_OPENVSWITCH_OVN_CONTROLLER }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     env:
       - name: TUNNEL_DEV
-        value: eth0
+        value: {{ NODE_NETWORK_DEFAULT_DEVICE }}
       - name: OVS_SB_DB_IP
-        value: {{OVS_SB_DB_IP}}
-    command:
-      - /start-node-controller.sh
+        value: {{ NETWORK_OPENVSWITCH_SOUTHBOUND_DB_IP }}
     volumeMounts:
       - mountPath: /var/run/openvswitch
         name: var-run-openvswitch
+      - mountPath: /etc/hosts
+        name: harbor-hosts
   volumes:
     - name: var-run-openvswitch
       hostPath:
@@ -62,3 +65,6 @@ spec:
     - name: dev-net
       hostPath:
         path: /dev/net
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

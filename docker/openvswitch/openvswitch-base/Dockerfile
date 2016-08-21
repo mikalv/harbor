@@ -13,4 +13,5 @@ RUN cp -rf /opt/harbor/assets/* / && \
 
 VOLUME ["/var/run/openvswitch"]
 
+ENTRYPOINT []
 CMD ["/start.sh"]

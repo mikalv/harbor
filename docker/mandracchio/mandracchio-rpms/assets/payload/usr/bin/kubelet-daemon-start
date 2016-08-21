@@ -1,17 +1,25 @@
 #!/bin/sh
+PATH=$PATH:/usr/local/bin
+: ${CONTAINER_NAME:="kubelet"}
 
-KUBELET_IMAGE=docker.io/port/system-kubelet:latest
+cfg_images=/etc/harbor/images.conf
+IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
+IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)
+IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
+IMAGE_PULL_POLICY=$(crudini --get $cfg_images DEFAULT pull_policy)
+IMAGE_NAME=$(crudini --get $cfg_images kubernetes kubelet)
+IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
 
-mkdir -p /etc/harbor
-touch /etc/harbor/kube.env
-touch /etc/harbor/kube-status
-touch /etc/harbor/kube_openstack_config
+if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+  docker pull ${IMAGE} || true
+fi
 
-docker pull ${KUBELET_IMAGE} || true
-docker rm -v -f kubelet || true
 
+docker rm -v -f ${CONTAINER_NAME} || true
+(docker ps | awk '{ if ($NF ~ "^k8s_") print $1 }' | xargs -l1 docker stop) || true
+docker rm $(docker ps -a -q) || true
 exec docker run \
-      --name kubelet \
+      --name ${CONTAINER_NAME} \
       -d \
       --restart=always \
       --volume=/:/rootfs:ro \
@@ -22,10 +30,9 @@ exec docker run \
       --volume=/var/lib/docker/:/var/lib/docker:rw \
       --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
       --volume=/var/run:/var/run:rw \
-      --volume=/etc/harbor/kube.env:/etc/harbor/kube.env:ro \
-      --volume=/etc/harbor/kube-status:/etc/harbor/kube-status:rw \
-      --volume=/etc/harbor/kube_openstack_config:/etc/harbor/kube_openstack_config:rw \
+      --volume=/etc/kubernetes/manifests:/etc/kubernetes/manifests:rw \
+      --volume=/etc/hosts:/etc/hosts:rw \
       --net=host \
       --privileged=true \
       --pid=host \
-      ${KUBELET_IMAGE} /kubelet
+      ${IMAGE}

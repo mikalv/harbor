@@ -1,4 +1,5 @@
 #!/bin/sh
-docker stop kubelet || true
+: ${CONTAINER_NAME:="kubelet"}
+docker stop ${CONTAINER_NAME} || true
 #(docker ps | awk '{ if ($NF ~ "^k8s_") print $1 }' | xargs -l1 docker stop) || true
-docker rm -v -f kubelet || true
+docker rm -v -f ${CONTAINER_NAME} || true

@@ -1,4 +1,5 @@
-#!/bin/bash
-
+#!/bin/sh
+mkdir -p /run/local-container
+touch /run/local-container/exit_code
 exit_code=$( cat /run/local-container/exit_code )
 exit $exit_code

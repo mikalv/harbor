@@ -1,7 +1,18 @@
 #!/bin/sh
+set -e
+: ${ARGS:=$@}
+: ${DOCKER_NETWORK:="host"}
+: ${FS_PREFIX:="/rootfs"}
+
+cfg_images=/etc/harbor/images.conf
+IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
+IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)
+IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
+IMAGE_NAME=$(crudini --get $cfg_images openvswitch ovn_ovsdb_sb)
+IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+
 exec docker run \
-     -t \
      --rm \
      --net=host \
      -v /var/run/openvswitch:/var/run/openvswitch:rw \
-     docker.io/port/ovn:latest ovn-sbctl "$@"
+     ${IMAGE} ovn-sbctl "$@"

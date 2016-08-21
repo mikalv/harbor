@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    harbor-app: kube-scheduler
+    version: v0.1.0
+  name: kube-scheduler
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube-scheduler
+    image: {{ IMAGE_KUBERNETES_SCHEDULER }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    command:
+      - kube-scheduler
+      - --master={{ KUBERNETES_SERVICE_HOST }}:8080
+      - --v=2
+      - --logtostderr=true
+    volumeMounts:
+      - mountPath: /srv/kubernetes
+        name: kube-data
+      - mountPath: /etc/hosts
+        name: harbor-hosts
+  volumes:
+    - name: kube-data
+      hostPath:
+        path: /var/lib/harbor/kube
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

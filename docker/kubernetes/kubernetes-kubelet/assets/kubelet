@@ -1,34 +1,57 @@
 #!/bin/sh
-tail -f /dev/null
-set -e
 set -x
-. /etc/harbor/kube.env
+: ${SECRETS_DIR:="/run/secrets"}
+: ${OVS_INTERGRATION_BRIDGE:="br-int"}
+
+cfg_node=/etc/harbor/node.conf
+cfg_network=/etc/harbor/network.conf
+
+export OS_DOMAIN=$(crudini --get $cfg_network DEFAULT os_domain)
+export NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
+
+find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
+
+source /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+
 export KUBELET_CMD='exec kubelet'
-KUBE_STATUS="$(cat /etc/harbor/kube-status)"
+
+KUBE_STATUS_DIR="/run/harbor"
+export KUBE_STATUS_FILE="${KUBE_STATUS_DIR}/kube-status"
+mkdir -p ${KUBE_STATUS_DIR}
+
+KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
 if [ -z "$KUBE_STATUS" ]; then
     echo "No status found, launching as bootrapper"
     export KUBE_STATUS="BOOTSTRAPPING"
-    echo "$KUBE_STATUS" > /etc/harbor/kube-status
+    echo "$KUBE_STATUS" > ${KUBE_STATUS_FILE}
 elif [ "$KUBE_STATUS" = "BOOTSTRAPPING" ]; then
     echo "This node is bootstrapping"
     export KUBE_STATUS="BOOTSTRAPPING"
 elif [ "$KUBE_STATUS" = "BOOTSTRAPPED" ]; then
     echo "This node has been boostrapped, just prepping manifests"
-    export KUBE_STATUS="BOOTSTRAPPED"
+    export KUBE_STATUS="INITALIZING"
 fi;
 
 
-if [ "$ROLE" = "master" ]; then
+cfg_node=/etc/harbor/node.conf
+NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
+
+if [ "$NODE_ROLE" = "master" ]; then
     echo "This is a master node."
-    /opt/harbor/roles/master &>/var/log/harbor-boostrap &
+    source /usr/bin/start-services
+    #/opt/harbor/roles/master &>/var/log/harbor-boostrap &
 else
     echo "Launching node boostrap script."
-    /opt/harbor/roles/node &>/var/log/harbor-boostrap &
+    source /usr/bin/start-services
+    #/opt/harbor/roles/node &>/var/log/harbor-boostrap &
 fi;
 
+#/opt/harbor/roles/ovn
 
 echo "Configuring Kuryr"
-/opt/harbor/scripts/config-kuryr
+#/opt/harbor/scripts/config-kuryr
 
 
 echo "Ensuring Required Host Assets Exist"
@@ -36,14 +59,18 @@ mkdir -p /var/run/swarm
 touch /var/run/swarm/docker.sock
 
 
-export NODE_HOSTNAME="$(hostname -s).$(hostname -d)"
+export NODE_HOSTNAME="$(hostname -s).${OS_DOMAIN}"
+export KUBERNETES_API_SERVER="http://${KUBERNETES_SERVICE_HOST}:8080"
+echo "Kubernetes Api Server: ${KUBERNETES_API_SERVER}"
 export KUBE_LAUNCH_PARAMS="--hostname-override=${NODE_HOSTNAME} \
               --allow-privileged=true \
-              --api-servers=http://${MASTER_IP}:8080 \
+              --api-servers=${KUBERNETES_API_SERVER} \
               --v=2 \
               --address=0.0.0.0 \
               --enable-server \
               --containerized \
+              --cluster-dns=${NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA} \
+              --cluster-domain=${OS_DOMAIN} \
               --network-plugin=cni \
               --config=/etc/kubernetes/manifests \
               --pod-infra-container-image=docker.io/port/system-pause:latest"
@@ -54,18 +81,18 @@ kubelet ${KUBE_LAUNCH_PARAMS} &
 KUBELET_PID=$!
 
 
-echo "Waiting for br-int to exist"
-until ovs-vsctl br-exists br-int; do
-  sleep 30; echo "Waiting for br-int...";
+echo "Waiting for ${OVS_INTERGRATION_BRIDGE} to exist"
+until ovs-vsctl br-exists ${OVS_INTERGRATION_BRIDGE}; do
+  sleep 30; echo "Waiting for ${OVS_INTERGRATION_BRIDGE}...";
 done;
 
 
 echo "Waiting for Node Bootstrap to complete"
-export KUBE_STATUS="$(cat /etc/harbor/kube-status)"
+export KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
 until [ "$KUBE_STATUS" = "BOOTSTRAPPED" ]; do
   echo "Waiting for Node Bootstrap to complete";
   sleep 30;
-  export KUBE_STATUS="$(cat /etc/harbor/kube-status)"
+  export KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
 done;
 
 

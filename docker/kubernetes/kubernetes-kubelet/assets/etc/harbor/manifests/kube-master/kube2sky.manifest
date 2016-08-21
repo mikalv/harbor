@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    harbor-app: kube2sky
+    version: v0.1.0
+  name: kube2sky
+  namespace: kube-system
+spec:
+  hostNetwork: true
+  containers:
+  - name: kube2sky
+    image: {{ IMAGE_KUBERNETES_KUBE2SKY }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: UNDERCLOUD
+        value: "True"
+    command:
+      - /start.sh
+      - -domain={{ OS_DOMAIN }}
+      - -etcd-server=http://127.0.0.1:14001
+      - -kube_master_url=http://{{ KUBERNETES_SERVICE_HOST }}:8080
+      - -v=2
+      - -alsologtostderr=true
+    volumeMounts:
+      - mountPath: /etc/hosts
+        name: harbor-hosts
+  - name: kube-skydns
+    image: docker.io/port/system-skydns:latest
+    env:
+      - name: UNDERCLOUD
+        value: "True"
+    command:
+      - /skydns
+      - -machines=http://127.0.0.1:14001
+      - -addr={{ NODE_NETWORK_DEFAULT_IP }}:53
+      - -domain={{ OS_DOMAIN }}
+      - -nameservers={{ NETWORK_EXTERNAL_DNS_DNS_SERVER }}:53
+    volumeMounts:
+      - mountPath: /etc/hosts
+        name: harbor-hosts
+  - name: kube-dns-etcd
+    image: {{ IMAGE_ETCD_SERVER }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    command:
+      - etcd
+      - -data-dir
+      - /var/etcd/data
+      - -listen-peer-urls
+      - http://localhost:17001
+      - --initial-advertise-peer-urls
+      - http://localhost:17001
+      - --initial-cluster
+      - default=http://localhost:17001
+      - -listen-client-urls
+      - http://127.0.0.1:14001
+      - -advertise-client-urls
+      - http://127.0.0.1:14001
+      - -initial-cluster-token
+      - skydns-etcd
+    volumeMounts:
+      - name: etcd-storage
+        mountPath: /var/etcd/data
+      - mountPath: /etc/hosts
+        name: harbor-hosts
+  volumes:
+    - name: etcd-storage
+      emptyDir: {}
+    - name: harbor-hosts
+      hostPath:
+        path: {{ HARBOR_HOSTS_FILE }}

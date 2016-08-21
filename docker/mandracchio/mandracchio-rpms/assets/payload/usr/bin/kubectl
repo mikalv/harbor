@@ -1,7 +1,58 @@
 #!/bin/sh
-exec docker run \
-      -t \
-      --rm \
-      --net=host \
-      -v /:/rootfs:ro \
-      port/undercloud-kubectl:latest /usr/bin/kubectl "$@"
+set -e
+: ${ARGS:=$@}
+: ${KUBECTL_DOCKER_NETWORK:="host"}
+: ${FS_PREFIX:="/rootfs"}
+: ${KUBECTL_FS_MODE:="ro"}
+: ${KUBECTL_INTERACTIVE:="False"}
+
+cfg_images=/etc/harbor/images.conf
+IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
+IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)
+IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
+IMAGE_PULL_POLICY=$(crudini --get $cfg_images DEFAULT pull_policy)
+IMAGE_NAME=$(crudini --get $cfg_images kubernetes kubectl)
+IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+ARGUMENTS=""
+ARG_COUNT=0
+for ARGUMENT in ${ARGS} ; do
+    if [ "${NEXT_ARGUMENT_ACTION}" == "intercept" ] ; then
+        if case $ARGUMENT in /*) true;; *) false;; esac; then
+          ARGUMENT="${FS_PREFIX}${ARGUMENT}"
+        else
+          ARGUMENT="${FS_PREFIX}$(pwd)/${ARGUMENT}"
+        fi
+      NEXT_ARGUMENT_ACTION=pass
+    elif [ "${ARGUMENT}" == "-f" ] ; then
+      NEXT_ARGUMENT_ACTION=intercept
+    else
+      if case $ARGUMENT in -f=*) true;; *) false;; esac; then
+        ARGUMENT=${ARGUMENT#-f=}
+        if case $ARGUMENT in /*) true;; *) false;; esac; then
+          ARGUMENT="${FS_PREFIX}${ARGUMENT}"
+        else
+          ARGUMENT="${FS_PREFIX}$(pwd)/${ARGUMENT}"
+        fi
+        ARGUMENT="-f=${ARGUMENT}"
+      fi
+    fi
+   #echo "${ARG_COUNT} ${ARGUMENT}"
+   ARGUMENTS="${ARGUMENTS} ${ARGUMENT}"
+   ARG_COUNT=$((ARG_COUNT+1))
+done
+
+if [ "${KUBECTL_INTERACTIVE}" == "True" ] ; then
+  exec docker run \
+        -it \
+        --rm \
+        --net=${KUBECTL_DOCKER_NETWORK} \
+        -v /:${FS_PREFIX}:${KUBECTL_FS_MODE} \
+        ${IMAGE} $ARGUMENTS
+else
+  exec docker run \
+        --rm \
+        --net=${KUBECTL_DOCKER_NETWORK} \
+        -v /:${FS_PREFIX}:${KUBECTL_FS_MODE} \
+        ${IMAGE} $ARGUMENTS
+fi

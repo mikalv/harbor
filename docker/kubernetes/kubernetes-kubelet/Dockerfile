@@ -7,11 +7,7 @@ ENV LC_ALL="en_US.UTF-8" \
     KURYR_BRANCH="k8s" \
     HARBOR_KUBECTL_IMAGE="docker.io/port/kubectl:latest"
 
-COPY ./assets/ /opt/harbor/assets
-
-RUN cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
-    yum install -y \
+RUN yum install -y \
         openvswitch \
         python34 \
         python34-devel \
@@ -39,8 +35,9 @@ RUN cp -rf /opt/harbor/assets/* / && \
 # What a horrible hack. Whats going on here?
 RUN /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
 
-ADD ./assets /opt/harbor/assets
-RUN cp -rf /opt/harbor/assets/* / && \
-    mkdir -p /etc/kubernetes/manifests
+ENTRYPOINT ["/kubelet"]
 
-CMD ["/kubelet"]
+COPY ./assets/ /opt/harbor/assets
+
+RUN cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets

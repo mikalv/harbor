@@ -1,18 +1,22 @@
-#!/bin/sh
+#!/bin/bash
 source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 
-# Set some generally useful defaults.
-MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
-    awk '$4 == "src" {print $5}')
-
+# We do it this way for maxium portability accross shells and implementations of the ip command
+ROUTES="$(ip route show)"
+if [ "${ROUTES}" == "" ] ; then
+  MY_IP=127.0.0.1
+else
+  MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
+      awk '$4 == "src" {print $5}')
+fi
 : ${PUBLIC_IP:=${MY_IP}}
 
 # Iterate over a list of variable names and exit if one is
 # undefined.
 check_required_vars() {
     for var in $*; do
-      if [ -z "${var:+1}" ]; then
+      if [ -z "${!var}" ]; then
         echo "ERROR: missing $var" >&2
         exit 1
       fi
