@@ -12,7 +12,8 @@ RUN set -e && \
         freeipa-client \
         freeipa-admintools && \
     dnf clean all && \
-    container-base-systemd-reset.sh
+    container-base-systemd-reset.sh && \
+    touch /init-ipa
 
 ENTRYPOINT []
 

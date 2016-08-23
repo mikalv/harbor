@@ -53,4 +53,4 @@ else
       --enable-dns-updates
 fi
 
-exec /start.sh
+exec /start.sh "$@"

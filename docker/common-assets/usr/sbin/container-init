@@ -28,7 +28,8 @@ echo "${OS_DISTRO}: Running Container Start Script"
 ################################################################################
 . /usr/sbin/container-gen-env
 
-if [ -f /init-ipa-client ]
+
+if [ -f /init-ipa ]
   then
     ################################################################################
     echo "${OS_DISTRO}: Launching IPA Client enrollment"

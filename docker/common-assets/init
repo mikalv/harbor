@@ -9,4 +9,12 @@ source /etc/os-container.env
 
 boot_checks
 
-exec /start.sh "$@"
+if [ -f /init-ipa ]
+  then
+    ################################################################################
+    echo "${OS_DISTRO}: Launching IPA Client enrollment"
+    ################################################################################
+    exec /init-ipa-client "$@"
+  else
+    exec /start.sh "$@"
+fi

@@ -2,8 +2,12 @@
 set -e
 source /etc/harbor/docker.env
 DOCKER_IP=$(ip -f inet -o addr show ${DOCKER_DEV}|cut -d\  -f 7 | cut -d/ -f 1)
-exec docker daemon \
-     -s overlay \
+DOCKER_DEV_MTU=$(ip -f inet -o link show ${DOCKER_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
+DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
+
+exec dockerd \
+     --mtu ${DOCKER_MTU} \
+     -s overlay2 \
      -H unix:///var/run/docker.sock \
      -H tcp://${DOCKER_IP}:${DOCKER_PORT} \
      --cluster-advertise=${DOCKER_DEV}:${DOCKER_PORT} \

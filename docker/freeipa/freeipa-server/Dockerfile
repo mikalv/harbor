@@ -13,7 +13,8 @@ RUN set -e && \
         freeipa-server-dns \
         bind \
         bind-dyndb-ldap && \
-    dnf clean all
+    dnf clean all && \
+    setcap cap_net_raw,cap_net_admin+p /usr/bin/ping || true
 
 RUN dnf install -y git && \
     git clone --depth 1 https://github.com/adelton/docker-freeipa.git /opt/docker-freeipa && \

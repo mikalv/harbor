@@ -9,6 +9,8 @@ if [ "${ROUTES}" == "" ] ; then
 else
   MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
       awk '$4 == "src" {print $5}')
+  MY_DEVICE=$(ip route | awk '$1 == "default" {print $5}')
+  MY_MTU=$(ip -f inet -o link show ${DEFAULT_DEVICE}|cut -d\  -f 5 | cut -d/ -f 1)
 fi
 : ${PUBLIC_IP:=${MY_IP}}
 

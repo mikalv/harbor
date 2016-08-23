@@ -1,6 +1,6 @@
 #!/bin/sh
 PATH=$PATH:/usr/local/bin
-: ${CONTAINER_NAME:="kubelet"}
+CONTAINER_NAME="kubelet"
 
 cfg_images=/etc/harbor/images.conf
 IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
@@ -17,7 +17,8 @@ fi
 
 docker rm -v -f ${CONTAINER_NAME} || true
 (docker ps | awk '{ if ($NF ~ "^k8s_") print $1 }' | xargs -l1 docker stop) || true
-docker rm $(docker ps -a -q) || true
+docker rm -v $(docker ps -a -q) || true
+rm -fr /etc/kubernetes/manifests
 exec docker run \
       --name ${CONTAINER_NAME} \
       -d \
