@@ -11,7 +11,9 @@ COPY ./common-assets /opt/harbor/common-assets
 
 COPY ./assets/ /opt/harbor/assets
 
-RUN cp -rf /opt/harbor/common-assets/* / && \
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \

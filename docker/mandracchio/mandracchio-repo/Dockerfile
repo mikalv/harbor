@@ -17,7 +17,9 @@ RUN yum update -y && \
         docker && \
     yum clean all
 
-RUN ( docker rm -f mandracchio-build-rpms || true ) && \
+RUN set -e && \
+    set -x && \
+    ( docker rm -f mandracchio-build-rpms || true ) && \
     docker run \
       -d \
       -p 172.17.0.1:81:80/tcp \

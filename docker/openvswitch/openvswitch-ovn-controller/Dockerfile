@@ -4,7 +4,9 @@ ENV HARBOR_COMPONENT="openvswitch-ovn-controller"
 
 COPY ./assets /opt/harbor/assets
 
-RUN cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
         openvswitch-ovn-host && \

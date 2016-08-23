@@ -1,12 +1,12 @@
-FROM fedora:latest
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="ipsilon" \
     OS_COMP="ipsilon" \
     OS_REPO_URL="https://github.com/portdirect/ipsilon.git" \
     OS_REPO_BRANCH="master"
 
-RUN dnf update -y && \
-    dnf upgrade -y && \
+RUN set -e && \
+    set -x && \
     dnf install -y \
         @development-tools \
         fedora-packager \
@@ -100,5 +100,7 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+ENTRYPOINT []
 
 CMD ["/start.sh"]

@@ -1,51 +1,12 @@
-#!/bin/sh
+#!/bin/bash
 set -e
+. /usr/sbin/container-gen-env
 : ${OS_DOMAIN:="kube.local"}
-: ${SECRETS_DIR:="/run/secrets"}
-
-find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
 
 source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 
+boot_checks
 
-if [ "${INIT_DB_REQUIRED}" == "True" ] ; then
-  fail_unless_db
-fi
-if [ "${INIT_OVN_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running ovn
-fi
-if [ "${INIT_FREEIPA_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running freeipa
-fi
-if [ "${INIT_IPSILON_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running ipsilon
-fi
-if [ "${INIT_KEYSTONE_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running keystone
-fi
-if [ "${INIT_GLANCE_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running glance
-fi
-if [ "${INIT_NOVA_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running nova
-fi
-if [ "${INIT_NEUTRON_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running neutron
-fi
-if [ "${INIT_CINDER_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running cinder
-fi
-if [ "${INIT_BARBICAN_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running barbican
-fi
-if [ "${INIT_HEAT_REQUIRED}" == "True" ] ; then
-  fail_unless_os_service_running heat
-fi
-
-if [ "${SYSTEMD}" == "True" ] ; then
-  exec /start.sh "$@"
-else
-  exec /start.sh "$@"
-fi
+exec /start.sh "$@"

@@ -23,18 +23,20 @@ mkdir -p /run/ipa
 trap mark_exit_code ERR EXIT
 
 set -e
-
-
-################################################################################
-echo "${OS_DISTRO}: Generating local environment file from HARBOR_SECRETS_DIR"
-################################################################################
-: ${SECRETS_DIR:="/run/secrets"}
-find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
-
 ################################################################################
 echo "${OS_DISTRO}: Running Container Start Script"
 ################################################################################
-/start.sh
+. /usr/sbin/container-gen-env
+
+if [ -f /init-ipa-client ]
+  then
+    ################################################################################
+    echo "${OS_DISTRO}: Launching IPA Client enrollment"
+    ################################################################################
+    /init-ipa-client
+  else
+    /init
+fi
 
 if true ; then
   echo "Container configured."

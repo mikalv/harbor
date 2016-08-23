@@ -1,6 +1,0 @@
-[harbor-freeipa]
-name=Harbor FreeIPA
-baseurl=http://172.17.0.1:83/
-enabled=1
-gpgcheck=0
-skip_if_unavailable=1

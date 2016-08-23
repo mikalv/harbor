@@ -1,6 +1,6 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%freeipa-client:%%DOCKER_TAG%%
 
-ENV HARBOR_COMPONENT="ipsilon-api"
+ENV HARBOR_COMPONENT="ipsilon-client"
 
 COPY ./assets/ /opt/harbor/assets
 
@@ -9,27 +9,11 @@ RUN set -e && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     dnf install -y \
-        'dnf-command(config-manager)' && \
-    dnf config-manager --set-enabled updates-testing && \
-    dnf install -y \
-        findutils \
-        postgresql \
-        ipsilon \
-        ipsilon-authfas \
-        ipsilon-authform \
-        ipsilon-authgssapi \
-        ipsilon-authldap \
-        ipsilon-authpam \
-        ipsilon-base \
-        ipsilon-client \
-        ipsilon-filesystem \
-        ipsilon-infosssd \
-        ipsilon-openid \
-        ipsilon-openidc \
-        ipsilon-persona \
-        ipsilon-saml2 \
-        ipsilon-saml2-base \
-        ipsilon-tools-ipa && \
+        httpd \
+        mod_ssl \
+        mod_wsgi \
+        mod_auth_mellon \
+        ipsilon-client && \
     dnf clean all && \
     container-base-systemd-reset.sh
 

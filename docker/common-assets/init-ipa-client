@@ -1,0 +1,56 @@
+#!/bin/bash
+set -e
+export OS_DOMAIN=$(hostname -d)
+: ${FREEIPA_HOSTNAME:="freeipa"}
+: ${FREEIPA_SERVICE_HOST:="${FREEIPA_HOSTNAME}.$OS_DOMAIN"}
+export FREEIPA_SERVICE_HOST
+echo "FREEIPA_SERVICE_HOST: $FREEIPA_SERVICE_HOST"
+
+source /etc/os-container.env
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
+
+check_required_vars HARBOR_RESOLV_FILE
+cat ${HARBOR_RESOLV_FILE} > /etc/resolv.conf
+boot_checks
+
+
+
+#/run/secrets/freeipa_host_admin_user
+FREEIPA_HOST_ADMIN_USER=admin
+
+systemctl start systemd-hostnamed.service
+systemctl enable systemd-hostnamed.service
+
+
+if [ -f /etc/ipa/ca.crt ] ; then
+  ################################################################################
+  echo "${OS_DISTRO}: IPA: CA Cert found @ /etc/ipa/ca.crt, assuming that we are already enrolled"
+  ################################################################################
+else
+  ################################################################################
+  echo "${OS_DISTRO}: IPA: Installing client"
+  ################################################################################
+  check_required_vars OS_DOMAIN \
+                      FREEIPA_SERVICE_HOST \
+                      FREEIPA_HOST_ADMIN_USER \
+                      FREEIPA_HOST_ADMIN_PASSWORD
+
+  ipa-client-install \
+      --domain=${OS_DOMAIN} \
+      --server=${FREEIPA_SERVICE_HOST} \
+      --realm=$( echo ${OS_DOMAIN}  | tr '[:lower:]' '[:upper:]' ) \
+      --principal=${FREEIPA_HOST_ADMIN_USER} \
+      --password=${FREEIPA_HOST_ADMIN_PASSWORD} \
+      --hostname=$(hostname -s).${OS_DOMAIN} \
+      --unattended \
+      --force \
+      --force-join \
+      --no-ntp \
+      --request-cert \
+      --mkhomedir  \
+      --ssh-trust-dns \
+      --enable-dns-updates
+fi
+
+exec /start.sh

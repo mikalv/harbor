@@ -14,7 +14,7 @@ spec:
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     command:
       - kube-controller-manager
-      - --master={{ KUBERNETES_SERVICE_HOST }}:8080
+      - --master=http://{{ KUBERNETES_SERVICE_HOST }}:8080
       - --service-account-private-key-file=/srv/kubernetes/server.key
       - --root-ca-file=/srv/kubernetes/ca.crt
       - --min-resync-period=3m

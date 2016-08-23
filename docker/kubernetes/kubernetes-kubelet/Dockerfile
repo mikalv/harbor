@@ -7,7 +7,9 @@ ENV LC_ALL="en_US.UTF-8" \
     KURYR_BRANCH="k8s" \
     HARBOR_KUBECTL_IMAGE="docker.io/port/kubectl:latest"
 
-RUN yum install -y \
+RUN set -e && \
+    set -x && \
+    yum install -y \
         openvswitch \
         python34 \
         python34-devel \

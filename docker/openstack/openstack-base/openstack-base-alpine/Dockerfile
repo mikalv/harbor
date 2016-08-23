@@ -2,7 +2,9 @@ FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
 ENV OPENSTACK_COMPONENT="base-alpine"
 
-RUN apk add --no-cache --virtual core-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual core-deps \
       python \
       sudo \
       curl && \

@@ -5,7 +5,9 @@ ENV OPENSTACK_COMPONENT="base-centos" \
 
 COPY ./assets/ /opt/harbor/assets
 
-RUN cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
         centos-release-gluster37 \

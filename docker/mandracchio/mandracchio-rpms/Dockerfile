@@ -39,7 +39,9 @@ RUN yum install -y \
 CMD ["/start.sh"]
 
 ADD ./assets /opt/harbor/assets
-RUN /bin/cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    /bin/cp -rf /opt/harbor/assets/* / && \
     cd /tmp && \
     export PACKAGE_NAME="harbor-assets" && \
     export PACKAGE_VERSION="0.1" && \

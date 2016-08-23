@@ -32,6 +32,7 @@ exec docker run \
       --volume=/var/run:/var/run:rw \
       --volume=/etc/kubernetes/manifests:/etc/kubernetes/manifests:rw \
       --volume=/etc/hosts:/etc/hosts:rw \
+      --volume=/etc/resolv.conf:/etc/resolv.conf:rw \
       --net=host \
       --privileged=true \
       --pid=host \

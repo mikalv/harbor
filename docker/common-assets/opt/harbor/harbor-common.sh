@@ -1,6 +1,6 @@
 #!/bin/bash
 source /etc/os-container.env
-. /opt/harbor/service-hosts.sh
+source /opt/harbor/service-hosts.sh
 
 # We do it this way for maxium portability accross shells and implementations of the ip command
 ROUTES="$(ip route show)"
@@ -116,7 +116,7 @@ check_for_os_service_endpoint() {
 
     check_required_vars $host_var
 
-    local endpoint="https://${host_var}/$api_version"
+    local endpoint="https://${!host_var}/$api_version"
 
     curl -sf -o /dev/null "$endpoint" || {
         echo "ERROR: $name is not available @ $endpoint" >&2
@@ -134,6 +134,7 @@ check_for_os_service_running() {
         ("keystone") args="KEYSTONE_PUBLIC_SERVICE_HOST v3" ;;
         ("neutron")  args="NEUTRON_API_SERVICE_HOST" ;;
         ("nova")     args="NOVA_API_SERVICE_HOST" ;;
+        ("freeipa")     args="FREEIPA_SERVICE_HOST" ;;
         (*)
             echo "Unknown service $service"
             return 1 ;;
@@ -173,4 +174,41 @@ dump_vars() {
     set -o posix
     set > /pid_$$_vars.sh
     set +o posix
+}
+
+
+boot_checks() {
+  if [ "${INIT_DB_REQUIRED}" == "True" ] ; then
+    fail_unless_db
+  fi
+  if [ "${INIT_OVN_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running ovn
+  fi
+  if [ "${INIT_FREEIPA_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running freeipa
+  fi
+  if [ "${INIT_IPSILON_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running ipsilon
+  fi
+  if [ "${INIT_KEYSTONE_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running keystone
+  fi
+  if [ "${INIT_GLANCE_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running glance
+  fi
+  if [ "${INIT_NOVA_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running nova
+  fi
+  if [ "${INIT_NEUTRON_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running neutron
+  fi
+  if [ "${INIT_CINDER_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running cinder
+  fi
+  if [ "${INIT_BARBICAN_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running barbican
+  fi
+  if [ "${INIT_HEAT_REQUIRED}" == "True" ] ; then
+    fail_unless_os_service_running heat
+  fi
 }

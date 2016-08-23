@@ -5,7 +5,9 @@ ENV HARBOR_COMPONENT="etcd" \
 
 COPY ./assets /opt/harbor/assets
 
-RUN apk add --no-cache --virtual build-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual build-deps \
         ca-certificates \
         openssl \
         tar && \

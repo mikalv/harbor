@@ -39,3 +39,11 @@ Building containers that provide the Ipsilon API a local repo is running on the 
 ```bash
 docker run -d --name ipsilon-repo -p 172.17.0.1:82:80/tcp port/ipsilon-rpm:latest
 ```
+
+
+### Cleaning up
+```bash
+docker rm -f freeipa-repo
+docker rm -f ipsilon-repo
+docker rm -f openvswitch-repo
+```

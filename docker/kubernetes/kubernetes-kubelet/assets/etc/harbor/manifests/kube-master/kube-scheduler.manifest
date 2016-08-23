@@ -14,7 +14,7 @@ spec:
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     command:
       - kube-scheduler
-      - --master={{ KUBERNETES_SERVICE_HOST }}:8080
+      - --master=http://{{ KUBERNETES_SERVICE_HOST }}:8080
       - --v=2
       - --logtostderr=true
     volumeMounts:

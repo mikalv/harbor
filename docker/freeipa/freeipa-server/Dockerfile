@@ -2,7 +2,9 @@ FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="freeipa-server"
 
-RUN dnf install -y \
+RUN set -e && \
+    set -x && \
+    dnf install -y \
         'dnf-command(config-manager)' && \
     dnf config-manager --set-enabled updates-testing && \
     dnf install -y \
@@ -19,7 +21,9 @@ RUN dnf install -y git && \
 
 COPY ./assets/ /opt/harbor/assets
 
-RUN cd /opt/docker-freeipa && \
+RUN set -e && \
+    set -x && \
+    cd /opt/docker-freeipa && \
     find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf && \
     for i in basic.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done && \
     rm -fv /usr/lib/systemd/system/sysinit.target.wants/* && \

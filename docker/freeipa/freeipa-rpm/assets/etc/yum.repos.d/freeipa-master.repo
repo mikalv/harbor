@@ -1,8 +1,0 @@
-[group_freeipa-freeipa-master]
-name=Copr repo for freeipa-master owned by @freeipa
-baseurl=https://copr-be.cloud.fedoraproject.org/results/@freeipa/freeipa-master/fedora-$releasever-$basearch/
-skip_if_unavailable=True
-gpgcheck=1
-gpgkey=https://copr-be.cloud.fedoraproject.org/results/@freeipa/freeipa-master/pubkey.gpg
-enabled=1
-enabled_metadata=1
