@@ -35,11 +35,15 @@ RUN set -e && \
     container-base-systemd-reset.sh
 
 # What a horrible hack. Whats going on here?
-RUN /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
+RUN set -e && \
+    set -x && \
+    /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
 
 ENTRYPOINT ["/kubelet"]
 
 COPY ./assets/ /opt/harbor/assets
 
-RUN cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets

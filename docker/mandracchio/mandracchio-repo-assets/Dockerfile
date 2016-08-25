@@ -10,7 +10,9 @@ LABEL license="Apache 2.0" \
       vendor="Harbor OpenStack"
 
 ADD ./assets /opt/harbor/assets
-RUN /bin/cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    /bin/cp -rf /opt/harbor/assets/* / && \
     yum update -y && \
     yum upgrade -y && \
     yum install -y \
@@ -19,7 +21,9 @@ RUN /bin/cp -rf /opt/harbor/assets/* / && \
 
 
 ADD ./assets /opt/harbor/assets
-RUN /bin/cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    /bin/cp -rf /opt/harbor/assets/* / && \
     ostree --repo=/srv/repo init --mode=archive-z2
 
 CMD ["/start.sh"]

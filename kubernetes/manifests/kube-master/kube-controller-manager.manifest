@@ -12,6 +12,9 @@ spec:
   - name: kube-controller-manager
     image: {{ IMAGE_KUBERNETES_CONTROLLER }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     command:
       - kube-controller-manager
       - --master=http://{{ KUBERNETES_SERVICE_HOST }}:8080

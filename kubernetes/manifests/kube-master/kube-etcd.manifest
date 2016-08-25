@@ -12,13 +12,16 @@ spec:
   - name: kube-etcd
     image: {{ IMAGE_ETCD_SERVER }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     ports:
-    - containerPort: 1401
-      hostPort: 1401
-      name: etcd-clients
-    - containerPort: 1701
-      hostPort: 1701
-      name: etcd-peers
+      - containerPort: 1401
+        hostPort: 1401
+        name: etcd-clients
+      - containerPort: 1701
+        hostPort: 1701
+        name: etcd-peers
     command:
     - etcd
     - -data-dir

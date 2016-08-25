@@ -62,17 +62,30 @@ touch /var/run/swarm/docker.sock
 export NODE_HOSTNAME="$(hostname -s).${OS_DOMAIN}"
 export KUBERNETES_API_SERVER="http://${KUBERNETES_SERVICE_HOST}:8080"
 echo "Kubernetes Api Server: ${KUBERNETES_API_SERVER}"
+
+
+check_required_vars NODE_HOSTNAME \
+                    KUBERNETES_API_SERVER \
+                    NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA \
+                    OS_DOMAIN \
+                    NODE_ROLE \
+                    OVS_INTERGRATION_BRIDGE \
+                    KUBE_STATUS_FILE \
+                    NODE_NETWORK_DEFAULT_IP
+
 export KUBE_LAUNCH_PARAMS="--hostname-override=${NODE_HOSTNAME} \
               --allow-privileged=true \
               --api-servers=${KUBERNETES_API_SERVER} \
               --v=2 \
-              --address=0.0.0.0 \
+              --node-ip=${NODE_NETWORK_DEFAULT_IP} \
+              --address=${NODE_NETWORK_DEFAULT_IP} \
               --enable-server \
               --containerized \
               --cluster-dns=${NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA} \
               --cluster-domain=${OS_DOMAIN} \
               --network-plugin=cni \
               --config=/etc/kubernetes/manifests \
+              --node-labels=harbor-role=$NODE_ROLE \
               --pod-infra-container-image=docker.io/port/system-pause:latest"
 
 

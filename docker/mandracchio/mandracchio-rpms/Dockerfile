@@ -9,7 +9,9 @@ ENV OS_DISTRO="HarborOS" \
 LABEL license="Apache 2.0" \
       vendor="Harbor OpenStack"
 
-RUN yum install -y \
+RUN set -e && \
+    set -x && \
+    yum install -y \
         epel-release && \
     yum update -y && \
     yum upgrade -y && \
@@ -64,7 +66,7 @@ RUN set -e && \
       --description "${PACKAGE_NAME} package for Harbor Atomic Host" \
       --url $PACKAGE_URL \
       --maintainer "Port Direct" \
-    /payload && \
+    /opt/payload && \
     cp $PACKAGE_NAME-$PACKAGE_VERSION-$ITERATIONS.$PACKAGE_ARCH.rpm /srv/repo/atomic-host/7/$PACKAGE_ARCH/ && \
     rm -rf /srv/repo/atomic-host/7/$PACKAGE_ARCH/repodata && \
     cd /srv/repo/atomic-host/7/$PACKAGE_ARCH && \

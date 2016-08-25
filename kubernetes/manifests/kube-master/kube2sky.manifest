@@ -13,6 +13,8 @@ spec:
     image: {{ IMAGE_KUBERNETES_KUBE2SKY }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
       - name: UNDERCLOUD
         value: "True"
     command:
@@ -28,6 +30,8 @@ spec:
   - name: kube-skydns
     image: docker.io/port/system-skydns:latest
     env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
       - name: UNDERCLOUD
         value: "True"
     command:
@@ -42,6 +46,9 @@ spec:
   - name: kube-dns-etcd
     image: {{ IMAGE_ETCD_SERVER }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     command:
       - etcd
       - -data-dir

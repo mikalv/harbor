@@ -16,26 +16,42 @@ spec:
       name: openstack-etcd
       namespace: os-etcd
     spec:
+      hostNetwork: true
       nodeSelector:
-        freeipa: 'master'
-        arch: 'x86'
+        openstack-etcd: 'true'
       containers:
         - name: openstack-etcd
-          image:  docker.io/port/system-etcd:latest
-          imagePullPolicy: IfNotPresent
+          image: {{ IMAGE_ETCD_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
           volumeMounts:
             - name: etcd
               mountPath: '/data'
               readOnly: false
           command:
-            - /bin/etcd
-            - --name=os-etcd
-            - --listen-client-urls=http://0.0.0.0:4001
-            - --advertise-client-urls=http://etcd.os-etcd.svc.{{OS_DOMAIN}}:4001
+            - etcd
+            - --name=default
+            - --listen-peer-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - --initial-advertise-peer-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - --initial-cluster
+            - default=http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - -listen-client-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
+            - -advertise-client-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
+            - -initial-cluster-token
+            - openstack-etcd
             - --data-dir=/data
           ports:
-            - containerPort: 4001
+            - containerPort: 11401
               name: etcd
+              protocol: TCP
+            - containerPort: 11701
+              name: etcd-peers
               protocol: TCP
           resources:
             limits:

@@ -16,7 +16,9 @@ RUN set -e && \
     dnf clean all && \
     setcap cap_net_raw,cap_net_admin+p /usr/bin/ping || true
 
-RUN dnf install -y git && \
+RUN set -e && \
+    set -x && \
+    dnf install -y git && \
     git clone --depth 1 https://github.com/adelton/docker-freeipa.git /opt/docker-freeipa && \
     dnf clean all
 

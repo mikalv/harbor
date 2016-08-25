@@ -1,18 +1,3 @@
-# apiVersion: v1
-# kind: Service
-# metadata:
-#   labels:
-#     openstack-app: keystone-nfs
-#   name: os-keystone-nfs
-#   namespace: os-keystone
-# spec:
-#   ports:
-#   - port: 2049
-#     protocol: TCP
-#     targetPort: 2049
-#   selector:
-#     openstack-app: keystone-nfs
-# ---
 apiVersion: v1
 kind: Service
 metadata:
@@ -21,8 +6,8 @@ metadata:
   name: os-keystone
   namespace: os-keystone
 spec:
-  clusterIP: 'None'
-  sessionAffinity: 'ClientIP'
+  clusterIP: None
+  sessionAffinity: ClientIP
   ports:
   - port: 443
     protocol: TCP
@@ -38,8 +23,8 @@ metadata:
   name: os-keystone-admin
   namespace: os-keystone
 spec:
-  clusterIP: 'None'
-  sessionAffinity: 'ClientIP'
+  clusterIP: None
+  sessionAffinity: ClientIP
   ports:
   - port: 35357
     protocol: TCP
@@ -55,8 +40,8 @@ metadata:
   name: os-keystone-v2
   namespace: os-keystone
 spec:
-  clusterIP: 'None'
-  sessionAffinity: 'ClientIP'
+  clusterIP: None
+  sessionAffinity: ClientIP
   ports:
   - port: 443
     targetPort: 5001
@@ -72,8 +57,8 @@ metadata:
   name: os-keystone-v2-admin
   namespace: os-keystone
 spec:
-  clusterIP: 'None'
-  sessionAffinity: 'ClientIP'
+  clusterIP: None
+  sessionAffinity: ClientIP
   ports:
   - port: 35357
     targetPort: 35358

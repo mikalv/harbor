@@ -133,8 +133,6 @@ cat $HARBOR_RESOLV_FILE > /etc/resolv.conf
 create_kube_openstack_config
 
 prep_manifests marina-master
-
-prep_manifests openvswitch
 prep_manifests etcd-master
 prep_manifests kube-master
 

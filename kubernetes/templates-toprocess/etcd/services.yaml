@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: etcd
+  name: etcd
+  namespace: os-etcd
+spec:
+  ports:
+  - port: 14001
+    targetPort: 14001
+    protocol: TCP
+    name: etcd
+  - port: 17001
+    targetPort: 17001
+    protocol: TCP
+    name: etcd-peers
+  selector:
+    openstack-app: etcd

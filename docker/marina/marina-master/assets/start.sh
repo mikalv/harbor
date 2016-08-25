@@ -1,2 +1,4 @@
 #!/bin/sh
-exec /usr/bin/start-freeipa-server
+set -x
+echo "hello"
+tail -f /dev/null

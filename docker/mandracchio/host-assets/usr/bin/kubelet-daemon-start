@@ -1,0 +1,41 @@
+#!/bin/sh
+set -e
+PATH=$PATH:/usr/local/bin
+CONTAINER_NAME="kubelet"
+
+cfg_images=/etc/harbor/images.conf
+IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
+IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)
+IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
+IMAGE_PULL_POLICY=$(crudini --get $cfg_images DEFAULT pull_policy)
+IMAGE_NAME=$(crudini --get $cfg_images kubernetes kubelet)
+IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+
+if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+  docker pull ${IMAGE} || true
+fi
+
+
+docker rm -v -f ${CONTAINER_NAME} || true
+docker rm -v -f $(docker ps -a | awk '{ if ($NF ~ "^k8s_") print $1 }') || true
+rm -fr /etc/kubernetes/manifests
+
+exec docker run \
+      --name ${CONTAINER_NAME} \
+      -d \
+      --restart=always \
+      --volume=/:/rootfs:ro \
+      --volume=/dev/net:/dev/net:rw \
+      --volume=/var/run/netns:/var/run/netns:rw \
+      --volume=/var/run/openvswitch:/var/run/openvswitch:rw \
+      --volume=/sys:/sys:ro \
+      --volume=/var/lib/docker/:/var/lib/docker:rw \
+      --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
+      --volume=/var/run:/var/run:rw \
+      --volume=/etc/kubernetes/manifests:/etc/kubernetes/manifests:rw \
+      --volume=/etc/hosts:/etc/hosts:rw \
+      --volume=/etc/resolv.conf:/etc/resolv.conf:rw \
+      --net=host \
+      --privileged=true \
+      --pid=host \
+      ${IMAGE}

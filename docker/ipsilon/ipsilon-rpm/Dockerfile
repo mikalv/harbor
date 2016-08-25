@@ -72,16 +72,22 @@ RUN set -e && \
         nginx && \
     dnf clean all
 
-RUN useradd build
+RUN set -e && \
+    set -x && \
+    useradd build
 
-RUN mkdir -p /opt/stack && \
+RUN set -e && \
+    set -x && \
+    mkdir -p /opt/stack && \
     chown -R build /opt/stack
 
 USER build
 
 WORKDIR /home/build
 
-RUN git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP} && \
+RUN set -e && \
+    set -x && \
+    git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP} && \
     cd /opt/stack/${OS_COMP} && \
       make && \
       make releaserpms
@@ -90,7 +96,9 @@ USER root
 
 WORKDIR /
 
-RUN cp /opt/stack/${OS_COMP}/dist/rpms/* /srv && \
+RUN set -e && \
+    set -x && \
+    cp /opt/stack/${OS_COMP}/dist/rpms/* /srv && \
     cd /srv && \
        createrepo . && \
     rm -rf /usr/share/nginx/html/* && \
@@ -98,7 +106,9 @@ RUN cp /opt/stack/${OS_COMP}/dist/rpms/* /srv && \
 
 COPY ./assets/ /opt/harbor/assets
 
-RUN cp -rf /opt/harbor/assets/* / && \
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 ENTRYPOINT []

@@ -1,0 +1,121 @@
+#!/bin/sh
+set -e
+MARINA_CURRENT_SERVICE=$1
+export OS_DOMAIN=novalocal
+source /etc/os-container.env
+source /opt/harbor/marina/load-config-helper.sh
+source /opt/harbor/harbor-common.sh
+check_required_vars MARINA_CURRENT_SERVICE OS_DOMAIN
+source /opt/harbor/service-hosts.sh
+load_node_config
+load_network_config
+check_required_vars MY_DEVICE MY_IP
+export NODE_NETWORK_DEFAULT_DEVICE=$MY_DEVICE
+export NODE_NETWORK_DEFAULT_IP=$MY_IP
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
+export KUBE_ENDPOINT="http://127.0.0.1:8080"
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
+source /opt/harbor/marina/manifest-helper.sh
+echo $OS_DOMAIN
+
+
+
+
+load_image_config marina
+check_required_vars IMAGE_MARINA_SERVICES
+IMAGE=$IMAGE_MARINA_SERVICES
+
+load_auth_config freeipa
+
+service_manager_container_start () {
+  OS_SERVICE=$1
+
+  CONTAINER_NAME="manager-${OS_SERVICE}"
+  MARINA_SERVICE=$1
+
+  CONTAINER_CONFIG_DIR="/var/run/harbor/containers/${CONTAINER_NAME}"
+
+  rm -rf ${CONTAINER_CONFIG_DIR}
+  mkdir -p ${CONTAINER_CONFIG_DIR}/secrets
+
+  check_required_vars AUTH_FREEIPA_HOST_ADMIN_USER \
+                      AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
+                      HARBOR_HOSTS_FILE \
+                      HARBOR_RESOLV_FILE \
+                      IMAGE \
+                      CONTAINER_NAME \
+                      MARINA_SERVICE \
+                      OS_DOMAIN \
+                      NETWORK_FREEIPA_FREEIPA_MASTER_IP
+
+  touch ${HARBOR_HOSTS_FILE}
+  touch ${HARBOR_RESOLV_FILE}
+
+  echo "FREEIPA_HOST_ADMIN_USER=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
+  echo "FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_HOSTS_FILE=${HARBOR_HOSTS_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_HOSTS_FILE | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_RESOLV_FILE=${HARBOR_RESOLV_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_RESOLV_FILE | tr '[:upper:]' '[:lower:]' )
+  echo "MARINA_SERVICE=${MARINA_SERVICE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo MARINA_SERVICE | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_SERVICE_DEFAULT_IP=${NODE_NETWORK_DEFAULT_IP}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_SERVICE_DEFAULT_IP | tr '[:upper:]' '[:lower:]' )
+  echo "NODE_NETWORK_DEFAULT_DEVICE=${NODE_NETWORK_DEFAULT_DEVICE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo NODE_NETWORK_DEFAULT_DEVICE | tr '[:upper:]' '[:lower:]' )
+
+  if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+    docker pull ${IMAGE} || true
+  fi
+
+  docker rm -v -f ${CONTAINER_NAME}.${OS_DOMAIN} || true
+
+  FREEIPA_CLIENT_CONTAINER=$(docker create \
+      --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
+      --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
+      --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+      --net=freeipa \
+      -t \
+      -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+      -v="/tmp" \
+      -v="/run" \
+      -v="/run/lock" \
+      -v="/var/run/secrets" \
+      -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
+      -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
+      -v="/etc/harbor:/etc/harbor:rw" \
+      -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
+      -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
+      -v="/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro" \
+      --security-opt="seccomp=unconfined" \
+      ${IMAGE})
+
+  export FREEIPA_CLIENT_CONTAINER
+
+  for ENV_VAR in ${CONTAINER_CONFIG_DIR}/secrets/*; do
+    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/secrets/$(basename $ENV_VAR)
+    rm -f $ENV_VAR
+    #echo "moved $ENV_VAR -> $(basename $ENV_VAR)"
+  done
+
+  docker start ${FREEIPA_CLIENT_CONTAINER}
+}
+
+service_manager_container_logs () {
+  check_required_vars FREEIPA_CLIENT_CONTAINER
+  docker logs -f ${FREEIPA_CLIENT_CONTAINER}
+}
+
+service_manager_container_clean () {
+  check_required_vars FREEIPA_CLIENT_CONTAINER
+  docker rm -f -v ${FREEIPA_CLIENT_CONTAINER}
+}
+
+service_manager_container_start ${MARINA_CURRENT_SERVICE}
+
+check_required_vars FREEIPA_CLIENT_CONTAINER
+service_manager_container_logs
+
+service_manager_container_clean
+
+if [ "$MARINA_CURRENT_SERVICE" = "kubernetes" ]; then
+  echo "Removing All kubenetes containers on node to restart services"
+  docker rm -v -f $(docker ps | awk '{ if ($NF ~ "^k8s_kube-") print $1}') || true
+else
+  echo "$MARINA_CURRENT_SERVICE"
+fi;

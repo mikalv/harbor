@@ -12,20 +12,23 @@ spec:
   - name: node-etcd
     image: {{ IMAGE_ETCD_SERVER }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     ports:
-    - containerPort: 4001
-      hostPort: 4001
-      name: etcd
-    - containerPort: 2380
-      hostPort: 2380
-      name: peers
+      - containerPort: 4001
+        hostPort: 4001
+        name: etcd
+      - containerPort: 2380
+        hostPort: 2380
+        name: peers
     command:
-    - etcd
-    - --name=master
-    - --initial-advertise-peer-urls=http://{{ NODE_ETCD_SERVICE_HOST }}:2380
-    - --initial-cluster=master=http://{{ NODE_ETCD_SERVICE_HOST }}:2380
-    - --listen-client-urls=http://localhost:2379,http://{{ NODE_ETCD_SERVICE_HOST }}:4001
-    - --advertise-client-urls=http://{{ NODE_ETCD_SERVICE_HOST }}:4001
+      - etcd
+      - --name=master
+      - --initial-advertise-peer-urls=http://{{ NODE_ETCD_SERVICE_HOST }}:2380
+      - --initial-cluster=master=http://{{ NODE_ETCD_SERVICE_HOST }}:2380
+      - --listen-client-urls=http://localhost:2379,http://{{ NODE_ETCD_SERVICE_HOST }}:4001
+      - --advertise-client-urls=http://{{ NODE_ETCD_SERVICE_HOST }}:4001
     volumeMounts:
       - mountPath: /var/etcd
         name: etcd-node

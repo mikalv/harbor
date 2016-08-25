@@ -7,13 +7,13 @@ export FREEIPA_SERVICE_HOST
 echo "FREEIPA_SERVICE_HOST: $FREEIPA_SERVICE_HOST"
 
 source /etc/os-container.env
+source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/harbor-common.sh
 
 check_required_vars HARBOR_RESOLV_FILE
 cat ${HARBOR_RESOLV_FILE} > /etc/resolv.conf
 boot_checks
-
 
 
 #/run/secrets/freeipa_host_admin_user

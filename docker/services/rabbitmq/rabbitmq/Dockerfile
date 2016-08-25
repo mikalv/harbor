@@ -6,7 +6,9 @@ ENV HARBOR_COMPONENT="rabbitmq" \
 COPY ./assets /opt/harbor/assets
 
 # Setup Erlang, download RabbitMQ and setup the management plugin
-RUN apk add --no-cache --virtual run-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual run-deps \
         erlang \
         erlang-mnesia \
         erlang-public-key \

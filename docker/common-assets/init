@@ -4,6 +4,7 @@ set -e
 : ${OS_DOMAIN:="kube.local"}
 
 source /etc/os-container.env
+source /opt/harbor/harbor-vars.sh
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 

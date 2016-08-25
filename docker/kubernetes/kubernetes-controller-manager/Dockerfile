@@ -3,7 +3,9 @@ FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 ENV HARBOR_COMPONENT="kubernetes" \
     KUBE_COMPONENT="controller-manager"
 
-RUN apk add --no-cache --virtual build-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual build-deps \
         ca-certificates \
         openssl \
         curl && \

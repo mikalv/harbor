@@ -1,0 +1,19 @@
+#!/bin/sh
+OS_SERVICES="$@"
+OS_SERVICES="kubernetes keystone"
+source /etc/os-container.env
+source /opt/harbor/marina/load-config-helper.sh
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+#load_node_config
+load_network_config
+check_required_vars OS_SERVICES MY_DEVICE MY_IP
+export NODE_NETWORK_DEFAULT_DEVICE=$MY_DEVICE
+export NODE_NETWORK_DEFAULT_IP=$MY_IP
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
+export KUBE_ENDPOINT="http://127.0.0.1:8080"
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
+
+for CURRENT_OS_SERVICE in $OS_SERVICES; do
+  harbor-service-manage-certs ${CURRENT_OS_SERVICE}
+done

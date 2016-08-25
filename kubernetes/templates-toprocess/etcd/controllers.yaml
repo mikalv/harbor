@@ -1,0 +1,63 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: etcd
+    version: v0.1.0
+  name: etcd
+  namespace: os-etcd
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: etcd
+        version: v0.1.0
+      name: openstack-etcd
+      namespace: os-etcd
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        openstack-etcd: 'true'
+      containers:
+        - name: openstack-etcd
+          image: {{ IMAGE_ETCD_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          volumeMounts:
+            - name: etcd
+              mountPath: '/data'
+              readOnly: false
+          command:
+            - etcd
+            - --name=default
+            - --listen-peer-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - --initial-advertise-peer-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - --initial-cluster
+            - default=http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
+            - -listen-client-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
+            - -advertise-client-urls
+            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
+            - -initial-cluster-token
+            - openstack-etcd
+            - --data-dir=/data
+          ports:
+            - containerPort: 11401
+              name: etcd
+              protocol: TCP
+            - containerPort: 11701
+              name: etcd-peers
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: etcd
+          hostPath:
+            path: /var/lib/harbor/os-etcd

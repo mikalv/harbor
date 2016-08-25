@@ -5,7 +5,9 @@ ENV HARBOR_COMPONENT="mariadb" \
 
 COPY ./assets /opt/harbor/assets
 
-RUN apk add --no-cache --virtual run-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual run-deps \
         mariadb-client && \
     cp -rf /opt/harbor/assets/* /
 

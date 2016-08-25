@@ -11,9 +11,12 @@ spec:
   containers:
   - name: kube-setup-files
     image: docker.io/port/system-hyperkube:latest
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     command:
-    - /setup-files.sh
-    - IP:{{ NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_KUBE }},DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.{{ OS_DOMAIN }}
+      - /setup-files.sh
+      - IP:{{ NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_KUBE }},DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.{{ OS_DOMAIN }}
     volumeMounts:
       - mountPath: /data
         name: kube-data

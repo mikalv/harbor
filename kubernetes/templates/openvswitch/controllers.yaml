@@ -1,0 +1,88 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: ovn-node
+    version: v0.1.0
+  name: ovn-node
+  namespace: os-ovn
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: ovn-node
+        version: v0.1.0
+      name: ovn-node
+      namespace: os-ovn
+    spec:
+      nodeSelector:
+        openstack-ovn: 'true'
+      hostNetwork: true
+      containers:
+      - name: node-ovsdb-server
+        image: {{ IMAGE_OPENVSWITCH_OVSDB }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        ports:
+          - containerPort: 6640
+            hostPort: 6640
+            name: ovs-db
+        volumeMounts:
+          - mountPath: /var/run/openvswitch
+            name: var-run-openvswitch
+          - mountPath: /var/lib/ovn
+            name: var-lib-ovn
+          - mountPath: /etc/hosts
+            name: harbor-hosts
+      - name: node-ovs-vswitchd
+        image: {{ IMAGE_OPENVSWITCH_VSWITCHD }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        volumeMounts:
+          - mountPath: /var/run/openvswitch
+            name: var-run-openvswitch
+          - mountPath: /var/lib/ovn
+            name: var-lib-ovn
+          - mountPath: /var/run/netns
+            name: var-run-netns
+          - mountPath: /dev/net
+            name: dev-net
+          - mountPath: /etc/hosts
+            name: harbor-hosts
+        securityContext:
+          privileged: true
+      - name: node-ovn-controller
+        image: {{ IMAGE_OPENVSWITCH_OVN_CONTROLLER }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+          - name: TUNNEL_DEV
+            value: {{ NODE_NETWORK_DEFAULT_DEVICE }}
+          - name: OVS_SB_DB_IP
+            value: {{ NETWORK_OPENVSWITCH_SOUTHBOUND_DB_IP }}
+        volumeMounts:
+          - mountPath: /var/run/openvswitch
+            name: var-run-openvswitch
+          - mountPath: /etc/hosts
+            name: harbor-hosts
+      volumes:
+        - name: var-run-openvswitch
+          hostPath:
+            path: /var/run/openvswitch
+        - name: var-lib-ovn
+          hostPath:
+            path: /var/lib/ovn
+        - name: var-run-netns
+          hostPath:
+            path: /var/run/netns
+        - name: dev-net
+          hostPath:
+            path: /dev/net
+        - name: harbor-hosts
+          hostPath:
+            path: {{ HARBOR_HOSTS_FILE }}

@@ -1,0 +1,154 @@
+#!/bin/sh
+echo "$OS_DISTRO: Loading enviornment"
+LOCAL_ENV=/tmp/harbor.env
+rm -f ${LOCAL_ENV}
+touch ${LOCAL_ENV}
+
+cfg_auth=/etc/harbor/auth.conf
+cfg_harbor_auth=/etc/harbor/harbor-auth.conf
+cfg_images=/etc/harbor/images.conf
+cfg_network=/etc/harbor/network.conf
+cfg_node=/etc/harbor/node.conf
+cfg_roles=/etc/harbor/roles.conf
+
+echo "$OS_DISTRO: cfg_images=$cfg_images"
+for CONF_SECTION in DEFAULT freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    IMAGE_REPO=$(crudini --get $cfg_images ${CONF_SECTION} repo)
+    IMAGE_NAMESPACE=$(crudini --get $cfg_images ${CONF_SECTION} namespace)
+    IMAGE_TAG=$(crudini --get $cfg_images ${CONF_SECTION} tag)
+    IMAGE_PULL_POLICY=$(crudini --get $cfg_images ${CONF_SECTION} pull_policy)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} IMAGE_PULL_POLICY"
+    echo "IMAGE_PULL_POLICY=${IMAGE_PULL_POLICY}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_images ${CONF_SECTION}); do
+        IMAGE_NAME="$(crudini --get $cfg_images ${CONF_SECTION} ${COMPONENT})"
+        VALUE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+        NAME="$(echo IMAGE_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+echo "$OS_DISTRO: cfg_network=$cfg_network"
+for CONF_SECTION in $(crudini --get $cfg_network); do
+  for COMPONENT in $(crudini --get $cfg_network ${CONF_SECTION}); do
+    VALUE="$(crudini --get $cfg_network ${CONF_SECTION} ${COMPONENT})"
+    NAME="$(echo NETWORK_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+    echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  done
+done
+
+
+export OS_DOMAIN=${NETWORK_DEFAULT_OS_DOMAIN}
+echo "OS_DOMAIN=${OS_DOMAIN}"
+source /opt/harbor/service-hosts.sh
+
+
+echo "$OS_DISTRO: cfg_auth=$cfg_auth"
+for CONF_SECTION in DEFAULT; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+echo "$OS_DISTRO: cfg_harbor_auth=$cfg_harbor_auth"
+for CONF_SECTION in freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+  docker pull ${IMAGE_FREEIPA_SERVER} || true
+fi
+
+
+docker network inspect freeipa || \
+docker network create --driver bridge --subnet ${NETWORK_FREEIPA_FREEIPA_SVC_RANGE} freeipa
+
+
+IPA_DATA_DIR=/var/lib/harbor/freeipa/freeipa.${NETWORK_DEFAULT_OS_DOMAIN}
+mkdir -p ${IPA_DATA_DIR}
+WORK_IPA_DATA_DIR=/tmp
+echo "--allow-zone-overlap" > ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--setup-dns" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--forwarder=${NETWORK_PUBLIC_PUBLIC_DNS}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+for BRIDGE_IP in ${NETWORK_PUBLIC_PUBLIC_IP_RANGE} ${NETWORK_KUBE_KUBE_IP_RANGE} ${NETWORK_FREEIPA_FREEIPA_SVC_RANGE} ${NETWORK_KUBE_KUBE_SVC_RANGE}; do
+  # do something
+  REVERSE_ZONE=$(echo ${BRIDGE_IP} | awk -F. '{print $3"." $2"."$1".in-addr.arpa."}')
+  echo "--reverse-zone=${REVERSE_ZONE}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+done
+echo "--ds-password=${AUTH_FREEIPA_DS_PASSWORD}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--admin-password=${AUTH_FREEIPA_ADMIN_PASSWORD}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+
+
+FREEIPA_PROVISIONER=$(docker create --net=none -v="${IPA_DATA_DIR}:/data:rw" ${IMAGE_REPO}/${IMAGE_NAMESPACE}/alpine:${IMAGE_TAG})
+docker cp ${WORK_IPA_DATA_DIR}/ipa-server-install-options ${FREEIPA_PROVISIONER}:/data/ipa-server-install-options
+docker rm -v ${FREEIPA_PROVISIONER}
+rm -f ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+
+
+docker rm -v -f ${FREEIPA_SERVICE_HOST} || true
+docker run \
+      --name="${FREEIPA_SERVICE_HOST}" \
+      --hostname="${FREEIPA_SERVICE_HOST}" \
+      --dns="${NETWORK_EXTERNAL_DNS_DNS_SERVER}" \
+      --net=freeipa \
+      --ip="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+      -t \
+      -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+      -v="/run" \
+      -v="/run/lock" \
+      -v="/tmp" \
+      -v="${IPA_DATA_DIR}:/data:rw" \
+      --security-opt="seccomp=unconfined" \
+      ${IMAGE_FREEIPA_SERVER}

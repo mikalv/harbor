@@ -4,7 +4,9 @@ ENV HARBOR_COMPONENT="memcached"
 
 COPY ./assets /opt/harbor/assets
 
-RUN apk add --no-cache --virtual run-deps \
+RUN set -e && \
+    set -x && \
+    apk add --no-cache --virtual run-deps \
         memcached && \
     cp -rf /opt/harbor/assets/* /
 

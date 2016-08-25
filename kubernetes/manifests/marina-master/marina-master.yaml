@@ -12,6 +12,9 @@ spec:
   - name: marina-master
     image: {{ IMAGE_MARINA_MASTER }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
     volumeMounts:
       - mountPath: /etc/harbor
         name: harbor-config

@@ -1,7 +1,7 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="ovs" \
-    HARBOR_SUBCOMPONENT="rpm-repo" \
+    HARBOR_SUBCOMPONENT="rpm-repo"
 
 RUN set -e && \
     set -x && \
@@ -30,10 +30,8 @@ RUN set -e && \
         selinux-policy-devel && \
     yum install -y \
         createrepo && \
-    yum clean all && \
     yum install -y \
         nginx && \
-    yum clean all && \
     yum clean all
 
 ENV OS_COMP="ovs" \
@@ -65,7 +63,9 @@ RUN set -e && \
 
 COPY ./assets /opt/harbor/assets
 
-RUN /bin/cp -rf /opt/harbor/assets/* /
+RUN set -e && \
+    set -x && \
+    /bin/cp -rf /opt/harbor/assets/* /
 
 ENTRYPOINT []
 

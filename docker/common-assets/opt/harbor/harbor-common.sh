@@ -1,6 +1,7 @@
 #!/bin/bash
 source /etc/os-container.env
 source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-vars.sh
 
 # We do it this way for maxium portability accross shells and implementations of the ip command
 ROUTES="$(ip route show)"
@@ -10,7 +11,7 @@ else
   MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
       awk '$4 == "src" {print $5}')
   MY_DEVICE=$(ip route | awk '$1 == "default" {print $5}')
-  MY_MTU=$(ip -f inet -o link show ${DEFAULT_DEVICE}|cut -d\  -f 5 | cut -d/ -f 1)
+  MY_MTU=$(ip -f inet -o link show ${MY_DEVICE}|cut -d\  -f 5 | cut -d/ -f 1)
 fi
 : ${PUBLIC_IP:=${MY_IP}}
 
@@ -23,6 +24,15 @@ check_required_vars() {
         exit 1
       fi
     done
+}
+
+wait_for_file() {
+  local wait_seconds="${1:-10}"
+  local test_interval="${2:-1}"
+  local file="$3"
+
+  until test $((wait_seconds--)) -eq 0 -o -f "$file" ; do sleep $test_interval; done
+  ((++wait_seconds))
 }
 
 # The usage of the wait_for function looks like the following
@@ -45,6 +55,9 @@ check_required_vars() {
 #     wait_for 30 10 ping -c 1 192.0.2.2
 #     wait_for 10 1 ls file_we_are_waiting_for
 #     wait_for 10 3 date \| grep 8
+
+
+
 wait_for() {
     local loops=${1:-""}
     local sleeptime=${2:-""}
@@ -62,7 +75,8 @@ wait_for() {
     while [ $i -lt $loops ]; do
         i=$((i + 1))
         local status=0
-        local output=$(eval $command 2>&1) || status=$?
+        local output=$(eval $($command; cmd_status=$?) 2>&1) || status=$?
+        echo $cmd_status
         if [[ -n "$SUCCESSFUL_MATCH_OUTPUT" ]] \
             && [[ $output =~ $SUCCESSFUL_MATCH_OUTPUT ]]; then
             return 0

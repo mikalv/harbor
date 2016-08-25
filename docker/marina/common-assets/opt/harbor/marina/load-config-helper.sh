@@ -40,8 +40,8 @@ load_node_config () {
 
 
 load_image_config () {
-  SERVICE=$1
-  for CONF_SECTION in DEFAULT ${OS_SERVICE}; do
+  SERVICE=$@
+  for CONF_SECTION in DEFAULT ${SERVICE}; do
     if [ "${CONF_SECTION}" = "DEFAULT" ]; then
       IMAGE_REPO=$(crudini --get $cfg_images ${CONF_SECTION} repo)
       IMAGE_NAMESPACE=$(crudini --get $cfg_images ${CONF_SECTION} namespace)
@@ -80,8 +80,8 @@ load_network_config () {
 }
 
 load_auth_config () {
-  SERVICE=$1
-  for CONF_SECTION in freeipa; do
+  SERVICE=$@
+  for CONF_SECTION in freeipa ${SERVICE}; do
     if [ "${CONF_SECTION}" = "DEFAULT" ]; then
       DEBUG=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} debug)
       HARBOR_ROLES=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} roles)
