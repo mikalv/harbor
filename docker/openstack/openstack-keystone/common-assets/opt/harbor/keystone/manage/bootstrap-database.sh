@@ -27,3 +27,4 @@ su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} --debug 
                   --bootstrap-public-url https://${KEYSTONE_API_SERVICE_HOST}/v3 \
                   --bootstrap-internal-url https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000/v3 \
                   --bootstrap-region-id RegionOne" keystone
+bootstrap-project-name

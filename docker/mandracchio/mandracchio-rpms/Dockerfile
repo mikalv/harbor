@@ -1,6 +1,10 @@
 FROM centos:latest
 MAINTAINER Port Direct <support@port.direct>
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV OS_DISTRO="HarborOS" \
     OPENSTACK_COMPONENT="mandracchio-rpm-repo" \
     LC_ALL="en_US.UTF-8" \
