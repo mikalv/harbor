@@ -1,6 +1,6 @@
 #!/bin/sh
 echo "$OS_DISTRO: Loading enviornment"
-LOCAL_ENV=/tmp/harbor.env
+LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
 rm -f ${LOCAL_ENV}
 touch ${LOCAL_ENV}
 
@@ -129,6 +129,15 @@ for BRIDGE_IP in ${NETWORK_PUBLIC_PUBLIC_IP_RANGE} ${NETWORK_KUBE_KUBE_IP_RANGE}
 done
 echo "--ds-password=${AUTH_FREEIPA_DS_PASSWORD}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
 echo "--admin-password=${AUTH_FREEIPA_ADMIN_PASSWORD}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--no-ntp" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--no-host-dns" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--no_hbac_allow" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--hostname=${FREEIPA_SERVICE_HOST}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--domain=${OS_DOMAIN}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--realm=$(echo ${OS_DOMAIN}| tr '[:lower:]' '[:upper:]')" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+echo "--unattended" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
+
+
 
 
 FREEIPA_PROVISIONER=$(docker create --net=none -v="${IPA_DATA_DIR}:/data:rw" ${IMAGE_REPO}/${IMAGE_NAMESPACE}/alpine:${IMAGE_TAG})

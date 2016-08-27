@@ -4,8 +4,6 @@ source /etc/os-container.env
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/harbor-common.sh
 
-
-FREEIPA_HOST_ADMIN_USER=admin
 FREEIPA_LOGIN_METHOD=password
 
 

@@ -16,9 +16,6 @@ cat ${HARBOR_RESOLV_FILE} > /etc/resolv.conf
 boot_checks
 
 
-#/run/secrets/freeipa_host_admin_user
-FREEIPA_HOST_ADMIN_USER=admin
-
 systemctl start systemd-hostnamed.service
 systemctl enable systemd-hostnamed.service
 

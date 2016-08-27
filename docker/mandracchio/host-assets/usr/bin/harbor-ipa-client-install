@@ -1,0 +1,30 @@
+#!/bin/sh
+set -e
+
+FREEIPA_HOST_ADMIN_USER=$(crudini --get /etc/harbor/harbor-auth.conf freeipa host_admin_user)
+FREEIPA_HOST_ADMIN_PASSWORD=$(crudini --get /etc/harbor/harbor-auth.conf freeipa host_admin_password)
+OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
+
+
+if [ -f /etc/ipa/ca.crt ] ; then
+  ################################################################################
+  echo "${OS_DISTRO}: IPA: CA Cert found @ /etc/ipa/ca.crt, assuming that we are already enrolled"
+  ################################################################################
+else
+  ################################################################################
+  echo "${OS_DISTRO}: IPA: Installing client"
+  ################################################################################
+  ipa-client-install \
+      --domain=${OS_DOMAIN} \
+      --principal=${FREEIPA_HOST_ADMIN_USER} \
+      --password=${FREEIPA_HOST_ADMIN_PASSWORD} \
+      --hostname=$(hostname -s).${OS_DOMAIN} \
+      --unattended \
+      --force \
+      --force-join \
+      --no-ntp \
+      --request-cert \
+      --mkhomedir  \
+      --ssh-trust-dns \
+      --enable-dns-updates
+fi

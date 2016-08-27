@@ -1,5 +1,9 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%freeipa-client:%%DOCKER_TAG%%
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV HARBOR_COMPONENT="marina"
 
 RUN set -e && \
@@ -7,7 +11,8 @@ RUN set -e && \
     dnf install -y \
         docker-engine \
         tar \
-        xz && \
+        xz \
+        pwgen && \
     dnf clean all && \
     curl -L https://github.com/coreos/etcd/releases/download/${HARBOR_ETCD_RELEASE_VERSION}/etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz  > /tmp/etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz && \
     cd /tmp && \

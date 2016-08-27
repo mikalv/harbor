@@ -1,6 +1,5 @@
 #!/bin/sh
 OS_SERVICES="$@"
-OS_SERVICES="kubernetes keystone"
 source /etc/os-container.env
 source /opt/harbor/marina/load-config-helper.sh
 source /opt/harbor/harbor-common.sh

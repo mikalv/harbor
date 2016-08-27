@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 MARINA_CURRENT_SERVICE=$1
-export OS_DOMAIN=novalocal
 source /etc/os-container.env
+echo "$OS_DISTRO: harbor domain: $OS_DOMAIN"
 source /opt/harbor/marina/load-config-helper.sh
 source /opt/harbor/harbor-common.sh
 check_required_vars MARINA_CURRENT_SERVICE OS_DOMAIN
@@ -16,16 +16,8 @@ export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_
 export KUBE_ENDPOINT="http://127.0.0.1:8080"
 export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
 source /opt/harbor/marina/manifest-helper.sh
-echo $OS_DOMAIN
 
 
-
-
-load_image_config marina
-check_required_vars IMAGE_MARINA_SERVICES
-IMAGE=$IMAGE_MARINA_SERVICES
-
-load_auth_config freeipa
 
 service_manager_container_start () {
   OS_SERVICE=$1
@@ -60,39 +52,63 @@ service_manager_container_start () {
   echo "NODE_NETWORK_DEFAULT_DEVICE=${NODE_NETWORK_DEFAULT_DEVICE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo NODE_NETWORK_DEFAULT_DEVICE | tr '[:upper:]' '[:lower:]' )
 
   if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+    echo "$OS_DISTRO: Pulling Managament Image: ${IMAGE}"
     docker pull ${IMAGE} || true
   fi
 
+  echo "$OS_DISTRO: Removing any existing container called: ${CONTAINER_NAME}.${OS_DOMAIN}"
   docker rm -v -f ${CONTAINER_NAME}.${OS_DOMAIN} || true
 
-  FREEIPA_CLIENT_CONTAINER=$(docker create \
-      --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
-      --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
-      --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
-      --net=freeipa \
-      -t \
-      -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
-      -v="/tmp" \
-      -v="/run" \
-      -v="/run/lock" \
-      -v="/var/run/secrets" \
-      -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
-      -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
-      -v="/etc/harbor:/etc/harbor:rw" \
-      -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
-      -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
-      -v="/etc/ssl/certs/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt:ro" \
-      --security-opt="seccomp=unconfined" \
-      ${IMAGE})
-
+  echo "$OS_DISTRO: Creating Managment Container"
+  if [ "$MARINA_SERVICE" == "kubernetes" ]; then
+    FREEIPA_CLIENT_CONTAINER=$(docker create \
+        --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+        --net=freeipa \
+        -t \
+        -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+        -v="/tmp" \
+        -v="/run" \
+        -v="/run/lock" \
+        -v="/var/run/harbor/secrets" \
+        -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
+        -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
+        -v="/etc/harbor:/etc/harbor:rw" \
+        -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
+        -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
+        --security-opt="seccomp=unconfined" \
+        ${IMAGE})
+  else
+    FREEIPA_CLIENT_CONTAINER=$(docker create \
+        --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+        --net=freeipa \
+        -t \
+        -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+        -v="/tmp" \
+        -v="/run" \
+        -v="/run/lock" \
+        -v="/var/run/harbor/secrets" \
+        -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
+        -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
+        -v="/etc/harbor:/etc/harbor:rw" \
+        -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
+        -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
+        --security-opt="seccomp=unconfined" \
+        ${IMAGE})
+  fi
   export FREEIPA_CLIENT_CONTAINER
 
+  echo "$OS_DISTRO: Loading Config into Managment Container"
   for ENV_VAR in ${CONTAINER_CONFIG_DIR}/secrets/*; do
-    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/secrets/$(basename $ENV_VAR)
+    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/harbor/secrets/$(basename $ENV_VAR)
     rm -f $ENV_VAR
     #echo "moved $ENV_VAR -> $(basename $ENV_VAR)"
   done
 
+  echo "$OS_DISTRO: Starting Managment Container"
   docker start ${FREEIPA_CLIENT_CONTAINER}
 }
 
@@ -106,16 +122,29 @@ service_manager_container_clean () {
   docker rm -f -v ${FREEIPA_CLIENT_CONTAINER}
 }
 
+echo "$OS_DISTRO: loading Marina image config"
+load_image_config marina
+check_required_vars IMAGE_MARINA_SERVICES
+IMAGE=$IMAGE_MARINA_SERVICES
+
+echo "$OS_DISTRO: loading FreeIPA Auth config"
+load_auth_config freeipa
+
+echo "$OS_DISTRO: Starting Service management container"
 service_manager_container_start ${MARINA_CURRENT_SERVICE}
 
+echo "$OS_DISTRO: Monitoring Service management container"
 check_required_vars FREEIPA_CLIENT_CONTAINER
 service_manager_container_logs
 
+echo "$OS_DISTRO: Cleaning Up Service management container"
 service_manager_container_clean
 
 if [ "$MARINA_CURRENT_SERVICE" = "kubernetes" ]; then
-  echo "Removing All kubenetes containers on node to restart services"
+  echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
   docker rm -v -f $(docker ps | awk '{ if ($NF ~ "^k8s_kube-") print $1}') || true
 else
-  echo "$MARINA_CURRENT_SERVICE"
+  echo "$OS_DISTRO: No post management hooks"
 fi;
+
+echo "$OS_DISTRO: Finished Managing $MARINA_CURRENT_SERVICE"

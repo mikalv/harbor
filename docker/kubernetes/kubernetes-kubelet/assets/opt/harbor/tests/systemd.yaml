@@ -23,7 +23,7 @@ spec:
         name: pod-run
       - mountPath: /run/lock
         name: pod-run-lock
-      - mountPath: /run/secrets
+      - mountPath: /var/run/harbor/secrets
         name: pod-run-secrets
       - mountPath: /tmp
         name: pod-tmp

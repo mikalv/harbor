@@ -2,8 +2,25 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    openstack-app: keystone-db
+  name: keystone-db
+  namespace: os-keystone
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3307
+    protocol: TCP
+    targetPort: 3307
+  selector:
+    openstack-app: keystone-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
     openstack-app: keystone
-  name: os-keystone
+  name: keystone
   namespace: os-keystone
 spec:
   clusterIP: None
@@ -20,7 +37,7 @@ kind: Service
 metadata:
   labels:
     openstack-app: keystone
-  name: os-keystone-admin
+  name: keystone-admin
   namespace: os-keystone
 spec:
   clusterIP: None
@@ -37,7 +54,7 @@ kind: Service
 metadata:
   labels:
     openstack-app: keystone-v2
-  name: os-keystone-v2
+  name: keystone-v2
   namespace: os-keystone
 spec:
   clusterIP: None
@@ -54,7 +71,7 @@ kind: Service
 metadata:
   labels:
     openstack-app: keystone-v2
-  name: os-keystone-v2-admin
+  name: keystone-v2-admin
   namespace: os-keystone
 spec:
   clusterIP: None

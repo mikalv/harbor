@@ -1,3 +1,4 @@
 #!/bin/sh
 source /opt/harbor/harbor-vars.sh
+mkdir -p $SECRETS_DIR
 find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env

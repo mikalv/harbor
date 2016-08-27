@@ -2,14 +2,23 @@ FROM centos:latest
 
 MAINTAINER Port Direct <support@port.direct>
 
-LABEL license="Apache 2.0" \
-      vendor="Port Direct"
+LABEL vendor="Port Direct" \
+      license="Apache 2.0" \
+      org.label-schema.license="Apache 2.0" \
+      org.label-schema.url="https://port.direct/" \
+      org.label-schema.vcs-type="Git" \
+      org.label-schema.vcs-url="https://github.com/portdirect/harbor" \
+      org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
 
 ENV OS_DISTRO="HarborOS-Centos" \
     container=docker \
     OS_REPO_BRANCH="master" \
     HARBOR_ETCD_RELEASE_VERSION="v3.0.4" \
-    HARBOR_KUBE_RELEASE_VERSION="v1.3.0"
+    HARBOR_KUBE_RELEASE_VERSION="v1.3.6" \
+    HARBOR_REPO_OVS="%%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openvswitch-rpm:%%DOCKER_TAG%%"
+
 
 COPY ./common-assets /opt/harbor/common-assets
 
@@ -30,6 +39,7 @@ RUN set -e && \
         iproute \
         bind-utils && \
     yum clean all && \
-    container-base-systemd-reset.sh
+    container-base-systemd-reset.sh && \
+    mkdir -p /var/run/harbor/secrets
 
 ENTRYPOINT ["/init"]

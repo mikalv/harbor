@@ -1,5 +1,9 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV HARBOR_COMPONENT="freeipa-server"
 
 RUN set -e && \
@@ -12,7 +16,8 @@ RUN set -e && \
         freeipa-server \
         freeipa-server-dns \
         bind \
-        bind-dyndb-ldap && \
+        bind-dyndb-ldap \
+        expect && \
     dnf clean all && \
     setcap cap_net_raw,cap_net_admin+p /usr/bin/ping || true
 
@@ -27,6 +32,9 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     cd /opt/docker-freeipa && \
+    for i in /usr/lib/systemd/system/*-hostnamed.service ; do sed -i 's|^CapabilityBoundingSet=|#CapabilityBoundingSet=|g' $i ; done && \
+    for i in /usr/lib/systemd/system/*-hostnamed.service ; do sed -i 's|^Private|#Private|g' $i ; done && \
+    for i in /usr/lib/systemd/system/*-hostnamed.service ; do sed -i 's|^Protect|#Protect|g' $i ; done && \
     find /etc/systemd/system/* '!' -name '*.wants' | xargs rm -rvf && \
     for i in basic.target network.service netconsole.service ; do rm -f /usr/lib/systemd/system/$i && ln -s /dev/null /usr/lib/systemd/system/$i ; done && \
     rm -fv /usr/lib/systemd/system/sysinit.target.wants/* && \
@@ -55,6 +63,7 @@ RUN set -e && \
     echo 1.1 > /etc/volume-version && \
     for i in /usr/lib/systemd/system/*-domainname.service ; do sed -i 's#^ExecStart=/#ExecStart=-/#' $i ; done && \
     uuidgen > /data-template/build-id
+
 
 VOLUME [ "/sys/fs/cgroup" , "/run", "/tmp" , "/run/lock" , "/etc/os-config", "/data" ]
 

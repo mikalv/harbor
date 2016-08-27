@@ -1,5 +1,9 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV HARBOR_COMPONENT="ipsilon" \
     OS_COMP="ipsilon" \
     OS_REPO_URL="https://github.com/portdirect/ipsilon.git" \

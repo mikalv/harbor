@@ -1,14 +1,14 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV OPENSTACK_COMPONENT="base-centos" \
     LC_ALL="en_US.UTF-8"
 
-COPY ./assets/ /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     yum install -y \
         centos-release-gluster37 \
         centos-release-openstack-mitaka && \
@@ -17,7 +17,8 @@ RUN set -e && \
         python \
         sudo \
         curl \
-        python-pip && \
+        python-pip \
+        mariadb-client && \
     yum clean all && \
     container-base-systemd-reset.sh && \
     chmod 0640 /etc/sudoers && \

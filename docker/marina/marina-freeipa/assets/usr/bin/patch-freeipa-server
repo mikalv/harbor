@@ -1,0 +1,211 @@
+#!/bin/sh
+set -e
+echo "$OS_DISTRO: Loading enviornment"
+LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
+rm -f ${LOCAL_ENV}
+touch ${LOCAL_ENV}
+
+cfg_auth=/etc/harbor/auth.conf
+cfg_harbor_auth=/etc/harbor/harbor-auth.conf
+cfg_images=/etc/harbor/images.conf
+cfg_network=/etc/harbor/network.conf
+cfg_node=/etc/harbor/node.conf
+cfg_roles=/etc/harbor/roles.conf
+
+echo "$OS_DISTRO: cfg_images=$cfg_images"
+for CONF_SECTION in DEFAULT freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    IMAGE_REPO=$(crudini --get $cfg_images ${CONF_SECTION} repo)
+    IMAGE_NAMESPACE=$(crudini --get $cfg_images ${CONF_SECTION} namespace)
+    IMAGE_TAG=$(crudini --get $cfg_images ${CONF_SECTION} tag)
+    IMAGE_PULL_POLICY=$(crudini --get $cfg_images ${CONF_SECTION} pull_policy)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} IMAGE_PULL_POLICY"
+    echo "IMAGE_PULL_POLICY=${IMAGE_PULL_POLICY}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_images ${CONF_SECTION}); do
+        IMAGE_NAME="$(crudini --get $cfg_images ${CONF_SECTION} ${COMPONENT})"
+        VALUE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
+        NAME="$(echo IMAGE_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+echo "$OS_DISTRO: cfg_network=$cfg_network"
+for CONF_SECTION in $(crudini --get $cfg_network); do
+  for COMPONENT in $(crudini --get $cfg_network ${CONF_SECTION}); do
+    VALUE="$(crudini --get $cfg_network ${CONF_SECTION} ${COMPONENT})"
+    NAME="$(echo NETWORK_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+    echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  done
+done
+
+
+export OS_DOMAIN=${NETWORK_DEFAULT_OS_DOMAIN}
+echo "OS_DOMAIN=${OS_DOMAIN}"
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
+
+
+echo "$OS_DISTRO: cfg_auth=$cfg_auth"
+for CONF_SECTION in DEFAULT; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+echo "$OS_DISTRO: cfg_harbor_auth=$cfg_harbor_auth"
+for CONF_SECTION in freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+until docker exec "${FREEIPA_SERVICE_HOST}" dig ${FREEIPA_SERVICE_HOST} @${NETWORK_FREEIPA_FREEIPA_MASTER_IP}
+do
+  echo "Waiting for dns"
+  sleep 60s
+done
+
+
+
+
+
+
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+do
+  echo "Waiting for auth"
+  sleep 60s
+done
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+echo "Waiting for 60s"
+sleep 60s
+
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+do
+  echo "Waiting for auth"
+  sleep 60s
+done
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+docker exec "${FREEIPA_SERVICE_HOST}" ipa pwpolicy-mod --maxlife=360 --minlife=1 global_policy || true
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ls /data/ipa-kra-installed || \
+(ipa-kra-install --unattended --password=${AUTH_FREEIPA_DS_PASSWORD} && touch /data/ipa-kra-installed)"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+TMP_PASSWORD=$(uuidgen)
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
+"ipa user-del ${AUTH_FREEIPA_USER_ADMIN_USER}"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
+"ipa user-show ${AUTH_FREEIPA_USER_ADMIN_USER} || ( \
+echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${AUTH_FREEIPA_USER_ADMIN_USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${AUTH_FREEIPA_USER_ADMIN_USER} )"
+docker exec "${FREEIPA_SERVICE_HOST}" /opt/harbor/assets/harbor-user-password-reset ${AUTH_FREEIPA_USER_ADMIN_USER} $TMP_PASSWORD ${AUTH_FREEIPA_USER_ADMIN_PASSWORD} || true
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa group-add-member admins --users=${AUTH_FREEIPA_USER_ADMIN_USER}" || true
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo $AUTH_FREEIPA_USER_ADMIN_PASSWORD | kinit ${AUTH_FREEIPA_USER_ADMIN_USER}"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+TMP_PASSWORD=$(uuidgen)
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
+"ipa user-show ${AUTH_FREEIPA_HOST_ADMIN_USER} || ( \
+echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${AUTH_FREEIPA_HOST_ADMIN_USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${AUTH_FREEIPA_HOST_ADMIN_USER} )"
+docker exec "${FREEIPA_SERVICE_HOST}" /opt/harbor/assets/harbor-user-password-reset ${AUTH_FREEIPA_HOST_ADMIN_USER} $TMP_PASSWORD ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} || true
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa group-add-member admins --users=${AUTH_FREEIPA_HOST_ADMIN_USER}" || true
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo $AUTH_FREEIPA_HOST_ADMIN_PASSWORD | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER}"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+IPA_CERT_PROFILE=caIPAclientCert
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa certprofile-show --out /tmp/webclient.cfg IECUserRoles"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.2|g\" /tmp/webclient.cfg|"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|profileId=IECUserRoles|profileId=${IPA_CERT_PROFILE}|g\" /tmp/webclient.cfg"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|name=IPA-RA Agent-Authenticated Server Certificate Enrollment|name=IPA-RA Agent-Authenticated Client Certificate Enrollment|g\" /tmp/webclient.cfg"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa certprofile-import ${IPA_CERT_PROFILE} --file /tmp/webclient.cfg --desc \"Standard profile for network clients\" --store TRUE"
+docker exec "${FREEIPA_SERVICE_HOST}" rm -f /tmp/webclient.cfg
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+
+
+
+
+
+# #Once it is up and running check it is working by running:
+# dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @$MY_IP
+# #If the above returns your KUBE_SKYDNS_IP as an A record then SkyDNS and the Kubernetes Adapter are working, now we need to make FreeIPA use them:
+# FREEIPA_CONTAINER_NAME=freeipa-master
+# source /etc/harbor/auth.env
+# docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh \
+# -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin && \
+#     ipa dnsforwardzone-add svc.${OS_DOMAIN}. --forwarder $MY_IP && \
+#     ipa dnsforwardzone-add pod.${OS_DOMAIN}. --forwarder $MY_IP && \
+#     ipa dnsrecord-del ${OS_DOMAIN} skydns --a-rec $MY_IP && \
+#     ipa dnsrecord-add ${OS_DOMAIN} skydns --a-rec $MY_IP && \
+#     sleep 5s && \
+#     ipa dnsrecord-add ${OS_DOMAIN}. svc --ns-rec=skydns && \
+#     ipa dnsrecord-add ${OS_DOMAIN}. pod --ns-rec=skydns && \
+#     kdestroy"
+# #Once it is up and running check it is working by running:
+# dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @${NETWORK_FREEIPA_FREEIPA_MASTER_IP}

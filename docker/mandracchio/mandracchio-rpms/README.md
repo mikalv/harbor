@@ -1,13 +1,6 @@
 # port/mandracchio-rpms
 
-## Function
-
-This image serves as the rpm assets image for the Mandracchio build system, it contains the lunch scripts and helpers for the harbor platform, packed into an rpm.
-It is consumed by the repo-builder. The assets that are installed on the Atomic host are held in the "./assets/payload" directory.
-
-## Usage
-
-The built image can be found @ the [Docker hub](https://hub.docker.com/r/port/mandracchio-base/). Or you can pull this image to a docker host by running:
-```bash
-docker pull port/mandracchio-rpms
-```
+### Release Info
+[![](https://images.microbadger.com/badges/version/port/mandracchio-rpms.svg)](http://microbadger.com/images/port/mandracchio-rpms "Image info @ microbadger.com")
+[![](https://images.microbadger.com/badges/image/port/mandracchio-rpms.svg)](http://microbadger.com/images/port/mandracchio-rpms "Image info @ microbadger.com")
+[![](https://images.microbadger.com/badges/commit/port/mandracchio-rpms.svg)](http://microbadger.com/images/port/mandracchio-rpms "Image info @ microbadger.com")

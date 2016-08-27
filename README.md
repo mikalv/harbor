@@ -41,6 +41,17 @@ docker run -d --name ipsilon-repo -p 172.17.0.1:82:80/tcp port/ipsilon-rpm:lates
 ```
 
 
+### Quickstart
+```bash
+docker run -d --name openvswitch-repo -p 172.17.0.1:80:80/tcp port/openvswitch-rpm:latest
+docker run -d --name freeipa-repo -p 172.17.0.1:83:80/tcp port/freeipa-rpm:latest
+docker run -d --name ipsilon-repo -p 172.17.0.1:82:80/tcp port/ipsilon-rpm:latest
+./tools/update-build-links
+./tools/make-scripts-exec.sh
+./tools/build-all-docker-images --release
+```
+
+
 ### Cleaning up
 ```bash
 docker rm -f freeipa-repo

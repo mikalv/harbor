@@ -38,9 +38,8 @@ RUN set -e && \
     chmod -R 0777 /srv/repo/atomic-host/7/{SRPMS,i386,x86_64,noarch} && \
     useradd user
 
-CMD ["/start.sh"]
-
 ADD ./assets /opt/harbor/assets
+
 RUN set -e && \
     set -x && \
     /bin/cp -rf /opt/harbor/assets/* / && \
@@ -72,3 +71,7 @@ RUN set -e && \
     cd /srv/repo/atomic-host/7/$PACKAGE_ARCH && \
       createrepo . && \
     mv /srv/repo/atomic-host/7/$PACKAGE_ARCH/* /usr/share/nginx/html/
+
+ENTRYPOINT []
+
+CMD ["/start.sh"]

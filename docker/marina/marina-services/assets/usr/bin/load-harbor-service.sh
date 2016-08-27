@@ -68,11 +68,9 @@ service_env_build_list_from_file () {
 freeipa_retreve_all_env_vars () {
   freeipa_login
   rm -rf /tmp/env-vars
-  freeipa_get_service_env_vault freeipa-user $OS_SERVICE_VAULT_PASSWORD_FILE freeipa /tmp/env-vars
-  freeipa_get_service_env_vault freeipa-host $OS_SERVICE_VAULT_PASSWORD_FILE freeipa /tmp/env-vars
   #freeipa_get_service_env_vault freeipa-master $OS_SERVICE_VAULT_PASSWORD_FILE freeipa /tmp/env-vars
 
-  for OS_AUTH_CFG_SECTION in $(crudini --get $cfg_harbor_auth | sed 's/^freeipa$//g'); do
+  for OS_AUTH_CFG_SECTION in ${LOAD_OS_SERVICE} freeipa-user freeipa-host; do
     freeipa_get_service_env_vault $OS_AUTH_CFG_SECTION $OS_SERVICE_VAULT_PASSWORD_FILE $OS_AUTH_CFG_SECTION /tmp/env-vars
   done
   freeipa_logout
@@ -96,11 +94,15 @@ load_manifest () {
   fi;
 }
 
-
+echo "$OS_DISTRO: Loading Network config"
 load_network_config
+export LOAD_OS_SERVICE=$MARINA_SERVICE
+
+
+echo "$OS_DISTRO: Retreiving env vars from config file and vaults"
 freeipa_retreve_all_env_vars
 service_env_build_list_from_file /tmp/env-vars
-
+source /tmp/env-vars
 HARBOR_SERVICE_DEFAULT_DEV=eth0
 export NODE_NETWORK_DEFAULT_DEVICE=$HARBOR_SERVICE_DEFAULT_DEV
 export NODE_NETWORK_DEFAULT_IP=$HARBOR_SERVICE_DEFAULT_IP
@@ -109,13 +111,25 @@ export KUBE_ENDPOINT="http://kubernetes.${OS_DOMAIN}:6443"
 export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
 export LOAD_OS_SERVICE=$MARINA_SERVICE
 
+echo "$OS_DISTRO: Loading Image config"
 load_image_config ${LOAD_OS_SERVICE}
+load_image_config etcd
 load_image_config marina
+load_image_config mariadb
+load_image_config mongodb
+load_image_config rabbitmq
+
+echo "$OS_DISTRO: Reloading Network config"
 load_network_config
 
 prep_manifests ${LOAD_OS_SERVICE}
 
 load_manifest ${LOAD_OS_SERVICE} namespace
 load_manifest ${LOAD_OS_SERVICE} services
-load_manifest ${LOAD_OS_SERVICE} controllers
 load_manifest ${LOAD_OS_SERVICE} secrets
+
+load_manifest ${LOAD_OS_SERVICE} controllers
+
+kube () {
+  kubectl --server https://kubernetes.${OS_DOMAIN}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} --namespace os-keystone "$@"
+}

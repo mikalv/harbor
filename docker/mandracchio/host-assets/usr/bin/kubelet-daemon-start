@@ -20,6 +20,12 @@ docker rm -v -f ${CONTAINER_NAME} || true
 docker rm -v -f $(docker ps -a | awk '{ if ($NF ~ "^k8s_") print $1 }') || true
 rm -fr /etc/kubernetes/manifests
 
+umount /var/lib/kublet || true
+rm -rf /var/lib/kublet
+mkdir -p /var/lib/kublet
+mount --bind /var/lib/kublet /var/lib/kublet
+mount --make-shared /var/lib/kublet
+
 exec docker run \
       --name ${CONTAINER_NAME} \
       -d \
@@ -30,12 +36,15 @@ exec docker run \
       --volume=/var/run/openvswitch:/var/run/openvswitch:rw \
       --volume=/sys:/sys:ro \
       --volume=/var/lib/docker/:/var/lib/docker:rw \
-      --volume=/var/lib/kubelet/:/var/lib/kubelet:rw \
+      --volume=/var/lib/kubelet/:/var/lib/kubelet:rshared \
       --volume=/var/run:/var/run:rw \
+      --volume=/etc/harbor:/etc/harbor:rw \
       --volume=/etc/kubernetes/manifests:/etc/kubernetes/manifests:rw \
       --volume=/etc/hosts:/etc/hosts:rw \
       --volume=/etc/resolv.conf:/etc/resolv.conf:rw \
       --net=host \
       --privileged=true \
       --pid=host \
+      --ipc=host \
+      --uts=host \
       ${IMAGE}

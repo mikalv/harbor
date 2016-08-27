@@ -1,5 +1,9 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+
 ENV LC_ALL="en_US.UTF-8" \
     HARBOR_COMPONENT="kubernetes" \
     KUBE_COMPONENT="kubelet" \
@@ -17,6 +21,7 @@ RUN set -e && \
         ethtool \
         mariadb \
         jq \
+        crudini \
         docker-engine && \
     chmod 0640 /etc/sudoers && \
     sed -i '/Defaults    requiretty/s/^/#/' /etc/sudoers && \

@@ -1,3 +1,31 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: keystone-db
+  name: os-keystone-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/keystone/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: keystone-db
+  name: os-keystone-db
+  namespace: os-keystone
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: extensions/v1beta1
 kind: Job
 metadata:
@@ -17,7 +45,7 @@ spec:
     spec:
       hostNetwork: true
       nodeSelector:
-        openstack-keystone: 'true'
+        harbor-role: master
       containers:
         - name: keystone-manager
           image: {{ IMAGE_KEYSTONE_MANAGER }}
@@ -25,167 +53,218 @@ spec:
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
-            - name: OS_MARINA_SERVICE
-              value: keystone
           volumeMounts:
-            - name: os-config
-              mountPath: /run/secrets/config
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-ldap
+              mountPath: /var/run/harbor/secrets/config-ldap
+              readOnly: true
+            - name: os-config-user
+              mountPath: /var/run/harbor/secrets/config-user
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
               readOnly: true
           securityContext:
             privileged: false
       restartPolicy: OnFailure
       volumes:
-        - name: os-config
+        - name: os-config-kubecfg
           secret:
-            secretName: keystone-manager
-# ---
-# apiVersion: v1
-# kind: ReplicationController
-# metadata:
-#   labels:
-#     openstack-app: keystone
-#     version: v0.1.0
-#   name: keystone
-#   namespace: os-keystone
-# spec:
-#   replicas: 1
-#   template:
-#     metadata:
-#       labels:
-#         openstack-app: keystone
-#         version: v0.1.0
-#       name: keystone
-#       namespace: os-keystone
-#     spec:
-#       nodeSelector:
-#         openstack-keystone: 'true'
-#         arch: 'x86'
-#       containers:
-#         - name: keystone-api
-#           image: docker.io/port/keystone-api:latest
-#           imagePullPolicy: Always
-#           ports:
-#           - containerPort: 5000
-#             name: api
-#             protocol: TCP
-#           - containerPort: 35357
-#             name: admin
-#             protocol: TCP
-#           env:
-#             - name: OS_DOMAIN
-#               value: {{ OS_DOMAIN }}
-#           volumeMounts:
-#             - name: os-config
-#               mountPath: "/etc/os-config"
-#               readOnly: true
-#             - name: os-ssl-database
-#               mountPath: '/etc/os-ssl-database'
-#               readOnly: true
-#             - name: os-ssl
-#               mountPath: "/etc/os-ssl"
-#               readOnly: true
-#             - name: os-websso
-#               mountPath: "/etc/os-websso"
-#               readOnly: true
-#             - name: os-fernet
-#               mountPath: "/etc/os-fernet"
-#               readOnly: true
-#             - name: ipa-ca-crt
-#               mountPath: /etc/pki/tls/certs/ca-bundle.crt
-#               readOnly: true
-#           securityContext:
-#             privileged: false
-#       volumes:
-#         - name: os-config
-#           secret:
-#             secretName: keystone
-#         - name: os-ssl-database
-#           hostPath:
-#             path: /etc/harbor/auth/host/database
-#         - name: os-ssl
-#           secret:
-#             secretName: keystone-ssl-secret
-#         - name: os-websso
-#           secret:
-#             secretName: keystone-websso-secret
-#         - name: os-fernet
-#           secret:
-#             secretName: keystone-fernet-secret
-#         - name: ipa-ca-crt
-#           hostPath:
-#             path: /etc/ipa/ca.crt
-# ---
-# apiVersion: v1
-# kind: ReplicationController
-# metadata:
-#   labels:
-#     openstack-app: keystone-v2
-#     version: v0.1.0
-#   name: keystone-v2
-#   namespace: os-keystone
-# spec:
-#   replicas: 1
-#   template:
-#     metadata:
-#       labels:
-#         openstack-app: keystone-v2
-#         version: v0.1.0
-#       name: keystone-v2
-#       namespace: os-keystone
-#     spec:
-#       nodeSelector:
-#         openstack-keystone: 'true'
-#         arch: 'x86'
-#       containers:
-#         - name: keystone-v2
-#           image: docker.io/port/keystone-default:latest
-#           imagePullPolicy: Always
-#           ports:
-#           - containerPort: 5001
-#             name: api
-#             protocol: TCP
-#           - containerPort: 35358
-#             name: admin
-#           env:
-#             - name: OS_DOMAIN
-#               value: {{ OS_DOMAIN }}
-#           volumeMounts:
-#             - name: os-config
-#               mountPath: "/etc/os-config"
-#               readOnly: true
-#             - name: os-ssl-database
-#               mountPath: '/etc/os-ssl-database'
-#               readOnly: true
-#             - name: os-ssl
-#               mountPath: "/etc/os-ssl"
-#               readOnly: true
-#             - name: os-websso
-#               mountPath: "/etc/os-websso"
-#               readOnly: true
-#             - name: os-fernet
-#               mountPath: "/etc/os-fernet"
-#               readOnly: true
-#             - name: ipa-ca-crt
-#               mountPath: /etc/pki/tls/certs/ca-bundle.crt
-#               readOnly: true
-#           securityContext:
-#             privileged: false
-#       volumes:
-#         - name: os-config
-#           secret:
-#             secretName: keystone-v2
-#         - name: os-ssl-database
-#           hostPath:
-#             path: /etc/harbor/auth/host/database
-#         - name: os-ssl
-#           secret:
-#             secretName: keystone-v2-ssl-secret
-#         - name: os-websso
-#           secret:
-#             secretName: keystone-websso-secret
-#         - name: os-fernet
-#           secret:
-#             secretName: keystone-fernet-secret
-#         - name: ipa-ca-crt
-#           hostPath:
-#             path: /etc/ipa/ca.crt
+            secretName: keystone-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: keystone-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: keystone-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: keystone-db-root
+        - name: os-config-db
+          secret:
+            secretName: keystone-db
+        - name: os-config-ldap
+          secret:
+            secretName: keystone-ldap
+        - name: os-config-user
+          secret:
+            secretName: keystone-user
+        - name: os-config-ssl-secret
+          secret:
+            secretName: keystone-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: keystone-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: keystone-db
+    version: v0.1.0
+  name: keystone-db
+  namespace: os-keystone
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: keystone-db
+        version: v0.1.0
+      name: keystone-db
+      namespace: os-keystone
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: keystone-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3307
+              hostPort: 3307
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3307'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_KEYSTONE_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_KEYSTONE_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_KEYSTONE_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_KEYSTONE_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_KEYSTONE_DB_NAME
+            - name: DB_USER
+              value: AUTH_KEYSTONE_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_KEYSTONE_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-keystone-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: keystone-db-root
+        - name: os-config-db
+          secret:
+            secretName: keystone-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: keystone-db-ssl-secret
+        - name: os-keystone-db
+          persistentVolumeClaim:
+            claimName: os-keystone-db
+----
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: keystone
+    version: v0.1.0
+  name: keystone-api-master
+  namespace: os-keystone
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: keystone
+        version: v0.1.0
+      name: keystone-api-master
+      namespace: os-keystone
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: keystone-api
+          image: {{ IMAGE_KEYSTONE_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 5000
+              hostPort: 5000
+              protocol: TCP
+              name: k-api
+            - containerPort: 35357
+              hostPort: 35357
+              protocol: TCP
+              name: k-admin
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-ldap
+              mountPath: /var/run/harbor/secrets/config-ldap
+              readOnly: true
+            - name: os-config-user
+              mountPath: /var/run/harbor/secrets/config-user
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-host-ipa
+          secret:
+            secretName: keystone-host-ipa
+        - name: os-config-db
+          secret:
+            secretName: keystone-db
+        - name: os-config-ldap
+          secret:
+            secretName: keystone-ldap
+        - name: os-config-user
+          secret:
+            secretName: keystone-user
+        - name: os-config-ssl-secret
+          secret:
+            secretName: keystone-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: keystone-user-ssl-secret

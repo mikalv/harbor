@@ -33,7 +33,7 @@ SERVICE_HOST_LIST=" NODE_ETCD_SERVICE_HOST \
 
 
 KUBE_MANIFESTS_DIR=/etc/kubernetes/manifests
-TEMPLATE_MANIFESTS_DIR=/etc/harbor/manifests
+TEMPLATE_MANIFESTS_DIR=/etc/harbor-kube/manifests
 MANIFESTS_WORK_DIR=/tmp/harbor/manifests
 
 

@@ -1,4 +1,8 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-httpd:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-fedora:%%DOCKER_TAG%%
+
+LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
+      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
+      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
 
 ENV OPENSTACK_COMPONENT="keystone-api" \
     OS_COMP="keystone" \
@@ -14,16 +18,18 @@ RUN set -e && \
     rm -rf /opt/harbor/common-assets && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
-    yum install -y \
+    dnf install -y \
         ipsilon-client \
         openldap-clients \
         sssd-dbus && \
-    yum install -y \
+    dnf install -y \
         gcc \
         git \
         openssl-devel \
-        python-devel && \
+        python-devel \
+        redhat-rpm-config && \
     /opt/harbor/build/dockerfile.sh && \
-    yum history undo -y $(yum history package gcc | tail -2 | head -1 | awk '{print $1}') -y && \
-    yum clean all && \
+    dnf clean all && \
     container-base-systemd-reset.sh
+
+LABEL

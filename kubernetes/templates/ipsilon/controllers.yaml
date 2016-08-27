@@ -1,0 +1,333 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ipsilon-api
+  name: os-ipsilon-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ipsilon/data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ipsilon-api
+  name: os-ipsilon-data
+  namespace: os-ipsilon
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ipsilon-db
+  name: os-ipsilon-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ipsilon/database
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ipsilon-db
+  name: os-ipsilon-db
+  namespace: os-ipsilon
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: ipsilon-manager
+    version: v0.1.0
+  name: ipsilon-manager
+  namespace: os-ipsilon
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: ipsilon-manager
+        version: v0.1.0
+      name: ipsilon-manager
+      namespace: os-ipsilon
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ipsilon-manager
+          image: {{ IMAGE_IPSILON_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-root-db
+              mountPath: /var/run/harbor/secrets/config-root-db
+              readOnly: true
+            - name: os-config-admin-db
+              mountPath: /var/run/harbor/secrets/config-admin-db
+              readOnly: true
+            - name: os-config-users-db
+              mountPath: /var/run/harbor/secrets/config-users-db
+              readOnly: true
+            - name: os-config-trans-db
+              mountPath: /var/run/harbor/secrets/config-trans-db
+              readOnly: true
+            - name: os-config-samlsession-db
+              mountPath: /var/run/harbor/secrets/config-samlsession-db
+              readOnly: true
+            - name: os-config-saml2session-db
+              mountPath: /var/run/harbor/secrets/config-saml2session-db
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: ipsilon-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: ipsilon-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: ipsilon-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: ipsilon-db-root
+        - name: os-config-db
+          secret:
+            secretName: ipsilon-db
+        - name: os-config-root-db
+          secret:
+            secretName: ipsilon-root-db
+        - name: os-config-admin-db
+          secret:
+            secretName: ipsilon-admin-db
+        - name: os-config-users-db
+          secret:
+            secretName: ipsilon-users-db
+        - name: os-config-trans-db
+          secret:
+            secretName: ipsilon-trans-db
+        - name: os-config-samlsession-db
+          secret:
+            secretName: ipsilon-samlsession-db
+        - name: os-config-saml2session-db
+          secret:
+            secretName: ipsilon-saml2session-db
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ipsilon-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ipsilon-user-ssl-secret
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: ipsilon-db
+    version: v0.1.0
+  name: ipsilon-db
+  namespace: os-ipsilon
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: ipsilon-db
+        version: v0.1.0
+      name: ipsilon-db
+      namespace: os-ipsilon
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: os-ipsilon
+          image: {{ IMAGE_IPSILON_DB }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 5432
+              protocol: TCP
+              name: psql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - name: data
+              mountPath: '/var/lib/pysql'
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: ipsilon-db-root
+        - name: os-config-db
+          secret:
+            secretName: ipsilon-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: ipsilon-db-ssl-secret
+        - name: data
+          persistentVolumeClaim:
+            claimName: os-ipsilon-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ipsilon-api
+    version: v0.1.0
+  name: ipsilon-api
+  namespace: os-ipsilon
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ipsilon-api
+        version: v0.1.0
+      name: ipsilon-api
+      namespace: os-ipsilon
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ipsilon-api-master
+          image: {{ IMAGE_IPSILON_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          ports:
+            - containerPort: 4143
+              name: https
+              protocol: TCP
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-root-db
+              mountPath: /var/run/harbor/secrets/config-root-db
+              readOnly: true
+            - name: os-config-admin-db
+              mountPath: /var/run/harbor/secrets/config-admin-db
+              readOnly: true
+            - name: os-config-users-db
+              mountPath: /var/run/harbor/secrets/config-users-db
+              readOnly: true
+            - name: os-config-trans-db
+              mountPath: /var/run/harbor/secrets/config-trans-db
+              readOnly: true
+            - name: os-config-samlsession-db
+              mountPath: /var/run/harbor/secrets/config-samlsession-db
+              readOnly: true
+            - name: os-config-saml2session-db
+              mountPath: /var/run/harbor/secrets/config-saml2session-db
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-ipsilon-data
+              mountPath: '/var/lib/ipsilon'
+              readOnly: false
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: ipsilon-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: ipsilon-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: ipsilon-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: ipsilon-db-root
+        - name: os-config-db
+          secret:
+            secretName: ipsilon-db
+        - name: os-config-root-db
+          secret:
+            secretName: ipsilon-root-db
+        - name: os-config-admin-db
+          secret:
+            secretName: ipsilon-admin-db
+        - name: os-config-users-db
+          secret:
+            secretName: ipsilon-users-db
+        - name: os-config-trans-db
+          secret:
+            secretName: ipsilon-trans-db
+        - name: os-config-samlsession-db
+          secret:
+            secretName: ipsilon-samlsession-db
+        - name: os-config-saml2session-db
+          secret:
+            secretName: ipsilon-saml2session-db
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ipsilon-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ipsilon-user-ssl-secret
+        - name: os-ipsilon-data
+          persistentVolumeClaim:
+            claimName: os-ipsilon-data

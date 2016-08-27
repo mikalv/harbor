@@ -105,7 +105,7 @@ start_container () {
   -v="/tmp" \
   -v="/run" \
   -v="/run/lock" \
-  -v="/var/run/secrets" \
+  -v="/var/run/harbor/secrets" \
   -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
   -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
   --volumes-from=${DATA_CONTAINER} \
@@ -113,7 +113,7 @@ start_container () {
   --security-opt="seccomp=unconfined" \
   docker.io/port/freeipa-client:latest)
   for ENV_VAR in ${CONTAINER_CONFIG_DIR}/secrets/*; do
-    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/secrets/$(basename $ENV_VAR)
+    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/harbor/secrets/$(basename $ENV_VAR)
     rm -f $ENV_VAR
     #echo "moved $ENV_VAR -> $(basename $ENV_VAR)"
   done
