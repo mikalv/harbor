@@ -1,18 +1,17 @@
 FROM centos:latest
 MAINTAINER Port Direct <support@port.direct>
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor"
 
 ENV OS_DISTRO="HarborOS" \
     OPENSTACK_COMPONENT="mandracchio-repo" \
     LC_ALL="en_US.UTF-8" \
     container=docker \
     DOCKER_HOST="172.17.0.1:2375"
-
-LABEL license="Apache 2.0" \
-      vendor="Harbor OpenStack"
 
 RUN set -e && \
     set -x && \
@@ -50,3 +49,7 @@ ADD ./assets /opt/harbor/assets
 RUN /bin/cp -rf /opt/harbor/assets/* /
 
 CMD ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

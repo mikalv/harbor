@@ -8,10 +8,10 @@ if [ "$MARINA_SERVICE" = "kubernetes" ]; then
   echo "$OS_DISTRO: Service is Kubernetes, no action required"
 else
   echo "$OS_DISTRO: Updating kube service"
-  tail -f /dev/null
   /usr/bin/load-harbor-service.sh
 fi
 
+tail -f /dev/null
 echo "$OS_DISTRO: Loaded Harbor Service"
 shutdown -h now
 

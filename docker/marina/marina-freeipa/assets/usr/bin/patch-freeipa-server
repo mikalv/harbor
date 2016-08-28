@@ -152,7 +152,7 @@ docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 
 
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
-TMP_PASSWORD=$(uuidgen)
+TMP_PASSWORD=$(harbor-gen-password 12 24)
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
 "ipa user-del ${AUTH_FREEIPA_USER_ADMIN_USER}"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
@@ -167,7 +167,7 @@ docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 
 
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
-TMP_PASSWORD=$(uuidgen)
+TMP_PASSWORD=$(harbor-gen-password 12 24)
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
 "ipa user-show ${AUTH_FREEIPA_HOST_ADMIN_USER} || ( \
 echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${AUTH_FREEIPA_HOST_ADMIN_USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${AUTH_FREEIPA_HOST_ADMIN_USER} )"

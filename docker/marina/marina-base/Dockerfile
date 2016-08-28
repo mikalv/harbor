@@ -1,8 +1,10 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%freeipa-client:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor"
 
 ENV HARBOR_COMPONENT="marina"
 
@@ -31,3 +33,7 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

@@ -13,7 +13,7 @@ for AUTH_FILE in $AUTH_FILES; do
             PARAM="$(crudini --get $AUTH_FILE $section $param)"
             if echo "$PARAM" | grep '^{{ PASSWORD_[0-9][0-9] }}' >/dev/null ; then
               PW_LENGTH=$(echo $PARAM | awk -F 'PASSWORD_' '{ print $2}'| awk '{ print $1}')
-              crudini --set $AUTH_FILE $section $param "$(pwgen $PW_LENGTH 1)"
+              crudini --set $AUTH_FILE $section $param "$(harbor-gen-password $PW_LENGTH $PW_LENGTH)"
             fi
           done
       done

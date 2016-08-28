@@ -6,8 +6,11 @@ ENV OS_DISTRO="HarborOS" \
     LC_ALL="en_US.UTF-8" \
     container=docker
 
-LABEL license="Apache 2.0" \
-      vendor="Harbor OpenStack"
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor"
 
 ADD ./assets /opt/harbor/assets
 
@@ -27,3 +30,7 @@ RUN set -e && \
     ostree --repo=/srv/repo init --mode=archive-z2
 
 CMD ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

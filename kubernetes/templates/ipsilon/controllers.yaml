@@ -78,10 +78,23 @@ spec:
         - name: ipsilon-manager
           image: {{ IMAGE_IPSILON_MANAGER }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          tty: true
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
+            - mountPath: /sys/fs/cgroup
+              name: host-sys-fs-cgroup
+              readOnly: true
+            - mountPath: /run
+              name: pod-run
+              readOnly: false
+            - mountPath: /run/lock
+              name: pod-run-lock
+              readOnly: false
+            - mountPath: /tmp
+              name: pod-tmp
+              readOnly: false
             - name: os-config-kubecfg
               mountPath: /var/run/harbor/secrets/config-kubecfg
               readOnly: true
@@ -90,9 +103,6 @@ spec:
               readOnly: true
             - name: os-config-host-ipa
               mountPath: /var/run/harbor/secrets/config-host-ipa
-              readOnly: true
-            - name: os-config-db-root
-              mountPath: /var/run/harbor/secrets/config-db-root
               readOnly: true
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
@@ -125,6 +135,15 @@ spec:
             privileged: false
       restartPolicy: OnFailure
       volumes:
+        - name: host-sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: pod-run
+          emptyDir: {}
+        - name: pod-run-lock
+          emptyDir: {}
+        - name: pod-tmp
+          emptyDir: {}
         - name: os-config-kubecfg
           secret:
             secretName: ipsilon-kubecfg
@@ -134,9 +153,6 @@ spec:
         - name: os-config-host-ipa
           secret:
             secretName: ipsilon-host-ipa
-        - name: os-config-db-root
-          secret:
-            secretName: ipsilon-db-root
         - name: os-config-db
           secret:
             secretName: ipsilon-db
@@ -196,10 +212,17 @@ spec:
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '5432'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: ROOT_DB_NAME
+              value: AUTH_IPSILON_DB_NAME
+            - name: ROOT_DB_USER
+              value: AUTH_IPSILON_DB_USER
+            - name: ROOT_DB_PASSWORD
+              value: AUTH_IPSILON_DB_PASSWORD
           volumeMounts:
-            - name: os-config-db-root
-              mountPath: /var/run/harbor/secrets/config-db-root
-              readOnly: true
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
               readOnly: true
@@ -210,9 +233,6 @@ spec:
               mountPath: '/var/lib/pysql'
               readOnly: false
       volumes:
-        - name: os-config-db-root
-          secret:
-            secretName: ipsilon-db-root
         - name: os-config-db
           secret:
             secretName: ipsilon-db
@@ -248,6 +268,7 @@ spec:
         - name: ipsilon-api-master
           image: {{ IMAGE_IPSILON_API }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          tty: true
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
@@ -256,6 +277,39 @@ spec:
               name: https
               protocol: TCP
           volumeMounts:
+            - mountPath: /sys/fs/cgroup
+              name: host-sys-fs-cgroup
+              readOnly: true
+            - mountPath: /run
+              name: pod-run
+              readOnly: false
+            - mountPath: /run/lock
+              name: pod-run-lock
+              readOnly: false
+            - mountPath: /tmp
+              name: pod-tmp
+              readOnly: false
+            - mountPath: /etc/krb5.conf
+              name: host-etc-krb5-conf
+              readOnly: true
+            - mountPath: /var/lib/sss/pubconf/krb5.include.d
+              name: host-var-lib-sss-pubconf-krb5-include-d
+              readOnly: true
+            - mountPath: /etc/ipa
+              name: host-etc-ipa
+              readOnly: true
+            - mountPath: /var/run/harbor/host/etc/sssd/sssd.conf
+              name: host-sssd-sssd-conf
+              readOnly: true
+            - mountPath: /etc/krb5.keytab
+              name: host-etc-krb5-keytab
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
               readOnly: true
@@ -289,6 +343,30 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: host-sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: pod-run
+          emptyDir: {}
+        - name: pod-run-lock
+          emptyDir: {}
+        - name: pod-tmp
+          emptyDir: {}
+        - name: host-etc-krb5-conf
+          hostPath:
+            path: /etc/krb5.conf
+        - name: host-var-lib-sss-pubconf-krb5-include-d
+          hostPath:
+            path: /var/lib/sss/pubconf/krb5.include.d
+        - name: host-etc-ipa
+          hostPath:
+            path: /etc/ipa
+        - name: host-sssd-sssd-conf
+          hostPath:
+            path: /etc/sssd/sssd.conf
+        - name: host-etc-krb5-keytab
+          hostPath:
+            path: /etc/krb5.keytab
         - name: os-config-kubecfg
           secret:
             secretName: ipsilon-kubecfg

@@ -2,15 +2,11 @@ FROM alpine:latest
 
 MAINTAINER Port Direct <support@port.direct>
 
-LABEL vendor="Port Direct" \
-      license="Apache 2.0" \
-      org.label-schema.license="Apache 2.0" \
-      org.label-schema.url="https://port.direct/" \
-      org.label-schema.vcs-type="Git" \
-      org.label-schema.vcs-url="https://github.com/portdirect/harbor" \
-      org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor"
 
 ENV OS_DISTRO="HarborOS-Alpine" \
     container=docker \
@@ -45,3 +41,7 @@ RUN set -e && \
     mkdir -p /var/run/harbor/secrets
 
 ENTRYPOINT ["/init"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

@@ -83,6 +83,7 @@
                    "realmd",
                    "device-mapper-multipath",
                    "glusterfs-fuse",
+                   "crudini",
                    "harbor-assets"],
 
     "remove-from-packages": [["yum", "yum-plugin-fastestmirror", "/usr/bin/.*"],

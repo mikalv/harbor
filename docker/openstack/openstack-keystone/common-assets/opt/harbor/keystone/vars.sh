@@ -4,6 +4,7 @@
 : ${KEYSTONE_APACHE_CONFIG_FILE:="/etc/httpd/conf.d/wsgi-keystone.conf"}
 : ${KEYSTONE_APACHE_MELLON_CONFIG_FILE:="/etc/httpd/conf.d/keystone-ipsilon.conf"}
 
+
 : ${KEYSTONE_MARIADB_SERVICE_PORT:="3307"}
 : ${KEYSTONE_DB_CA:="/run/harbor/auth/user/ca"}
 : ${KEYSTONE_DB_KEY:="/run/harbor/auth/user/key"}

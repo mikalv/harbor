@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV HARBOR_COMPONENT="memcached"
 
 COPY ./assets /opt/harbor/assets
@@ -15,3 +11,7 @@ RUN set -e && \
     cp -rf /opt/harbor/assets/* /
 
 CMD ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV HARBOR_COMPONENT="freeipa" \
     OS_COMP="freeipa" \
     OS_REPO_URL="https://github.com/freeipa/freeipa.git" \
@@ -72,3 +68,7 @@ RUN set -e && \
 ENTRYPOINT []
 
 CMD ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

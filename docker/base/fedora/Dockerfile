@@ -2,15 +2,11 @@ FROM fedora:latest
 
 MAINTAINER Port Direct <support@port.direct>
 
-LABEL vendor="Port Direct" \
-      license="Apache 2.0" \
-      org.label-schema.license="Apache 2.0" \
-      org.label-schema.url="https://port.direct/" \
-      org.label-schema.vcs-type="Git" \
-      org.label-schema.vcs-url="https://github.com/portdirect/harbor" \
-      org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor"
 
 ENV OS_DISTRO="HarborOS-Fedora" \
     container=docker \
@@ -19,7 +15,6 @@ ENV OS_DISTRO="HarborOS-Fedora" \
     HARBOR_KUBE_RELEASE_VERSION="v1.3.6" \
     HARBOR_REPO_IPSILON="%%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%ipsilon-rpm:%%DOCKER_TAG%%"  \
     HARBOR_REPO_FREEIPA="%%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%freeipa-rpm:%%DOCKER_TAG%%"
-
 
 COPY ./common-assets /opt/harbor/common-assets
 
@@ -42,3 +37,7 @@ RUN set -e && \
     mkdir -p /var/run/harbor/secrets
 
 ENTRYPOINT ["/init"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

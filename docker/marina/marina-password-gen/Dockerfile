@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
@@ -13,5 +9,8 @@ RUN set -e && \
     apk add --no-cache --virtual run-deps \
         pwgen
 
-
 ENTRYPOINT ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

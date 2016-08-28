@@ -1,12 +1,20 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-fedora:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV OPENSTACK_COMPONENT="keystone-api" \
     OS_COMP="keystone" \
     OS_REPO_URL="https://github.com/openstack/keystone.git"
+
+RUN set -e && \
+    set -x && \
+    dnf install -y \
+        ipsilon-client \
+        openldap-clients \
+        sssd-dbus \
+        httpd \
+        mod_ssl \
+        mod_wsgi && \
+    dnf clean all && \
+    container-base-systemd-reset.sh
 
 COPY ./common-assets /opt/harbor/common-assets
 
@@ -19,10 +27,6 @@ RUN set -e && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     dnf install -y \
-        ipsilon-client \
-        openldap-clients \
-        sssd-dbus && \
-    dnf install -y \
         gcc \
         git \
         openssl-devel \
@@ -32,4 +36,6 @@ RUN set -e && \
     dnf clean all && \
     container-base-systemd-reset.sh
 
-LABEL
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

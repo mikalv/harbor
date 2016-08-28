@@ -23,6 +23,9 @@ else
   adduser -u 1000 -g ${OS_COMP} --system  ${OS_COMP}
 fi;
 
+mkdir -p /home/${OS_COMP}
+chown -R ${OS_COMP}:${OS_COMP} /home/${OS_COMP}
+
 chown -R ${OS_COMP}:${OS_COMP} /var/log/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/lib/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /etc/${OS_COMP}

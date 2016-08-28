@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 source /etc/os-container.env
 export OS_DOMAIN=$(hostname -d)
 source /etc/os-container.env

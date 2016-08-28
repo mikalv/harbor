@@ -51,8 +51,8 @@ service_manager_container_start () {
   touch ${HARBOR_HOSTS_FILE}
   touch ${HARBOR_RESOLV_FILE}
 
-  echo "FREEIPA_HOST_ADMIN_USER=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
-  echo "FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
+  echo "AUTH_FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
+  echo "AUTH_FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
   echo "HARBOR_HOSTS_FILE=${HARBOR_HOSTS_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_HOSTS_FILE | tr '[:upper:]' '[:lower:]' )
   echo "HARBOR_RESOLV_FILE=${HARBOR_RESOLV_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_RESOLV_FILE | tr '[:upper:]' '[:lower:]' )
 

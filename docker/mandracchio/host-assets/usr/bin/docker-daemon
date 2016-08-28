@@ -1,14 +1,33 @@
 #!/bin/sh
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -e
 source /etc/harbor/docker.env
 DOCKER_IP=$(ip -f inet -o addr show ${DOCKER_DEV}|cut -d\  -f 7 | cut -d/ -f 1)
 DOCKER_DEV_MTU=$(ip -f inet -o link show ${DOCKER_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
 DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
+DOCKER_CMD="-H tcp://${DOCKER_IP}:${DOCKER_PORT} \
+--cluster-advertise=${DOCKER_DEV}:${DOCKER_PORT} \
+--cluster-store etcd://127.0.0.1:4001 \
+--swarm-default-advertise-addr=${DOCKER_DEV}:${DOCKER_PORT}"
 
+mkdir -p /var/lib/docker
 exec dockerd \
      --mtu ${DOCKER_MTU} \
-     -s overlay2 \
+     --storage-driver overlay2 \
+     --graph=/var/lib/docker \
      -H unix:///var/run/docker.sock \
-     -H tcp://${DOCKER_IP}:${DOCKER_PORT} \
-     --cluster-advertise=${DOCKER_DEV}:${DOCKER_PORT} \
-     --cluster-store etcd://127.0.0.1:4001
+     ${DOCKER_CMD}

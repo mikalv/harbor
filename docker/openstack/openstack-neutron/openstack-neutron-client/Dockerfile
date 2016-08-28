@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV OS_COMP="neutronclient" \
     OS_CLIENT="neutron"
 
@@ -27,3 +23,7 @@ RUN set -e && \
     chown -R ${OS_COMP}:${OS_COMP} /var/log/${OS_COMP} && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

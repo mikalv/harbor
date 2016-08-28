@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV HARBOR_COMPONENT="ovs" \
     HARBOR_SUBCOMPONENT="rpm-repo"
 
@@ -74,6 +70,10 @@ RUN set -e && \
 ENTRYPOINT []
 
 CMD ["/start.sh"]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"
 
 # RUN yum install -y python-pip && \
 #     pip install /srv/python/ovs.tar && \

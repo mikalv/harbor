@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-httpd:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV OS_COMP="neutron" \
     OS_REPO_URL="https://github.com/openstack/neutron.git" \
     OS_REPO_BRANCH="master" \
@@ -54,3 +50,7 @@ RUN set -e && \
     yum history undo -y $(yum history package gcc | tail -2 | head -1 | awk '{print $1}') -y && \
     yum clean all && \
     container-base-systemd-reset.sh
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

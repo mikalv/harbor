@@ -1,63 +1,87 @@
-#!/bin/sh
-set -e
-if [ "${SECURE_CONFIG}" == "True" ] ; then
-  ################################################################################
-  echo "${OS_DISTRO}: Sourcing local environment variables"
-  ################################################################################
-  source /etc/os-container.env
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+tail -f /dev/null
+
+PGDATA=/var/lib/pysql
+chown -R postgres "$PGDATA"
+
+POSTGRES_PASSWORD=$AUTH_IPSILON_DB_PASSWORD
+#/var/run/harbor/secrets/config-db/..8988_28_08_03_37_25.059080945/ipsilon-db-name
+POSTGRES_DB=$AUTH_IPSILON_DB_NAME
+#/var/run/harbor/secrets/config-db/..8988_28_08_03_37_25.059080945/ipsilon-db-user
+POSTGRES_USER=$AUTH_IPSILON_DB_USER
+#/var/run/harbor/secrets/config-db-root/..8988_28_08_03_37_23.754169637/mariadb-root-password
+AUTH_IPSILON_DB_ROOT_PASSWORD
+
+if [ -z "$(ls -A "$PGDATA")" ]; then
+    su -s /bin/sh -c "initdb" postgres
+    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$PGDATA"/postgresql.conf
+
+    : ${POSTGRES_USER:="postgres"}
+    : ${POSTGRES_DB:=$POSTGRES_USER}
+
+    if [ "$POSTGRES_PASSWORD" ]; then
+      pass="PASSWORD '$POSTGRES_PASSWORD'"
+      authMethod=md5
+    else
+      echo "==============================="
+      echo "!!! Use \$POSTGRES_PASSWORD env var to secure your database !!!"
+      echo "==============================="
+      pass=
+      authMethod=trust
+    fi
+    echo
+
+
+    if [ "$POSTGRES_DB" != 'postgres' ]; then
+      createSql="CREATE DATABASE $POSTGRES_DB;"
+      echo $createSql | gosu postgres postgres --single -jE
+      echo
+    fi
+
+    if [ "$POSTGRES_USER" != 'postgres' ]; then
+      op=CREATE
+    else
+      op=ALTER
+    fi
+
+    userSql="$op USER $POSTGRES_USER WITH SUPERUSER $pass;"
+    echo $userSql | gosu postgres postgres --single -jE
+    echo
+
+    # internal start of server in order to allow set-up using psql-client
+    # does not listen on TCP/IP and waits until start finishes
+    gosu postgres pg_ctl -D "$PGDATA" \
+        -o "-c listen_addresses=''" \
+        -w start
+
+    echo
+    for f in /docker-entrypoint-initdb.d/*; do
+        case "$f" in
+            *.sh)  echo "$0: running $f"; . "$f" ;;
+            *.sql) echo "$0: running $f"; psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" < "$f" && echo ;;
+            *)     echo "$0: ignoring $f" ;;
+        esac
+        echo
+    done
+
+    gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
+
+    { echo; echo "host all all 0.0.0.0/0 $authMethod"; } >> "$PGDATA"/pg_hba.conf
 fi
 
-
-: ${DB_ROOT_PASSWORD:="password"}
-: ${DATADIR:=/var/lib/mysql}
-
-MYSQLD_CMD="mysqld_safe"
-if [ -z "$(ls /var/lib/mysql)" -a "${MYSQLD_CMD}" = 'mysqld_safe' ]; then
-  ################################################################################
-  echo "${OS_DISTRO}: Prepping MySQL"
-  ################################################################################
-  PATH=/usr/libexec:$PATH
-  export PATH
-
-  if [ -z "$DB_ROOT_PASSWORD" ]; then
-    echo >&2 'error: database is uninitialized and DB_ROOT_PASSWORD not set'
-    echo >&2 '  Did you forget to add -e DB_ROOT_PASSWORD=... ?'
-    exit 1
-  fi
-
-  mysql_install_db --user=mysql --datadir="$DATADIR"
-
-  # These statements _must_ be on individual lines, and _must_ end with
-  # semicolons (no line breaks or comments are permitted).
-  # TODO proper SQL escaping on ALL the things D:
-  TEMP_FILE='/tmp/mysql-first-time.sql'
-  cat > "$TEMP_FILE" <<EOSQL
-DELETE FROM mysql.user ;
-CREATE USER 'root'@'%' IDENTIFIED BY '${DB_ROOT_PASSWORD}' ;
-GRANT ALL ON *.* TO 'root'@'%' WITH GRANT OPTION ;
-DROP DATABASE IF EXISTS test ;
-EOSQL
-
-        if [ "$MARIADB_DATABASE" ]; then
-                echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
-        fi
-
-        if [ "$MARIADB_USER" -a "$MARIADB_PASSWORD" ]; then
-                echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
-
-                if [ "$MARIADB_DATABASE" ]; then
-                        echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' ;" >> "$TEMP_FILE"
-                fi
-        fi
-
-        echo 'FLUSH PRIVILEGES ;' >> "$TEMP_FILE"
-
-        MYSQLD_CMD="${MYSQLD_CMD} --init-file="$TEMP_FILE""
-fi
-
-chown -R mysql:mysql "$DATADIR"
-
-################################################################################
-echo "${OS_DISTRO}: MariaDB: Running Launch Command"
-################################################################################
-exec ${MYSQLD_CMD}
+exec gosu postgres "$@"

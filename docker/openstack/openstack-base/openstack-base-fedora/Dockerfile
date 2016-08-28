@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV OPENSTACK_COMPONENT="base-fedora" \
     LC_ALL="en_US.UTF-8"
 
@@ -24,3 +20,7 @@ RUN set -e && \
     pip --no-cache-dir install crudini && \
     pip --no-cache-dir install PyMySQL && \
     pip --no-cache-dir install python-memcached
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

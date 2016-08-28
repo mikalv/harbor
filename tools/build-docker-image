@@ -131,7 +131,7 @@ sed -i.bak "s|%%DOCKER_FULLIMAGE%%|$DOCKER_FULLIMAGE|g" ${TMPDIR}/Dockerfile
 sed -i.bak "s|%%DOCKER_NAMESPACE%%|$NAMESPACE|g" ${TMPDIR}/Dockerfile
 sed -i.bak "s|%%DOCKER_PREFIX%%|$PREFIX|g" ${TMPDIR}/Dockerfile
 sed -i.bak "s|%%DOCKER_TAG%%|$PARENT_TAG|g" ${TMPDIR}/Dockerfile
-sed -i.bak "s|%%DOCKER_BUILD_DATE%%|$(date -u +%Y-%m-%dT%H:%M:%SZ)|g" ${TMPDIR}/Dockerfile
+sed -i.bak "s|%%DOCKER_BUILD_DATE%%|$(date -u +%Y-%m-%d)|g" ${TMPDIR}/Dockerfile
 
 
 

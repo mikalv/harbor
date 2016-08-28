@@ -11,15 +11,15 @@ else
   ################################################################################
   check_required_vars OS_DOMAIN \
                       FREEIPA_SERVICE_HOST \
-                      FREEIPA_HOST_ADMIN_USER \
-                      FREEIPA_HOST_ADMIN_PASSWORD
+                      AUTH_FREEIPA_HOST_ADMIN_USER \
+                      AUTH_FREEIPA_HOST_ADMIN_PASSWORD
 
   ipa-client-install \
       --domain=${OS_DOMAIN} \
       --server=${FREEIPA_SERVICE_HOST} \
       --realm=$( echo ${OS_DOMAIN}  | tr '[:lower:]' '[:upper:]' ) \
-      --principal=${FREEIPA_HOST_ADMIN_USER} \
-      --password=${FREEIPA_HOST_ADMIN_PASSWORD} \
+      --principal=${AUTH_FREEIPA_HOST_ADMIN_USER} \
+      --password=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} \
       --hostname=$(hostname -s).${OS_DOMAIN} \
       --unattended \
       --force \

@@ -1,9 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
-LABEL org.label-schema.name="%%DOCKER_FULLIMAGE%%" \
-      org.label-schema.vcs-ref="%%DOCKER_TAG%%" \
-      org.label-schema.build-date="%%DOCKER_BUILD_DATE%%"
-
 ENV HARBOR_COMPONENT="freeipa-server"
 
 RUN set -e && \
@@ -70,3 +66,7 @@ VOLUME [ "/sys/fs/cgroup" , "/run", "/tmp" , "/run/lock" , "/etc/os-config", "/d
 STOPSIGNAL RTMIN+3
 
 ENTRYPOINT [ "/usr/sbin/init-data" ]
+
+LABEL name="%%DOCKER_FULLIMAGE%%" \
+      vcs-ref="%%DOCKER_TAG%%" \
+      build-date="%%DOCKER_BUILD_DATE%%"

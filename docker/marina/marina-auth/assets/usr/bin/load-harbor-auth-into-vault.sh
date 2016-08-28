@@ -1,4 +1,19 @@
 #!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 source /etc/os-container.env
 export OS_DOMAIN=$(hostname -d)
 source /etc/os-container.env
@@ -45,42 +60,42 @@ load_auth_config_into_vault () {
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault "True"
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_user || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_user "${FREEIPA_HOST_ADMIN_USER}"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password "$(pwgen $((64 + RANDOM % 32)) 1)"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             elif [ "$CURRENT_AUTH_SERVICE" == "$CONF_SECTION-user" ]; then
               VAULT_NAME="env-${CONF_SECTION}-user"
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault "True"
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_user || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_user "${FREEIPA_HOST_ADMIN_USER}"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password "$(pwgen $((64 + RANDOM % 32)) 1)"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             elif [ "$CURRENT_AUTH_SERVICE" == "$CONF_SECTION-host" ]; then
               VAULT_NAME="env-${CONF_SECTION}-host"
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault "True"
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_user || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_user "${FREEIPA_HOST_ADMIN_USER}"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password "$(pwgen $((64 + RANDOM % 32)) 1)"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             else
               VAULT_NAME="env-${CONF_SECTION}"
               crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault "True"
               crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${FREEIPA_HOST_ADMIN_USER}"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password || \
-                crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(pwgen $((64 + RANDOM % 32)) 1)"
+                crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             fi
           else
             VAULT_NAME="env-${CONF_SECTION}"
             crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault "True"
             crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_name "${VAULT_NAME}"
             crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user || \
-              crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${FREEIPA_HOST_ADMIN_USER}"
+              crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
             crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password || \
-              crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(pwgen $((64 + RANDOM % 32)) 1)"
+              crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(harbor-gen-password 64 96)"
           fi
         fi
     fi;
@@ -97,7 +112,7 @@ freeipa_create_service_env_vault () {
                       VAULT_PASSWORD_FILE \
                       AUTH_SECTION \
                       OS_DOMAIN \
-                      FREEIPA_HOST_ADMIN_USER
+                      AUTH_FREEIPA_HOST_ADMIN_USER
 
   export CURRENT_AUTH_SERVICE
   LOCAL_ENV_LIST=""

@@ -1,4 +1,19 @@
-#!/bin/sh
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 PATH=$PATH:/usr/local/bin
 echo "$OS_DISTRO: Loading enviornment"
 LOCAL_ENV=/tmp/harbor.env
@@ -78,8 +93,8 @@ start_container () {
   CONTAINER_CONFIG_DIR="/var/run/harbor/containers/${CONTAINER_NAME}"
   rm -rf ${CONTAINER_CONFIG_DIR}
   mkdir -p ${CONTAINER_CONFIG_DIR}/secrets
-  echo "FREEIPA_HOST_ADMIN_USER=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
-  echo "FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
+  echo "AUTH_FREEIPA_HOST_ADMIN_USER=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
+  echo "AUTH_FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
   echo "HARBOR_HOSTS_FILE=${HARBOR_HOSTS_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_HOSTS_FILE | tr '[:upper:]' '[:lower:]' )
   echo "HARBOR_RESOLV_FILE=${HARBOR_RESOLV_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_RESOLV_FILE | tr '[:upper:]' '[:lower:]' )
 

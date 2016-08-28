@@ -23,8 +23,6 @@ spec:
         name: pod-run
       - mountPath: /run/lock
         name: pod-run-lock
-      - mountPath: /var/run/harbor/secrets
-        name: pod-run-secrets
       - mountPath: /tmp
         name: pod-tmp
   volumes:
@@ -34,8 +32,6 @@ spec:
     - name: pod-run
       emptyDir: {}
     - name: pod-run-lock
-      emptyDir: {}
-    - name: pod-run-secrets
       emptyDir: {}
     - name: pod-tmp
       emptyDir: {}
