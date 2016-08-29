@@ -18,7 +18,7 @@ spec:
       hostNetwork: true
       containers:
       - name: node-ovsdb-server
-        image: {{ IMAGE_OPENVSWITCH_OVSDB }}
+        image: {{ IMAGE_OVN_OVSDB }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
           - name: OS_DOMAIN
@@ -33,7 +33,7 @@ spec:
           - mountPath: /var/lib/ovn
             name: var-lib-ovn
       - name: node-ovs-vswitchd
-        image: {{ IMAGE_OPENVSWITCH_VSWITCHD }}
+        image: {{ IMAGE_OVN_VSWITCHD }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
           - name: OS_DOMAIN
@@ -50,7 +50,7 @@ spec:
         securityContext:
           privileged: true
       - name: node-ovn-controller
-        image: {{ IMAGE_OPENVSWITCH_OVN_CONTROLLER }}
+        image: {{ IMAGE_OVN_OVN_CONTROLLER }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
           - name: OS_DOMAIN

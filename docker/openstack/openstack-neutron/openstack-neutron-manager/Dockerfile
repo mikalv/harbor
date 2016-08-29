@@ -1,13 +1,12 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openvswitch-ovn-base:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-neutron-api:%%DOCKER_TAG%%
 
-ENV HARBOR_COMPONENT="openvswitch-ovn-ovsdb-nb"
-
-COPY ./assets /opt/harbor/assets
+COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
+    rm -rf /opt/harbor/assets && \
+    container-base-systemd-reset.sh
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

@@ -18,4 +18,12 @@ set -e
 echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
 
-tail -f /dev/null
+
+################################################################################
+/opt/harbor/ipsilon/install-ipsilon.sh
+/opt/harbor/ipsilon/config-apache.sh
+
+
+echo "${OS_DISTRO}: Launching Container Application"
+################################################################################
+exec httpd -D FOREGROUND

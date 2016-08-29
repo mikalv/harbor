@@ -4,6 +4,8 @@
 : ${IPSILON_API_TLS_KEY:="/run/harbor/auth/ssl/key"}
 : ${IPSILON_API_TLS_CERT:="/run/harbor/auth/ssl/crt"}
 
+: ${IPSILON_DATA_DIR:="/data"}
+
 : ${IPSILON_DB_SERVICE_PORT:="5432"}
 : ${IPSILON_DB_CA:="/run/harbor/auth/user/ca"}
 : ${IPSILON_DB_KEY:="/run/harbor/auth/user/key"}

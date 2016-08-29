@@ -2,12 +2,6 @@ FROM fedora:latest
 
 MAINTAINER Port Direct <support@port.direct>
 
-LABEL license="Apache-2.0" \
-      vendor="Port Direct" \
-      url="https://port.direct/" \
-      vcs-type="Git" \
-      vcs-url="https://github.com/portdirect/harbor"
-
 ENV OS_DISTRO="HarborOS-Fedora" \
     container=docker \
     OS_REPO_BRANCH="master" \
@@ -38,6 +32,11 @@ RUN set -e && \
 
 ENTRYPOINT ["/init"]
 
-LABEL name="%%DOCKER_FULLIMAGE%%" \
+LABEL license="Apache-2.0" \
+      vendor="Port Direct" \
+      url="https://port.direct/" \
+      vcs-type="Git" \
+      vcs-url="https://github.com/portdirect/harbor" \
+      name="%%DOCKER_FULLIMAGE%%" \
       vcs-ref="%%DOCKER_TAG%%" \
       build-date="%%DOCKER_BUILD_DATE%%"

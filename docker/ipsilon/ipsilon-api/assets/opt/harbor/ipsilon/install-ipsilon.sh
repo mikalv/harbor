@@ -25,6 +25,7 @@ echo "${OS_DISTRO}: Installing Ipsilon"
 
 ################################################################################
 check_required_vars OS_DOMAIN \
+                    IPSILON_DATA_DIR \
                     FREEIPA_SERVICE_HOST \
                     IPSILON_SERVICE_HOST \
                     IPSILON_HOSTNAME \
@@ -67,11 +68,18 @@ cat ${IPSILON_API_TLS_CA} >> /etc/ssl/certs/ca-bundle.crt
 
 
 ################################################################################
-if [ -f /var/lib/ipsilon/installed ] ; then
-  rm -rf /var/lib/ipsilon/idp
-  mkdir -p /var/lib/ipsilon/idp/saml2
-  cp /var/lib/ipsilon/idp-live/saml2/* /var/lib/ipsilon/idp/saml2/
+rm -rf /etc/ipsilon
+mkdir -p ${IPSILON_DATA_DIR}/etc/ipsilon
+ln -s ${IPSILON_DATA_DIR}/ipsilon /etc/ipsilon
 
+
+################################################################################
+rm -rf /var/lib/ipsilon
+mkdir -p ${IPSILON_DATA_DIR}/var/lib/ipsilon
+ln -s ${IPSILON_DATA_DIR}/var/lib/ipsilon /var/lib/ipsilon
+
+
+################################################################################
 ipsilon-server-install \
 --server-debugging \
 --hostname="${IPSILON_SERVICE_HOST}" \
@@ -96,47 +104,3 @@ ipsilon-server-install \
 --saml2-session-dburl="postgres://${AUTH_IPSILON_SAML2SESSION_DB_USER}:${AUTH_IPSILON_SAML2SESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAML2SESSION_DB_NAME}" \
 --openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}" \
 --openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
-
-
-  rm -rf /etc/ipsilon
-  rm -rf /var/lib/ipsilon/idp
-  ln -s /var/lib/ipsilon/etc /etc/ipsilon
-  ln -s /var/lib/ipsilon/idp-live /var/lib/ipsilon/idp
-else
-  rm -rf /var/lib/ipsilon/*
-  rm -rf /etc/ipsilon
-  mkdir -p /etc/ipsilon
-  mkdir -p /var/lib/ipsilon/etc
-  mv /etc/ipsilon /var/lib/ipsilon/etc
-  ln -s /var/lib/ipsilon/etc/ipsilon /etc/ipsilon
-
-ipsilon-server-install \
---server-debugging \
---hostname="${IPSILON_SERVICE_HOST}" \
---testauth=no \
---secure=yes \
---ldap=yes \
---ldap-server-url="ldap://${FREEIPA_SERVICE_HOST}" \
---ldap-bind-dn-template="uid=%(username)s,cn=users,cn=accounts,dc=${OS_DOMAIN}" \
---ldap-tls-level="Never" \
---ldap-base-dn "dc=${OS_DOMAIN}" \
---info-nss=no \
---info-ldap=yes \
---info-ldap-server-url="ldap://${FREEIPA_SERVICE_HOST}" \
---info-ldap-user-dn-template="uid=%(username)s,cn=users,cn=accounts,dc=${OS_DOMAIN}" \
---info-ldap-bind-dn="uid=${AUTH_FREEIPA_USER_ADMIN_USER},cn=users,cn=accounts,dc=${OS_DOMAIN}" \
---info-ldap-bind-pwd="${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" \
---info-ldap-base-dn="cn=accounts,dc=${OS_DOMAIN}"\
---admin-dburi="postgres://${AUTH_IPSILON_ADMIN_DB_USER}:${AUTH_IPSILON_ADMIN_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_ADMIN_DB_NAME}" \
---users-dburi="postgres://${AUTH_IPSILON_USERS_DB_USER}:${AUTH_IPSILON_USERS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_USERS_DB_NAME}" \
---transaction-dburi="postgres://${AUTH_IPSILON_TRANS_DB_USER}:${AUTH_IPSILON_TRANS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_TRANS_DB_NAME}" \
---samlsessions-dburi="postgres://${AUTH_IPSILON_SAMLSESSION_DB_USER}:${AUTH_IPSILON_SAMLSESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAMLSESSION_DB_NAME}" \
---saml2-session-dburl="postgres://${AUTH_IPSILON_SAML2SESSION_DB_USER}:${AUTH_IPSILON_SAML2SESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAML2SESSION_DB_NAME}" \
---openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}" \
---openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
-
-
-  mv /var/lib/ipsilon/idp /var/lib/ipsilon/idp-live
-  ln -s /var/lib/ipsilon/idp-live /var/lib/ipsilon/idp
-  touch /var/lib/ipsilon/installed
-fi

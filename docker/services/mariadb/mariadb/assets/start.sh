@@ -81,41 +81,38 @@ GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
 DROP DATABASE IF EXISTS test ;
 EOSQL
 
-        echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database"
-        if [ "$MARIADB_DATABASE" ]; then
-                echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
-        fi
+  echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database"
+  if [ "$MARIADB_DATABASE" ]; then
+    echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
+  fi
+  echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database: $MARIADB_USER"
+  if [ "$MARIADB_USER" -a "$MARIADB_PASSWORD" ]; then
+    echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
 
-        echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database: $MARIADB_USER"
-        if [ "$MARIADB_USER" -a "$MARIADB_PASSWORD" ]; then
-                echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
+    if [ "$MARIADB_DATABASE" ]; then
+            echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
+    fi
+  fi
 
-                if [ "$MARIADB_DATABASE" ]; then
-                        echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
-                fi
-        fi
+  echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database"
+  if [ "$DB_NAME" ]; then
+    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
+  fi
+  echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database: $DB_USER"
+  if [ "$DB_USER" -a "$DB_PASSWORD" ]; then
+    echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
 
+    if [ "$DB_NAME" ]; then
+            echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
+    fi
+  fi
 
-        echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database"
-        if [ "$DB_NAME" ]; then
-                echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
-        fi
+  echo 'FLUSH PRIVILEGES ;' >> "$TEMP_FILE"
+  MYSQLD_CMD="${MYSQLD_CMD} --init-file="$TEMP_FILE""
 
-        echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database: $DB_USER"
-        if [ "$DB_USER" -a "$DB_PASSWORD" ]; then
-                echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
-
-                if [ "$DB_NAME" ]; then
-                        echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
-                fi
-        fi
-
-        echo 'FLUSH PRIVILEGES ;' >> "$TEMP_FILE"
-
-        MYSQLD_CMD="${MYSQLD_CMD} --init-file="$TEMP_FILE""
 fi
+
+echo "${OS_DISTRO}: Launching Container application"
+
 chown -R mysql:mysql "$DATADIR"
-
-
-echo "${OS_DISTRO}: MariaDB: Running Launch Command"
 exec ${MYSQLD_CMD}
