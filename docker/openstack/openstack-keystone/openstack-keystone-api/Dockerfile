@@ -22,6 +22,7 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    rm -rf /etc/httpd/conf.d/*.conf && \
     cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
     cp -rf /opt/harbor/assets/* / && \
@@ -35,6 +36,9 @@ RUN set -e && \
     /opt/harbor/build/dockerfile.sh && \
     dnf clean all && \
     container-base-systemd-reset.sh
+
+
+RUN sed -i 's/^Listen 80/#Listen 80/' /etc/httpd/conf/httpd.conf
 
 LABEL name="%%DOCKER_FULLIMAGE%%" \
       vcs-ref="%%DOCKER_TAG%%" \

@@ -138,23 +138,20 @@ done
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 
 
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
-docker exec "${FREEIPA_SERVICE_HOST}" ipa pwpolicy-mod --maxlife=360 --minlife=1 global_policy || true
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin && \
+              (ipa pwpolicy-mod --maxlife=360 --minlife=1 global_policy || true) && kdestroy -A"
 
 
 
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ls /data/ipa-kra-installed || \
-(ipa-kra-install --unattended --password=${AUTH_FREEIPA_DS_PASSWORD} && touch /data/ipa-kra-installed)"
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin && \
+(ls /data/ipa-kra-installed || \
+(ipa-kra-install --unattended --password=${AUTH_FREEIPA_DS_PASSWORD} && touch /data/ipa-kra-installed))  && \
+kdestroy -A"
 
 
 
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
 TMP_PASSWORD=$(harbor-gen-password 12 24)
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
-"ipa user-del ${AUTH_FREEIPA_USER_ADMIN_USER}"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c \
 "ipa user-show ${AUTH_FREEIPA_USER_ADMIN_USER} || ( \
 echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${AUTH_FREEIPA_USER_ADMIN_USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${AUTH_FREEIPA_USER_ADMIN_USER} )"
@@ -163,7 +160,6 @@ docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa group-add-member admins --
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo $AUTH_FREEIPA_USER_ADMIN_PASSWORD | kinit ${AUTH_FREEIPA_USER_ADMIN_USER}"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
-
 
 
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
@@ -181,31 +177,29 @@ docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 IPA_CERT_PROFILE=caIPAclientCert
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa certprofile-show --out /tmp/webclient.cfg IECUserRoles"
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.2|g\" /tmp/webclient.cfg|"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.2|g\" /tmp/webclient.cfg"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|profileId=IECUserRoles|profileId=${IPA_CERT_PROFILE}|g\" /tmp/webclient.cfg"
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "sed -i \"s|name=IPA-RA Agent-Authenticated Server Certificate Enrollment|name=IPA-RA Agent-Authenticated Client Certificate Enrollment|g\" /tmp/webclient.cfg"
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa certprofile-import ${IPA_CERT_PROFILE} --file /tmp/webclient.cfg --desc \"Standard profile for network clients\" --store TRUE"
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa certprofile-import ${IPA_CERT_PROFILE} --file /tmp/webclient.cfg --desc \"Standard profile for network clients\" --store TRUE" || true
 docker exec "${FREEIPA_SERVICE_HOST}" rm -f /tmp/webclient.cfg
 docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
 
 
-
-
-
-# #Once it is up and running check it is working by running:
-# dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @$MY_IP
-# #If the above returns your KUBE_SKYDNS_IP as an A record then SkyDNS and the Kubernetes Adapter are working, now we need to make FreeIPA use them:
-# FREEIPA_CONTAINER_NAME=freeipa-master
-# source /etc/harbor/auth.env
-# docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh \
-# -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin && \
-#     ipa dnsforwardzone-add svc.${OS_DOMAIN}. --forwarder $MY_IP && \
-#     ipa dnsforwardzone-add pod.${OS_DOMAIN}. --forwarder $MY_IP && \
-#     ipa dnsrecord-del ${OS_DOMAIN} skydns --a-rec $MY_IP && \
-#     ipa dnsrecord-add ${OS_DOMAIN} skydns --a-rec $MY_IP && \
-#     sleep 5s && \
-#     ipa dnsrecord-add ${OS_DOMAIN}. svc --ns-rec=skydns && \
-#     ipa dnsrecord-add ${OS_DOMAIN}. pod --ns-rec=skydns && \
-#     kdestroy"
-# #Once it is up and running check it is working by running:
-# dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @${NETWORK_FREEIPA_FREEIPA_MASTER_IP}
+export KUBE_IP_FROM_SKYDNS=$(dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @$MY_IP)
+check_required_vars KUBE_IP_FROM_SKYDNS
+docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh \
+-c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin && \
+    ipa dnsforwardzone-del svc.${OS_DOMAIN}. || true && \
+    ipa dnsforwardzone-del pod.${OS_DOMAIN}. || true && \
+    ipa dnsforwardzone-add svc.${OS_DOMAIN}. --forwarder $MY_IP && \
+    ipa dnsforwardzone-add pod.${OS_DOMAIN}. --forwarder $MY_IP && \
+    ipa dnsrecord-del ${OS_DOMAIN} skydns --a-rec $MY_IP || true && \
+    ipa dnsrecord-add ${OS_DOMAIN} skydns --a-rec $MY_IP && \
+    sleep 5s && \
+    ipa dnsrecord-del ${OS_DOMAIN}. svc --ns-rec=skydns && \
+    ipa dnsrecord-add ${OS_DOMAIN}. svc --ns-rec=skydns && \
+    ipa dnsrecord-del ${OS_DOMAIN}. pod --ns-rec=skydns && \
+    ipa dnsrecord-add ${OS_DOMAIN}. pod --ns-rec=skydns && \
+    kdestroy"
+export KUBE_IP_FROM_IPA=$(dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @${NETWORK_FREEIPA_FREEIPA_MASTER_IP})
+check_required_vars KUBE_IP_FROM_IPA

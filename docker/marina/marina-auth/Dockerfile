@@ -1,11 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%marina-base:%%DOCKER_TAG%%
 
-LABEL license="Apache-2.0" \
-      vendor="Port Direct" \
-      url="https://port.direct/" \
-      vcs-type="Git" \
-      vcs-url="https://github.com/portdirect/harbor"
-
 ADD ./assets /opt/harbor/assets
 
 RUN set -e && \

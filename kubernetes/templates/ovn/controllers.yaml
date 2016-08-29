@@ -15,8 +15,6 @@ spec:
       name: ovn-node
       namespace: os-ovn
     spec:
-      nodeSelector:
-        openstack-ovn: 'true'
       hostNetwork: true
       containers:
       - name: node-ovsdb-server
@@ -34,8 +32,6 @@ spec:
             name: var-run-openvswitch
           - mountPath: /var/lib/ovn
             name: var-lib-ovn
-          - mountPath: /etc/hosts
-            name: harbor-hosts
       - name: node-ovs-vswitchd
         image: {{ IMAGE_OPENVSWITCH_VSWITCHD }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
@@ -51,8 +47,6 @@ spec:
             name: var-run-netns
           - mountPath: /dev/net
             name: dev-net
-          - mountPath: /etc/hosts
-            name: harbor-hosts
         securityContext:
           privileged: true
       - name: node-ovn-controller
@@ -68,8 +62,6 @@ spec:
         volumeMounts:
           - mountPath: /var/run/openvswitch
             name: var-run-openvswitch
-          - mountPath: /etc/hosts
-            name: harbor-hosts
       volumes:
         - name: var-run-openvswitch
           hostPath:
@@ -83,6 +75,3 @@ spec:
         - name: dev-net
           hostPath:
             path: /dev/net
-        - name: harbor-hosts
-          hostPath:
-            path: {{ HARBOR_HOSTS_FILE }}

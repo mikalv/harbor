@@ -17,3 +17,5 @@
 set -e
 echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
+
+tail -f /dev/null

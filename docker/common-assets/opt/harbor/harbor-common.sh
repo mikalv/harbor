@@ -14,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+touch /etc/os-container.env
 source /etc/os-container.env
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/harbor-vars.sh

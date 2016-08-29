@@ -21,6 +21,7 @@ export OS_DOMAIN=$(hostname -d)
 export FREEIPA_SERVICE_HOST
 echo "FREEIPA_SERVICE_HOST: $FREEIPA_SERVICE_HOST"
 
+touch /etc/os-container.env
 source /etc/os-container.env
 source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh

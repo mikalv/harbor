@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%freeipa-client:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="ipsilon-api"
 
@@ -14,22 +14,16 @@ RUN set -e && \
     dnf install -y \
         findutils \
         postgresql \
+        python-psycopg2 \
         ipsilon \
-        ipsilon-authfas \
-        ipsilon-authform \
-        ipsilon-authgssapi \
         ipsilon-authldap \
-        ipsilon-authpam \
         ipsilon-base \
-        ipsilon-client \
         ipsilon-filesystem \
-        ipsilon-infosssd \
         ipsilon-openid \
         ipsilon-openidc \
         ipsilon-persona \
         ipsilon-saml2 \
-        ipsilon-saml2-base \
-        ipsilon-tools-ipa && \
+        ipsilon-saml2-base && \
     dnf clean all && \
     container-base-systemd-reset.sh
 

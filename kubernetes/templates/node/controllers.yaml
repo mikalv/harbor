@@ -1,0 +1,31 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: node-memcached
+    version: v0.1.0
+  name: node-memcached
+  namespace: os-node
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: node-memcached
+        version: v0.1.0
+      name: node-memcached
+      namespace: os-node
+    spec:
+      hostNetwork: true
+      containers:
+        - name: node-memcached
+          image: {{ IMAGE_MARINA_MEMCACHED }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 11211
+              hostPort: 11211
+              name: memcached
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DEVICE
+              value: lo

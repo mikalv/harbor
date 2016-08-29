@@ -40,7 +40,14 @@ NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
 
 if [ "$NODE_ROLE" = "master" ]; then
     echo "This is a master node."
-    docker run --rm -v /etc/harbor:/etc/harbor:rw port/marina-password-gen:latest
+    cfg_images=/etc/harbor/images.conf
+    IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
+    IMAGE_PULL_POLICY=$(crudini --get $cfg_images DEFAULT pull_policy)
+    PASSWD_GEN_IMAGE=docker.io/port/marina-password-gen:${IMAGE_TAG}
+    if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+      docker pull ${PASSWD_GEN_IMAGE} || true
+    fi
+    docker run --rm -v /etc/harbor:/etc/harbor:rw ${PASSWD_GEN_IMAGE}
     source /usr/bin/start-services
     #/opt/harbor/roles/master &>/var/log/harbor-boostrap &
 else

@@ -24,6 +24,17 @@ DOCKER_CMD="-H tcp://${DOCKER_IP}:${DOCKER_PORT} \
 --cluster-store etcd://127.0.0.1:4001 \
 --swarm-default-advertise-addr=${DOCKER_DEV}:${DOCKER_PORT}"
 
+
+( IFS='
+'
+for BRIDGE in $(brctl show | grep "^qbr" | awk '{ print $1 }'); do
+  (ip link set dev ${BRIDGE} down
+  brctl delbr ${BRIDGE}) || true
+done
+)
+
+
+
 mkdir -p /var/lib/docker
 exec dockerd \
      --mtu ${DOCKER_MTU} \

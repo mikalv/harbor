@@ -14,4 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-exec su -s /bin/sh -c "exec memcached -p 11211 -U 11211 -l 0.0.0.0" memcached
+set -e
+echo "${OS_DISTRO}: Starting Memcached Container"
+################################################################################
+touch /etc/os-container.env
+source /etc/os-container.env
+source /opt/harbor/harbor-vars.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
+
+
+################################################################################
+check_required_vars OS_DOMAIN \
+                    DEVICE \
+                    PORT
+
+
+################################################################################
+MEMCACHED_IP="$(ip -f inet -o addr show ${DEVICE}|cut -d\  -f 7 | cut -d/ -f 1)"
+
+
+echo "${OS_DISTRO}: Launching Memcached @ ${MEMCACHED_IP}:${PORT}"
+################################################################################
+exec su -s /bin/sh -c "exec memcached -p ${PORT} -U ${PORT} -l ${MEMCACHED_IP}" memcached

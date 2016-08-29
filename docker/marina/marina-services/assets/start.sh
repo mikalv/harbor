@@ -8,7 +8,7 @@ if [ "$MARINA_SERVICE" = "kubernetes" ]; then
   echo "$OS_DISTRO: Service is Kubernetes, no action required"
 else
   echo "$OS_DISTRO: Updating kube service"
-  /usr/bin/load-harbor-service.sh
+
 fi
 
 tail -f /dev/null
@@ -18,9 +18,9 @@ shutdown -h now
 
 
 
-rm -f /opt/harbor/kubernetes/templates/keystone/controllers.yaml && \
-vi /opt/harbor/kubernetes/templates/keystone/controllers.yaml && \
-(
+rm -f /opt/harbor/kubernetes/templates/ipsilon/controllers.yaml && \
+vi /opt/harbor/kubernetes/templates/ipsilon/controllers.yaml && \
+  /usr/bin/load-harbor-service.sh
 prep_manifests ${LOAD_OS_SERVICE}
 
 load_manifest ${LOAD_OS_SERVICE} namespace

@@ -27,8 +27,8 @@ freeipa_login () {
   if [ "$FREEIPA_LOGIN_METHOD" == 'keytab' ]; then
     kinit -k -t /etc/krb5.keytab
   elif [ "$FREEIPA_LOGIN_METHOD" == 'password' ]; then
-    check_required_vars FREEIPA_HOST_ADMIN_PASSWORD FREEIPA_HOST_ADMIN_USER
-    echo ${FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${FREEIPA_HOST_ADMIN_USER}
+    check_required_vars AUTH_FREEIPA_HOST_ADMIN_PASSWORD AUTH_FREEIPA_HOST_ADMIN_USER
+    echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER}
   fi
 }
 

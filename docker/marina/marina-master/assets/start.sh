@@ -4,6 +4,7 @@ echo "hello"
 /usr/bin/harbor-service-manage-auth
 tail -f /dev/null
 
+harbor-service-update kubernetes
 harbor-service-update ipsilon
 harbor-service-update keystone
 harbor-service-update neutron

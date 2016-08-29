@@ -14,74 +14,73 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-tail -f /dev/null
+set -e
+echo "${OS_DISTRO}: Starting Postgresql Container"
+################################################################################
+source /etc/os-container.env
+: ${DATADIR:="/var/lib/postgresql/data"}
+: ${DB_PORT:="5432"}
+OS_DOMAIN=$OS_DOMAIN
+ROOT_DB_NAME=${!ROOT_DB_NAME}
+ROOT_DB_USER=${!ROOT_DB_USER}
+ROOT_DB_PASSWORD=${!ROOT_DB_PASSWORD}
+DB_PORT=$DB_PORT
+source /opt/harbor/harbor-vars.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
 
-PGDATA=/var/lib/pysql
-chown -R postgres "$PGDATA"
 
-POSTGRES_PASSWORD=$AUTH_IPSILON_DB_PASSWORD
-#/var/run/harbor/secrets/config-db/..8988_28_08_03_37_25.059080945/ipsilon-db-name
-POSTGRES_DB=$AUTH_IPSILON_DB_NAME
-#/var/run/harbor/secrets/config-db/..8988_28_08_03_37_25.059080945/ipsilon-db-user
-POSTGRES_USER=$AUTH_IPSILON_DB_USER
-#/var/run/harbor/secrets/config-db-root/..8988_28_08_03_37_23.754169637/mariadb-root-password
-AUTH_IPSILON_DB_ROOT_PASSWORD
+################################################################################
+check_required_vars OS_DOMAIN \
+                    DB_PORT
 
-if [ -z "$(ls -A "$PGDATA")" ]; then
+
+################################################################################
+chown -R postgres "$DATADIR"
+if [ -z "$(ls -A "$DATADIR")" ]; then
+
+    check_required_vars ROOT_DB_USER \
+                        ROOT_DB_NAME \
+                        ROOT_DB_PASSWORD
+
+    echo "${OS_DISTRO}: Bootstrapping Postgresql DB in ${DATADIR}"
     su -s /bin/sh -c "initdb" postgres
-    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$PGDATA"/postgresql.conf
-
-    : ${POSTGRES_USER:="postgres"}
-    : ${POSTGRES_DB:=$POSTGRES_USER}
-
-    if [ "$POSTGRES_PASSWORD" ]; then
-      pass="PASSWORD '$POSTGRES_PASSWORD'"
-      authMethod=md5
-    else
-      echo "==============================="
-      echo "!!! Use \$POSTGRES_PASSWORD env var to secure your database !!!"
-      echo "==============================="
-      pass=
-      authMethod=trust
-    fi
-    echo
 
 
-    if [ "$POSTGRES_DB" != 'postgres' ]; then
-      createSql="CREATE DATABASE $POSTGRES_DB;"
-      echo $createSql | gosu postgres postgres --single -jE
-      echo
+    echo "${OS_DISTRO}: Configuring connections"
+    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$DATADIR"/postgresql.conf
+
+
+    if [ "$ROOT_DB_NAME" != 'postgres' ]; then
+      createSql="CREATE DATABASE $ROOT_DB_NAME;"
+      su -s /bin/bash -c "echo \"$createSql\" | postgres --single -jE" postgres
     fi
 
-    if [ "$POSTGRES_USER" != 'postgres' ]; then
+    if [ "$ROOT_DB_USER" != 'postgres' ]; then
       op=CREATE
     else
       op=ALTER
     fi
 
-    userSql="$op USER $POSTGRES_USER WITH SUPERUSER $pass;"
-    echo $userSql | gosu postgres postgres --single -jE
-    echo
+    pass="PASSWORD '$ROOT_DB_PASSWORD'"
+    authMethod=md5
+
+    userSql="$op USER $ROOT_DB_USER WITH SUPERUSER $pass;"
+    su -s /bin/sh -c "echo \"$userSql\" | postgres --single -jE" postgres
 
     # internal start of server in order to allow set-up using psql-client
     # does not listen on TCP/IP and waits until start finishes
-    gosu postgres pg_ctl -D "$PGDATA" \
-        -o "-c listen_addresses=''" \
-        -w start
+    su -s /bin/sh -c "pg_ctl -D \"$DATADIR\" \
+        -o \"-c listen_addresses=''\" \
+        -w start" postgres
 
-    echo
-    for f in /docker-entrypoint-initdb.d/*; do
-        case "$f" in
-            *.sh)  echo "$0: running $f"; . "$f" ;;
-            *.sql) echo "$0: running $f"; psql --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" < "$f" && echo ;;
-            *)     echo "$0: ignoring $f" ;;
-        esac
-        echo
-    done
+    su -s /bin/sh -c "pg_ctl -D \"$DATADIR\" -m fast -w stop" postgres
 
-    gosu postgres pg_ctl -D "$PGDATA" -m fast -w stop
-
-    { echo; echo "host all all 0.0.0.0/0 $authMethod"; } >> "$PGDATA"/pg_hba.conf
+    cat /opt/harbor/postgresql/pg_hba.conf > $DATADIR/pg_hba.conf
+    echo "host all all 0.0.0.0/0 $authMethod" >> $DATADIR/pg_hba.conf
 fi
 
-exec gosu postgres "$@"
+
+
+################################################################################
+exec su -s /bin/sh -c "exec postgres $@" postgres
