@@ -15,5 +15,31 @@
 # limitations under the License.
 
 set -e
-mkdir -p /var/run/openvswitch
-exec ovn-northd --ovnnb-db=tcp:${OVS_NB_DB_IP}:6641 --ovnsb-db=tcp:${OVS_SB_DB_IP}:6642 --verbose
+echo "${OS_DISTRO}: Launching OVN Northd Container"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+
+
+################################################################################
+check_required_vars OS_DOMAIN \
+                    OVN_NB_DB_SERVICE_HOST_SVC \
+                    OVN_SB_DB_SERVICE_HOST_SVC
+
+
+################################################################################
+OVS_NB_DB_IP=$(dig +short ${OVN_NB_DB_SERVICE_HOST_SVC} | awk '{ print ; exit }')
+OVS_SB_DB_IP=$(dig +short ${OVN_SB_DB_SERVICE_HOST_SVC} | awk '{ print ; exit }')
+check_required_vars OVS_SB_DB_IP \
+                    OVS_NB_DB_IP
+
+
+echo "${OS_DISTRO}: Launching Container Application"
+################################################################################
+echo "${OS_DISTRO}: Connecting to NB database @ tcp:${OVS_NB_DB_IP}:6641"
+echo "${OS_DISTRO}: Connecting to SB database @ tcp:${OVS_SB_DB_IP}:6642"
+exec ovn-northd \
+      --log-file="/dev/null" \
+      --ovnnb-db=tcp:${OVS_NB_DB_IP}:6641 \
+      --ovnsb-db=tcp:${OVS_SB_DB_IP}:6642

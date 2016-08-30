@@ -1,3 +1,59 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ovn-northbound-db
+  name: os-ovn-northbound-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ovn/northbound-db
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ovn-northbound-db
+  name: os-ovn-northbound-db
+  namespace: os-ovn
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ovn-southbound-db
+  name: os-ovn-southbound-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ovn/southbound-db
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ovn-southbound-db
+  name: os-ovn-southbound-db
+  namespace: os-ovn
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -26,6 +82,7 @@ spec:
         ports:
           - containerPort: 6640
             hostPort: 6640
+            protocol: TCP
             name: ovs-db
         volumeMounts:
           - mountPath: /var/run/openvswitch
@@ -57,8 +114,6 @@ spec:
             value: {{ OS_DOMAIN }}
           - name: TUNNEL_DEV
             value: {{ NODE_NETWORK_DEFAULT_DEVICE }}
-          - name: OVS_SB_DB_IP
-            value: {{ NETWORK_OPENVSWITCH_SOUTHBOUND_DB_IP }}
         volumeMounts:
           - mountPath: /var/run/openvswitch
             name: var-run-openvswitch
@@ -75,3 +130,122 @@ spec:
         - name: dev-net
           hostPath:
             path: /dev/net
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ovn-northd
+    version: v0.1.0
+  name: ovn-northd
+  namespace: os-ovn
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ovn-northd
+        version: v0.1.0
+      name: ovn-northd
+      namespace: os-ovn
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ovn-northd
+          image: {{ IMAGE_OVN_OVN_NORTHD }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          securityContext:
+            privileged: false
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ovn-northbound-db
+    version: v0.1.0
+  name: ovn-northbound-db
+  namespace: os-ovn
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ovn-northbound-db
+        version: v0.1.0
+      name: ovn-northbound-db
+      namespace: os-ovn
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ovn-northbound-db
+          image: {{ IMAGE_OVN_OVN_OVSDB_NB }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 6641
+              hostPort: 6641
+              protocol: TCP
+              name: ovs-db
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          securityContext:
+            privileged: false
+          volumeMounts:
+            - mountPath: /var/lib/ovn
+              name: os-ovn-northbound-db
+              readOnly: false
+      volumes:
+        - name: os-ovn-northbound-db
+          persistentVolumeClaim:
+            claimName: os-ovn-northbound-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ovn-southbound-db
+    version: v0.1.0
+  name: ovn-southbound-db
+  namespace: os-ovn
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ovn-southbound-db
+        version: v0.1.0
+      name: ovn-southbound-db
+      namespace: os-ovn
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ovn-southbound-db
+          image: {{ IMAGE_OVN_OVN_OVSDB_SB }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 6642
+              hostPort: 6642
+              protocol: TCP
+              name: ovs-db
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          securityContext:
+            privileged: false
+          volumeMounts:
+            - mountPath: /var/lib/ovn
+              name: os-ovn-southbound-db
+              readOnly: false
+      volumes:
+        - name: os-ovn-southbound-db
+          persistentVolumeClaim:
+            claimName: os-ovn-southbound-db

@@ -3,7 +3,7 @@ kind: Service
 metadata:
   labels:
     openstack-app: ovn-node
-  name: ovn
+  name: ovn-nodes
   namespace: os-ovn
 spec:
   clusterIP: None
@@ -15,3 +15,39 @@ spec:
     name: ovsdb
   selector:
     openstack-app: ovn-node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: ovn-northbound-db
+  name: ovn-northbound-db
+  namespace: os-ovn
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 6641
+    targetPort: 6641
+    protocol: TCP
+    name: ovsdb
+  selector:
+    openstack-app: ovn-node
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: ovn-southbound-db
+  name: ovn
+  namespace: os-ovn
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 6642
+    targetPort: 6642
+    protocol: TCP
+    name: ovsdb
+  selector:
+    openstack-app: ovn-southbound-db

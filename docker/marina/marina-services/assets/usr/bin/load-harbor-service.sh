@@ -132,6 +132,7 @@ load_image_config etcd
 load_image_config marina
 load_image_config mariadb
 load_image_config mongodb
+load_image_config memcached
 load_image_config rabbitmq
 
 echo "$OS_DISTRO: Reloading Network config"

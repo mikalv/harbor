@@ -1,0 +1,53 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Configuring domains"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/nova/vars.sh
+
+
+################################################################################
+check_required_vars NEUTRON_CONFIG_FILE \
+                    OS_DOMAIN \
+                    AUTH_NOVA_KEYSTONE_REGION \
+                    AUTH_NOVA_KEYSTONE_DOMAIN \
+                    AUTH_NOVA_KEYSTONE_USER \
+                    AUTH_NOVA_KEYSTONE_PASSWORD \
+                    AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN \
+                    AUTH_NOVA_KEYSTONE_PROJECT \
+                    NEUTRON_DB_CA \
+                    KEYSTONE_API_SERVICE_HOST_SVC \
+                    MEMCACHE_SERVICE_HOST_SVC
+
+
+################################################################################
+crudini --set ${NEUTRON_CONFIG_FILE} nova memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
+crudini --set ${NEUTRON_CONFIG_FILE} nova auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
+crudini --set ${NEUTRON_CONFIG_FILE} nova project_domain_name "${AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova project_name "${AUTH_NOVA_KEYSTONE_PROJECT}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova user_domain_name "${AUTH_NOVA_KEYSTONE_DOMAIN}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova region_name "${AUTH_NOVA_KEYSTONE_REGION}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova password "${AUTH_NOVA_KEYSTONE_PASSWORD}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova username "${AUTH_NOVA_KEYSTONE_USER}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
+crudini --set ${NEUTRON_CONFIG_FILE} nova auth_type "password"
+crudini --set ${NEUTRON_CONFIG_FILE} nova auth_version "v3"
+crudini --set ${NEUTRON_CONFIG_FILE} nova signing_dir "/var/cache/neutron"
+crudini --set ${NEUTRON_CONFIG_FILE} nova cafile "${NEUTRON_DB_CA}"

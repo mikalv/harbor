@@ -4,6 +4,9 @@ ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    dnf install -y \
+        git && \
+    dnf clean all && \
     /bin/cp -rf /opt/harbor/assets/* / && \
     /bin/rm -rf /opt/harbor/assets && \
     container-base-systemd-reset.sh

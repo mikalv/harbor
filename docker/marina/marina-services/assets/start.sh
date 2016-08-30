@@ -16,11 +16,19 @@ echo "$OS_DISTRO: Loaded Harbor Service"
 shutdown -h now
 
 
-
-
-rm -f /opt/harbor/kubernetes/templates/ipsilon/controllers.yaml && \
-vi /opt/harbor/kubernetes/templates/ipsilon/controllers.yaml && \
+rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/secrets.yaml && \
+vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/secrets.yaml && \
   /usr/bin/load-harbor-service.sh
+
+rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/controllers.yaml && \
+vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/controllers.yaml && \
+  /usr/bin/load-harbor-service.sh
+
+
+rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/services.yaml && \
+vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/services.yaml && \
+/usr/bin/load-harbor-service.sh
+
 prep_manifests ${LOAD_OS_SERVICE}
 
 load_manifest ${LOAD_OS_SERVICE} namespace

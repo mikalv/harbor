@@ -1,0 +1,55 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: messaging
+    version: v0.1.0
+  name: messaging
+  namespace: os-messaging
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: messaging
+        version: v0.1.0
+      name: messaging
+      namespace: os-messaging
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: messaging-api
+          image: {{ IMAGE_RABBITMQ_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 5672
+              hostPort: 5672
+              protocol: TCP
+              name: rabbit
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: messaging-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: messaging-user-ssl-secret

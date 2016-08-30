@@ -6,6 +6,7 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
+    pip --no-cache-dir install python-openstackclient && \
     container-base-systemd-reset.sh
 
 LABEL license="Apache-2.0" \

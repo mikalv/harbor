@@ -15,21 +15,28 @@
 # limitations under the License.
 
 set -e
-
-###############################################################################
-echo "${OS_DISTRO}: ${HARBOR_COMPONENT}: Adapting vars from base image"
+echo "${OS_DISTRO}: Starting Rabbitmq Container"
 ################################################################################
-RABBITMQ_USER="guest"
-RABBITMQ_PASS="guest"
+source /etc/os-container.env
+source /opt/harbor/harbor-vars.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
 : ${RABBITMQ_NODENAME:="messaging"}
-: ${RABBITMQ_LOG_BASE:=/var/log/rabbitmq}
+: ${RABBITMQ_LOG_BASE:="/var/log/rabbitmq"}
+
 
 ################################################################################
-echo "${OS_DISTRO}: ${HARBOR_COMPONENT}: Configuring"
+check_required_vars OS_DOMAIN \
+                    AUTH_MESSAGING_USER \
+                    AUTH_MESSAGING_PASS \
+                    RABBITMQ_NODENAME \
+                    RABBITMQ_LOG_BASE
+
+
 ################################################################################
 sed -i '
-  s|@RABBITMQ_USER@|'"$RABBITMQ_USER"'|g
-  s|@RABBITMQ_PASS@|'"$RABBITMQ_PASS"'|g
+  s|@RABBITMQ_USER@|'"$AUTH_MESSAGING_USER"'|g
+  s|@RABBITMQ_PASS@|'"$AUTH_MESSAGING_PASS"'|g
 ' /etc/rabbitmq/rabbitmq.config
 
 sed -i '
@@ -37,13 +44,19 @@ sed -i '
   s|@RABBITMQ_LOG_BASE@|'"$RABBITMQ_LOG_BASE"'|g
 ' /etc/rabbitmq/rabbitmq-env.conf
 
-echo "127.0.0.1 $(hostname)" >> /etc/hosts
 
-
-chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
-mkdir -p /var/log/rabbitmq
-chown -R rabbitmq:rabbitmq /var/log/rabbitmq
 ################################################################################
-echo "${OS_DISTRO}: ${HARBOR_COMPONENT}: Launching"
+echo "127.0.0.1 $(hostname)" >> /etc/hosts
+echo "127.0.0.1 ${RABBITMQ_NODENAME}" >> /etc/hosts
+
+
+################################################################################
+mkdir -p /var/lib/rabbitmq
+chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
+mkdir -p ${RABBITMQ_LOG_BASE}
+chown -R rabbitmq:rabbitmq ${RABBITMQ_LOG_BASE}
+
+
+echo "${OS_DISTRO}: Starting Container Application"
 ################################################################################
 exec su -s /bin/sh -c "exec rabbitmq-server" rabbitmq

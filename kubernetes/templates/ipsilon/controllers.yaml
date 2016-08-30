@@ -297,9 +297,6 @@ spec:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
-            - name: os-config-ssl-user-secret
-              mountPath: /run/harbor/auth/user
-              readOnly: true
             - name: os-ipsilon-api
               mountPath: /data
               readOnly: false

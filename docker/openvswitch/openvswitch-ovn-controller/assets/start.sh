@@ -15,23 +15,61 @@
 # limitations under the License.
 
 set -e
+echo "${OS_DISTRO}: Launching OVS DB Container"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
 
-TUNNEL_DEV=${TUNNEL_DEV:-eth0}
-HOST_IP="$(ip -f inet -o addr show ${TUNNEL_DEV}|cut -d\  -f 7 | cut -d/ -f 1)"
-OVS_SB_DB_IP=${OVS_SB_DB_IP:-$HOST_IP}
-INTERGRATION_BRIDGE=${INTERGRATION_BRIDGE:-br-int}
 
+################################################################################
+INTERGRATION_BRIDGE=${INTERGRATION_BRIDGE:-"br-int"}
+SYSTEM_ID="$(hostname -s).${OS_DOMAIN}"
+
+
+################################################################################
+check_required_vars OS_DOMAIN \
+                    MY_IP \
+                    INTERGRATION_BRIDGE \
+                    OVN_SB_DB_SERVICE_HOST_SVC \
+                    SYSTEM_ID
+
+################################################################################
+OVS_SB_DB_IP=$(dig +short ${OVN_SB_DB_SERVICE_HOST_SVC} | awk '{ print ; exit }')
+check_required_vars OVS_SB_DB_IP
+
+
+echo "${OS_DISTRO}: Setting Systemid to ${SYSTEM_ID}"
+################################################################################
 ovs-vsctl --no-wait init
 ovs-vsctl --no-wait set open_vswitch . system-type="HarborOS"
-ovs-vsctl --no-wait set open_vswitch . external-ids:system-id="$(hostname -s).$(hostname -d)"
+ovs-vsctl --no-wait set open_vswitch . external-ids:system-id="${SYSTEM_ID}"
 
+
+echo "${OS_DISTRO}: Setting OVS-SB connection to ${OVS_SB_DB_IP}"
+################################################################################
 ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-remote="tcp:${OVS_SB_DB_IP}:6642"
-ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-bridge="${INTERGRATION_BRIDGE}"
-ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-type="geneve"
-ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-ip="$HOST_IP"
 
+
+echo "${OS_DISTRO}: Setting intergration bridge to ${INTERGRATION_BRIDGE}"
+################################################################################
+ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-bridge="${INTERGRATION_BRIDGE}"
+
+
+echo "${OS_DISTRO}: Setting geneve encapsulation ip to ${MY_IP}"
+################################################################################
+ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-type="geneve"
+ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-ip="${MY_IP}"
+
+
+echo "${OS_DISTRO}: Configuring intergration bridge  ${INTERGRATION_BRIDGE}"
+################################################################################
 ovs-vsctl --no-wait -- --may-exist add-br ${INTERGRATION_BRIDGE}
 ovs-vsctl --no-wait br-set-external-id ${INTERGRATION_BRIDGE} bridge-id ${INTERGRATION_BRIDGE}
 ovs-vsctl --no-wait set bridge br-int fail-mode=secure other-config:disable-in-band=true
 
-exec ovn-controller --verbose unix:/var/run/openvswitch/db.sock
+
+echo "${OS_DISTRO}: Launching Container Application"
+################################################################################
+exec ovn-controller unix:/var/run/openvswitch/db.sock \
+      --log-file="/dev/null"

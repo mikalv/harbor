@@ -1,13 +1,33 @@
-#!/bin/sh
+#!/bin/bash
 set -e
-set -x
-echo "${OS_DISTRO}: ${OS_COMP}: Starting Container"
-source /etc/os-container.env
+echo "${OS_DISTRO}: Launching"
+################################################################################
+. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-# File path and name used by crudini tool
-export cfg=/etc/${OS_COMP}/${OS_COMP}.conf
+. /opt/harbor/neutron/vars.sh
 
 
-echo "${OS_DISTRO}: ${OS_COMP}: Launching"
-exec tail -f /dev/null
+echo "${OS_DISTRO}: Config Starting"
+################################################################################
+/opt/harbor/config-neutron.sh
+
+
+echo "${OS_DISTRO}: Managing database"
+################################################################################
+/opt/harbor/neutron/manage/bootstrap-database.sh
+
+
+echo "${OS_DISTRO}: Managing User"
+################################################################################
+/opt/harbor/neutron/manage/manage-keystone-user.sh
+
+
+echo "${OS_DISTRO}: Managing Service"
+################################################################################
+/opt/harbor/neutron/manage/manage-keystone-service.sh
+
+
+echo "${OS_DISTRO}: Finished management"
+################################################################################
+tail -f /dev/null

@@ -1,0 +1,45 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: node-memcached
+  name: node-memcached
+  namespace: os-memcached
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 11211
+    targetPort: 11211
+    protocol: TCP
+  selector:
+    openstack-app: node-memcached
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: memcached
+  name: memcached
+  namespace: os-memcached
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 11211
+    protocol: TCP
+---
+apiVersion: "v1"
+kind: "Endpoints"
+metadata:
+  labels:
+    openstack-app: memcached
+  name: memcached
+  namespace: os-memcached
+subsets:
+ - addresses:
+      - ip: "172.16.0.1"
+   ports:
+      - port: 11211
+        protocol: TCP
+        name: memcached

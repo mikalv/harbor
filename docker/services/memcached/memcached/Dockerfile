@@ -10,8 +10,6 @@ RUN set -e && \
         memcached && \
     cp -rf /opt/harbor/assets/* /
 
-CMD ["/start.sh"]
-
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

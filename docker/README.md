@@ -3,11 +3,12 @@
 This directory contains the Dockerfiles and associated assets for building the
 Harbor Platform:
 
- * Mandracchio: The Harbor Atomic Host
- * OpenvSwitch: Software Defined Networking
- * Etcd: The Harbor Atomic Host
- * Skydns: The Harbor Atomic Host
+ * Base: Base Distro Images
  * FreeIPA: Identity Policy & Audit
- * Ipsilon: Software Defined Networking
- * OpenStack: Cloud Operating System
+ * Ipsilon: Federated Identity Provider
  * Kubernetes: Container Orchestration
+ * Mandracchio: Harbor Atomic Host
+ * Marina: Harbor Service Management
+ * OpenStack: Cloud Operating System
+ * OpenvSwitch: Software Defined Networking
+ * Services: Common Service Images

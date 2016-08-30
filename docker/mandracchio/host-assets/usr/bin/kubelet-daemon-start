@@ -18,6 +18,11 @@ set -e
 PATH=$PATH:/usr/local/bin
 CONTAINER_NAME="kubelet"
 
+brctl addbr br-lo || true
+ip addr add 172.16.0.1/32 dev br-lo || true
+ip link set br-lo up
+
+
 cfg_images=/etc/harbor/images.conf
 IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
 IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)

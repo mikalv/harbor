@@ -20,9 +20,9 @@ set -e
 mkdir -p /opt/stack
 
 git clone ${OS_REPO_URL} /opt/stack/${OS_COMP}
-  cd /opt/stack/${OS_COMP}
-  git checkout ${OS_REPO_COMMIT}
-  cd /
+  # cd /opt/stack/${OS_COMP}
+  # git checkout ${OS_REPO_COMMIT}
+  # cd /
 
 git clone ${OS_REPO_URL_1} -b ${OS_REPO_BRANCH_1} --depth 1 /opt/stack/${OS_COMP_1}
 cd /opt/stack/${OS_COMP_1}
@@ -42,6 +42,7 @@ mkdir -p /var/lib/${OS_COMP}/state
 mkdir -p /var/lib/${OS_COMP}/state/lbaas
 
 mkdir -p /etc/${OS_COMP}
+mkdir -p /etc/${OS_COMP}/plugins/ml2
 mkdir -p /var/cache/${OS_COMP}
 
 cp /opt/stack/neutron/etc/*.ini /etc/${OS_COMP}/

@@ -15,21 +15,32 @@
 # limitations under the License.
 
 set -e
+echo "${OS_DISTRO}: Launching OVN Southbound DB Container"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+OVN_SB_IP=${MY_IP}
 
-OVN_DIR=/var/lib/ovn
-OVN_LOG_DIR=/var/log/ovn
-mkdir -p $OVN_DIR
-mkdir -p $OVN_LOG_DIR
 
-if [ ! -f  $OVN_DIR/ovnnb.db ]; then
+################################################################################
+check_required_vars OVN_DIR \
+                    OS_DOMAIN \
+                    OVN_SB_IP
+
+
+################################################################################
+if [ ! -f ${OVN_DIR}/ovnsb.db ]; then
     echo "Creating DB"
     ovsdb-tool create $OVN_DIR/ovnsb.db /usr/share/openvswitch/ovn-sb.ovsschema
 fi
 
 
+echo "${OS_DISTRO}: Launching Container Application"
+################################################################################
+echo "${OS_DISTRO}: Serving remote connections on: ptcp:6642:${OVN_SB_IP}"
 exec ovsdb-server  \
-      --log-file=${OVN_LOG_DIR}/ovsdb-server-sb.log \
+      --log-file="/dev/null" \
       --remote=punix:/var/run/openvswitch/ovnsb_db.sock \
-      --remote=ptcp:6642:0.0.0.0 \
-      --pidfile=/var/run/openvswitch/ovnsb_db.pid \
-      --unixctl=ovnsb_db.ctl ${OVN_DIR}/ovnsb.db --verbose
+      --remote=ptcp:6642:${OVN_SB_IP} \
+      --unixctl=ovnsb_db.ctl ${OVN_DIR}/ovnsb.db

@@ -7,7 +7,9 @@ COPY ./assets /opt/harbor/assets
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
+    rm -rf /opt/harbor/assets && \
+    container-base-systemd-reset.sh
+
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

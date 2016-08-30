@@ -3,10 +3,13 @@ FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 ENV HARBOR_COMPONENT="ipsilon" \
     OS_COMP="ipsilon" \
     OS_REPO_URL="https://github.com/portdirect/ipsilon.git" \
-    OS_REPO_BRANCH="master"
+    OS_REPO_BRANCH="release-1.2"
 
 RUN set -e && \
     set -x && \
+    dnf install -y \
+        'dnf-command(config-manager)' && \
+    dnf config-manager --set-enabled updates-testing && \
     dnf install -y \
         @development-tools \
         fedora-packager \
@@ -81,9 +84,18 @@ RUN set -e && \
     mkdir -p /opt/stack && \
     chown -R build /opt/stack
 
+RUN dnf install -y \
+        rubygems \
+        gcc-c++ \
+        ruby-devel && \
+    dnf clean all && \
+    gem install less && \
+    gem install therubyracer
+
 USER build
 
 WORKDIR /home/build
+
 
 RUN set -e && \
     set -x && \

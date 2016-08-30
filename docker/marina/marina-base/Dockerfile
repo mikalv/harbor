@@ -8,7 +8,8 @@ RUN set -e && \
         docker-engine \
         tar \
         xz \
-        pwgen && \
+        pwgen \
+        git && \
     dnf clean all && \
     curl -L https://github.com/coreos/etcd/releases/download/${HARBOR_ETCD_RELEASE_VERSION}/etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz  > /tmp/etcd-${HARBOR_ETCD_RELEASE_VERSION}-linux-amd64.tar.gz && \
     cd /tmp && \

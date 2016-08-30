@@ -5,7 +5,6 @@ ENV HARBOR_COMPONENT="rabbitmq" \
 
 COPY ./assets /opt/harbor/assets
 
-# Setup Erlang, download RabbitMQ and setup the management plugin
 RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps \
@@ -33,8 +32,6 @@ RUN set -e && \
     mkdir -p /data/rabbitmq && \
     chown -R rabbitmq:rabbitmq /data/rabbitmq && \
     cp -rf /opt/harbor/assets/* /
-
-CMD ["/start.sh"]
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
