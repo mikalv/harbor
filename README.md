@@ -1,7 +1,4 @@
-.. image:: https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/256/ship.png
-    :alt: Harbor
-    :align: center
-
+<div style="text-align:center" id="container"><img src="https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/256/ship.png"></img></div>
 # Harbor
 
 Harbor is the Kubernetes, Openstack, Atomic Linux and FreeIPA stack from port.direct.
