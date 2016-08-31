@@ -23,8 +23,8 @@ RUN set -e && \
         linux-headers \
         openssl-dev && \
     mkdir -p /opt/stack && \
-    pip install pbr && \
-    pip install python-${OS_COMP} && \
+    pip --no-cache-dir install pbr && \
+    pip --no-cache-dir install python-${OS_COMP} && \
     apk del build-deps && \
     mkdir -p /var/log/${OS_COMP} && \
     addgroup ${OS_COMP} -g 1000 && \

@@ -9,9 +9,9 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 3308
+  - port: 3309
     protocol: TCP
-    targetPort: 3308
+    targetPort: 3309
   selector:
     openstack-app: api-db
 ---

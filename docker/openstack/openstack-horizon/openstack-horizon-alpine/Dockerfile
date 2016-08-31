@@ -8,12 +8,18 @@ ENV OS_COMP="horizon" \
     OS_REPO_BRANCH_1="master"
 
 
-ADD ./common-assets/opt/harbor/build/dockerfile.sh /opt/harbor/build/dockerfile.sh
+COPY ./common-assets/opt/harbor/build/dockerfile.sh /opt/harbor/build/dockerfile.sh
 
 RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps \
-        apache2 && \
+        apache2 \
+        apache2-mod-wsgi \
+        apache2-ssl \
+        mariadb-libs \
+        mariadb-client-libs && \
+    mkdir -p /run/apache2 && \
+    sed -i 's/^Listen 80/#Listen 80/' /etc/apache2/httpd.conf && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \
@@ -22,16 +28,22 @@ RUN set -e && \
         linux-headers \
         libffi-dev \
         postgresql-dev \
-        openssl-dev && \
+        openssl-dev \
+        mariadb-dev && \
+    pip --no-cache-dir install mysql-python && \
     /opt/harbor/build/dockerfile.sh && \
     apk del build-deps
 
-ADD ./common-assets /opt/harbor/common-assets
+COPY ./common-assets /opt/harbor/common-assets
+
+COPY ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets && \
     HORIZON_CFG_FILE="/opt/stack/horizon/openstack_dashboard/local/local_settings.py" && \
     cp -f ${HORIZON_CFG_FILE}.build ${HORIZON_CFG_FILE} && \
     /opt/stack/horizon/manage.py collectstatic --noinput && \

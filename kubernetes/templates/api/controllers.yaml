@@ -75,9 +75,6 @@ spec:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
-            - name: os-config-keystone-admin-user
-              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
-              readOnly: true
           securityContext:
             privileged: false
       restartPolicy: OnFailure
@@ -103,9 +100,6 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: api-user-ssl-secret
-        - name: os-config-keystone-admin-user
-          secret:
-            secretName: keystone-admin-user
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -133,15 +127,15 @@ spec:
           image: {{ IMAGE_MARIADB_SERVER }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           ports:
-            - containerPort: 3310
-              hostPort: 3310
+            - containerPort: 3309
+              hostPort: 3309
               protocol: TCP
               name: mysql
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
             - name: DB_PORT
-              value: '3310'
+              value: '3309'
             - name: DB_TLS
               value: /run/harbor/auth/db
             - name: DB_ROOT_PASSWORD

@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-horizon-httpd:%%DOCKER_TAG%%
 
 RUN echo "hey"
 

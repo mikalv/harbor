@@ -12,41 +12,31 @@ ADD ./common-assets/opt/harbor/build/dockerfile.sh /opt/harbor/build/dockerfile.
 
 RUN set -e && \
     set -x && \
-    yum install -y \
-        MySQL-python \
-        mod_auth_mellon \
-        web-assets-filesystem \
-        gettext && \
-    yum clean all && \
-    yum install -y \
+    apk add --no-cache --virtual run-deps \
+        apache2 && \
+    apk add --no-cache --virtual build-deps \
         gcc \
         git \
-        python-devel \
-        postgresql-devel \
-        openssl-devel && \
-    yum clean all && \
+        musl-dev \
+        python-dev \
+        linux-headers \
+        libffi-dev \
+        postgresql-dev \
+        openssl-dev && \
     /opt/harbor/build/dockerfile.sh && \
-    yum history undo -y $(yum history package gcc | tail -2 | head -1 | awk '{print $1}') -y && \
-    yum clean all && \
-    container-base-systemd-reset.sh
+    apk del build-deps
 
-COPY ./common-assets /opt/harbor/common-assets
-
-COPY ./assets /opt/harbor/assets
+ADD ./common-assets /opt/harbor/common-assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     HORIZON_CFG_FILE="/opt/stack/horizon/openstack_dashboard/local/local_settings.py" && \
     cp -f ${HORIZON_CFG_FILE}.build ${HORIZON_CFG_FILE} && \
     /opt/stack/horizon/manage.py collectstatic --noinput && \
     /opt/stack/horizon/manage.py compress && \
-    /opt/stack/horizon/manage.py make_web_conf --wsgi && \
-    rm -rf ${HORIZON_CFG_FILE} && \
-    chown -R apache:apache /opt/stack/horizon/openstack_dashboard/local
+    rm -rf ${HORIZON_CFG_FILE}
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

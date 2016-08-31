@@ -7,9 +7,9 @@ git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
 
 git clone ${OS_REPO_URL_1} -b ${OS_REPO_BRANCH_1} --depth 1 /opt/stack/${OS_COMP_1}
 
-pip install /opt/stack/${OS_COMP}
+pip --no-cache-dir install /opt/stack/${OS_COMP}
 
-pip install /opt/stack/${OS_COMP_1}
+pip --no-cache-dir install /opt/stack/${OS_COMP_1}
 
 mkdir -p /etc/${OS_COMP}/
 mkdir -p  /opt/stack/${OS_COMP}/etc/${OS_COMP}/

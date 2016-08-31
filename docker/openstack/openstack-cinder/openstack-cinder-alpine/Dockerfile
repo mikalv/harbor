@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
 ENV OS_COMP="cinder" \
     OS_REPO_URL="https://github.com/openstack/cinder.git" \
@@ -18,14 +18,10 @@ RUN set -e && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache --virtual run-deps \
-        py-numpy \
-        py-xattr \
         libxml2 \
         libxslt \
-        libldap \
-        libsasl \
-        openssl \
         libcurl \
+        openssl \
         iproute2 \
         sysfsutils \
         open-iscsi \

@@ -1,6 +1,11 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-horizon-alpine:%%DOCKER_TAG%%
 
-RUN echo "hey"
+COPY ./assets /opt/harbor/assets
+
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

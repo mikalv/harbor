@@ -81,7 +81,7 @@ LABEL license="Apache-2.0" \
       build-date="%%DOCKER_BUILD_DATE%%"
 
 # RUN yum install -y python-pip && \
-#     pip install /srv/python/ovs.tar && \
+#     pip --no-cache-dir install /srv/python/ovs.tar && \
 #     yum install -y /srv/x86_64/*.rpm /srv/noarch/*.rpm && \
 #     yum clean all && \
 #     mkdir -p /var/run/openvswitch

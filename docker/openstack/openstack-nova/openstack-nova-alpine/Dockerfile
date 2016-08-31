@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
 ENV OS_COMP="nova" \
     OS_REPO_URL="https://github.com/openstack/nova.git" \
@@ -17,18 +17,11 @@ RUN set -e && \
     rm -rf /opt/harbor/common-assets && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
-    cat /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
-    echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
-    apk add --no-cache --virtual run-deps \
-        py-numpy \
-        py-xattr \
+    apk add --no-cache --virtual run-deps  \
         libxml2 \
         libxslt \
-        libldap \
-        libsasl \
-        openssl \
         libcurl \
+        openssl \
         docker \
         iproute2 \
         ethtool \
@@ -36,22 +29,25 @@ RUN set -e && \
         sysfsutils \
         open-iscsi \
         util-linux && \
-    apk add --no-cache --virtual management-deps  \
-        mariadb-client \
-        mariadb-client-libs && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \
         musl-dev \
-        python-dev \
         linux-headers \
         libffi-dev \
+        python-dev \
         postgresql-dev \
         openssl-dev \
         libxml2-dev \
-        libxslt-dev && \
+        libxslt-dev \
+        curl \
+        cmake \
+        pkgconf \
+        unzip \
+        build-base && \
     /opt/harbor/build/dockerfile.sh && \
     apk del build-deps
+
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
