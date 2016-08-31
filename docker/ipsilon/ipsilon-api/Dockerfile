@@ -8,9 +8,7 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
-    dnf install -y \
-        'dnf-command(config-manager)' && \
-    dnf config-manager --set-enabled updates-testing && \
+    sed -i '/\[fedora\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora.repo && \
     dnf install -y \
         findutils \
         postgresql \
@@ -20,7 +18,6 @@ RUN set -e && \
         ipsilon-base \
         ipsilon-filesystem \
         ipsilon-openid \
-        ipsilon-openidc \
         ipsilon-persona \
         ipsilon-saml2 \
         ipsilon-saml2-base && \

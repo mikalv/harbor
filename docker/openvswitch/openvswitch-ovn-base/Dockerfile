@@ -11,7 +11,6 @@ RUN set -e && \
         openvswitch-ovn-common && \
     yum clean all && \
     mkdir -p ${OVN_DIR} && \
-    mkdir -p ${OVN_LOG_DIR} && \
     mkdir -p ${OVN_SOCKET_DIR} && \
     container-base-systemd-reset.sh
 

@@ -11,4 +11,4 @@ harbor-service-update keystone
 harbor-service-update messaging
 harbor-service-update ovn
 harbor-service-update neutron
-harbor-service-update horizon
+harbor-service-update api

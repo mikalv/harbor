@@ -57,13 +57,21 @@ echo "${OS_DISTRO}: Starting plugins config"
 /opt/harbor/neutron/config-plugins.sh
 
 
+echo "${OS_DISTRO}: Starting ml2/ovn config"
+################################################################################
+/opt/harbor/neutron/config-ovn.sh
+
+
+echo "${OS_DISTRO}: Starting nova config (allowed to fail)"
+################################################################################
+/opt/harbor/neutron/config-nova.sh || true
+
+
 echo "${OS_DISTRO}: Starting lbaas config"
 ################################################################################
 /opt/harbor/neutron/config-lbaas.sh
 
-# /opt/harbor/neutron/config-domains.sh
-# /opt/harbor/neutron/config-federation.sh
 
-# echo "${OS_DISTRO}: Starting apache config"
-# ################################################################################
-# /opt/harbor/neutron/config-apache.sh
+echo "${OS_DISTRO}: Starting api-server config"
+################################################################################
+/opt/harbor/neutron/config-api-server.sh

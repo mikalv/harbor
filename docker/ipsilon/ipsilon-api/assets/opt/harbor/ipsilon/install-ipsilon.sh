@@ -67,21 +67,37 @@ cat ${IPSILON_DB_CA} >> /etc/ssl/certs/ca-bundle.crt
 cat ${IPSILON_API_TLS_CA} >> /etc/ssl/certs/ca-bundle.crt
 
 
+echo "${OS_DISTRO}: clearing /etc/ipsilon"
 ################################################################################
 rm -rf /etc/ipsilon
-mkdir -p ${IPSILON_DATA_DIR}/etc/ipsilon
-ln -s ${IPSILON_DATA_DIR}/ipsilon /etc/ipsilon
+mkdir -p /etc/ipsilon
 
 
+echo "${OS_DISTRO}: clearing /var/lib/ipsilon"
 ################################################################################
 rm -rf /var/lib/ipsilon
-mkdir -p ${IPSILON_DATA_DIR}/var/lib/ipsilon
-ln -s ${IPSILON_DATA_DIR}/var/lib/ipsilon /var/lib/ipsilon
+mkdir -p /var/lib/ipsilon
 
 
+if [ ! -f ${IPSILON_DATA_DIR}/installed ]; then
+  echo "${OS_DISTRO}: Linking ${IPSILON_DATA_DIR}/etc/ipsilon to /etc/ipsilon"
+  ################################################################################
+  rm -rf /etc/ipsilon
+  mkdir -p ${IPSILON_DATA_DIR}/etc/ipsilon
+  ln -s ${IPSILON_DATA_DIR}/etc/ipsilon /etc/ipsilon
+
+
+  echo "${OS_DISTRO}: Linking ${IPSILON_DATA_DIR}/var/lib/ipsilon to /var/lib/ipsilon"
+  ################################################################################
+  rm -rf /var/lib/ipsilon
+  mkdir -p ${IPSILON_DATA_DIR}/var/lib/ipsilon
+  ln -s ${IPSILON_DATA_DIR}/var/lib/ipsilon /var/lib/ipsilon
+fi
+
+
+echo "${OS_DISTRO}: Running ipsilon-server-install"
 ################################################################################
 ipsilon-server-install \
---server-debugging \
 --hostname="${IPSILON_SERVICE_HOST}" \
 --testauth=no \
 --secure=yes \
@@ -102,5 +118,25 @@ ipsilon-server-install \
 --transaction-dburi="postgres://${AUTH_IPSILON_TRANS_DB_USER}:${AUTH_IPSILON_TRANS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_TRANS_DB_NAME}" \
 --samlsessions-dburi="postgres://${AUTH_IPSILON_SAMLSESSION_DB_USER}:${AUTH_IPSILON_SAMLSESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAMLSESSION_DB_NAME}" \
 --saml2-session-dburl="postgres://${AUTH_IPSILON_SAML2SESSION_DB_USER}:${AUTH_IPSILON_SAML2SESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAML2SESSION_DB_NAME}" \
---openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}" \
---openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
+--openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}"
+#--openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
+
+
+if [ -f ${IPSILON_DATA_DIR}/installed ]; then
+  echo "${OS_DISTRO}: Linking ${IPSILON_DATA_DIR}/etc/ipsilon to /etc/ipsilon"
+  ################################################################################
+  rm -rf /etc/ipsilon
+  mkdir -p ${IPSILON_DATA_DIR}/etc/ipsilon
+  ln -s ${IPSILON_DATA_DIR}/etc/ipsilon /etc/ipsilon
+
+
+  echo "${OS_DISTRO}: Linking ${IPSILON_DATA_DIR}/var/lib/ipsilon to /var/lib/ipsilon"
+  ################################################################################
+  rm -rf /var/lib/ipsilon
+  mkdir -p ${IPSILON_DATA_DIR}/var/lib/ipsilon
+  ln -s ${IPSILON_DATA_DIR}/var/lib/ipsilon /var/lib/ipsilon
+else
+  echo "${OS_DISTRO}: Marking Ipsilon as installed"
+  ################################################################################
+  touch ${IPSILON_DATA_DIR}/installed
+fi

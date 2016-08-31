@@ -19,8 +19,13 @@ echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
 
 
+echo "${OS_DISTRO}: Launching ipsilon installer"
 ################################################################################
 /opt/harbor/ipsilon/install-ipsilon.sh
+
+
+echo "${OS_DISTRO}: Launching Apache Config"
+################################################################################
 /opt/harbor/ipsilon/config-apache.sh
 
 

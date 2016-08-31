@@ -22,12 +22,10 @@ OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
 
 
 if [ -f /etc/ipa/ca.crt ] ; then
-  ################################################################################
-  echo "${OS_DISTRO}: IPA: CA Cert found @ /etc/ipa/ca.crt, assuming that we are already enrolled"
+  echo "Harbor: IPA: CA Cert found @ /etc/ipa/ca.crt, assuming that we are already enrolled"
   ################################################################################
 else
-  ################################################################################
-  echo "${OS_DISTRO}: IPA: Installing client"
+  echo "Harbor: IPA: Installing client"
   ################################################################################
   ipa-client-install \
       --domain=${OS_DOMAIN} \
@@ -43,3 +41,35 @@ else
       --ssh-trust-dns \
       --enable-dns-updates
 fi
+
+echo "Harbor: Restarting certmonger"
+################################################################################
+systemctl restart certmonger
+
+
+
+SVC_AUTH_ROOT_HOST=/etc/harbor/node/auth
+echo "Harbor: Storing Host certs in ${SVC_AUTH_ROOT_HOST}"
+################################################################################
+mkdir -p ${SVC_AUTH_ROOT_HOST}/${SVC_HOST_NAME}
+HOST_CERT=${SVC_AUTH_ROOT_HOST}/node.key
+HOST_KEY=${SVC_AUTH_ROOT_HOST}/node.crt
+HOST_CA=${SVC_AUTH_ROOT_HOST}/node-ca.crt
+
+
+################################################################################
+until certutil -K -d /etc/ipa/nssdb -a -f /etc/ipa/nssdb/pwdfile.txt; do
+   echo "Waiting for Certs"
+   sleep 5
+done
+until pk12util -o ${SVC_AUTH_ROOT_HOST}/node.p12 -n 'Local IPA host' -d /etc/ipa/nssdb -w /etc/ipa/nssdb/pwdfile.txt -k /etc/ipa/nssdb/pwdfile.txt; do
+   echo "Waiting for Certs"
+   sleep 5
+done
+
+
+################################################################################
+openssl pkcs12 -in ${SVC_AUTH_ROOT_HOST}/node.p12 -out ${HOST_CERT} -nocerts -nodes -passin file:/etc/ipa/nssdb/pwdfile.txt -passout pass:
+openssl pkcs12 -in ${SVC_AUTH_ROOT_HOST}/node.p12 -out ${HOST_KEY} -clcerts -passin file:/etc/ipa/nssdb/pwdfile.txt -passout pass:
+openssl pkcs12 -in ${SVC_AUTH_ROOT_HOST}/node.p12 -out ${HOST_CA} -cacerts -passin file:/etc/ipa/nssdb/pwdfile.txt -passout pass:
+rm -rf ${SVC_AUTH_ROOT_HOST}/node.p12

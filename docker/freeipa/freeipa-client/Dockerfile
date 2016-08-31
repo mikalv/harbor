@@ -9,8 +9,8 @@ RUN set -e && \
     dnf config-manager --set-enabled updates-testing && \
     dnf install -y \
         crudini \
-        freeipa-client \
-        freeipa-admintools && \
+        hostname \
+        freeipa-client && \
     dnf clean all && \
     container-base-systemd-reset.sh && \
     touch /init-ipa

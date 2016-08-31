@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
+FROM fedora:latest
 
 ENV HARBOR_COMPONENT="ipsilon" \
     OS_COMP="ipsilon" \
@@ -7,21 +7,17 @@ ENV HARBOR_COMPONENT="ipsilon" \
 
 RUN set -e && \
     set -x && \
-    dnf install -y \
-        'dnf-command(config-manager)' && \
-    dnf config-manager --set-enabled updates-testing && \
+    curl -L https://copr.fedorainfracloud.org/coprs/puiterwijk/Ipsilon-master-dependencies/repo/fedora-rawhide/puiterwijk-Ipsilon-master-dependencies-fedora-rawhide.repo > /etc/yum.repos.d/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo && \
     dnf install -y \
         @development-tools \
         fedora-packager \
         rpmdevtools \
-        python2-devel && \
-    dnf install -y \
+        python2-devel \
         git \
         which \
         findutils \
         sqlite \
-        open-sans-fonts && \
-    dnf install -y \
+        open-sans-fonts \
         make \
         pylint \
         python-pep8 \
@@ -54,8 +50,7 @@ RUN set -e && \
         krb5-workstation \
         python-sssdconfig \
         mod_ssl \
-        python-jwcrypto && \
-    dnf install -y \
+        python-jwcrypto \
         httpd \
         mod_ssl \
         mod_wsgi \
@@ -69,28 +64,18 @@ RUN set -e && \
         lasso \
         xmlsec1 \
         xmlsec1-openssl \
-        mod_auth_openidc && \
-    dnf install -y \
+        mod_auth_openidc \
         createrepo \
-        nginx && \
-    dnf clean all
-
-RUN set -e && \
-    set -x && \
-    useradd build
-
-RUN set -e && \
-    set -x && \
-    mkdir -p /opt/stack && \
-    chown -R build /opt/stack
-
-RUN dnf install -y \
+        nginx \
         rubygems \
         gcc-c++ \
         ruby-devel && \
     dnf clean all && \
     gem install less && \
-    gem install therubyracer
+    gem install therubyracer && \
+    useradd build && \
+    mkdir -p /opt/stack && \
+    chown -R build /opt/stack
 
 USER build
 
@@ -99,9 +84,16 @@ WORKDIR /home/build
 
 RUN set -e && \
     set -x && \
-    git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP} && \
+    git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
+
+RUN set -e && \
+    set -x && \
     cd /opt/stack/${OS_COMP} && \
-      make && \
+      make
+
+RUN set -e && \
+    set -x && \
+    cd /opt/stack/${OS_COMP} && \
       make releaserpms
 
 USER root
