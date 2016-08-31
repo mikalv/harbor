@@ -1,8 +1,6 @@
 <p align="center">
   <img src="http://kubernetes.io/images/favicon.png" width="128" height="128" alt="Kubernetes"/>
-  <img  src="https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/128/arrows-h.png" alt="+"/>
-  <img src="https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/128/ship.png" alt="Harbor"/>
-  <img bottom="32px" src="https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/128/arrows-h.png" alt="+"/>
+  <img src="https://raw.githubusercontent.com/portdirect/Font-Awesome-SVG-PNG/master/black/png/256/ship.png" alt="Harbor"/>
   <img src="https://www.openstack.org/assets/openstack-logo/R/openstack-cloud-software-vertical-web.png" width="128" height="128" alt="OpenStack"/>
 </p>
 # Harbor
