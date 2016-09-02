@@ -33,10 +33,9 @@ for BRIDGE in $(brctl show | grep "^qbr" | awk '{ print $1 }'); do
 done
 )
 
-
-
 mkdir -p /var/lib/docker
 exec dockerd \
+     --exec-opt native.cgroupdriver=systemd \
      --mtu ${DOCKER_MTU} \
      --storage-driver overlay2 \
      --graph=/var/lib/docker \

@@ -27,14 +27,15 @@ ExecStartPre=-/sbin/modprobe overlay
 ExecStartPre=-/sbin/modprobe dm_multipath
 
 ExecStart=/usr/bin/docker-daemon
+
 # set mountflags to shared to that containers can be used to mount filesystems on the host
 MountFlags=shared
 LimitNOFILE=1048576
 LimitNPROC=1048576
 LimitCORE=infinity
+
 TimeoutStartSec=0
-# set delegate yes so that systemd does not reset the cgroups of docker containers
-Delegate=yes
+Restart=always
 
 [Install]
 WantedBy=multi-user.target

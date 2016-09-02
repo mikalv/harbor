@@ -4,6 +4,15 @@ LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
 rm -f ${LOCAL_ENV}
 touch ${LOCAL_ENV}
 
+touch /etc/os-container.env
+source /etc/os-container.env
+source /opt/harbor/harbor-vars.sh
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+DOCKER_MTU_OVERHEAD=68
+DOCKER_MTU=$(expr $MY_MTU - $DOCKER_MTU_OVERHEAD)
+
+
 cfg_auth=/etc/harbor/auth.conf
 cfg_harbor_auth=/etc/harbor/harbor-auth.conf
 cfg_images=/etc/harbor/images.conf
@@ -113,7 +122,7 @@ fi
 
 
 docker network inspect freeipa || \
-docker network create --driver bridge --subnet ${NETWORK_FREEIPA_FREEIPA_SVC_RANGE} freeipa
+docker network create --driver bridge --subnet ${NETWORK_FREEIPA_FREEIPA_SVC_RANGE} -o "com.docker.network.mtu"="${DOCKER_MTU}" freeipa
 
 
 IPA_DATA_DIR=/var/lib/harbor/freeipa/freeipa.${NETWORK_DEFAULT_OS_DOMAIN}

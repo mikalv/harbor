@@ -8,11 +8,8 @@ sed -i "s/OPENSTACK_HOST = \"127.0.0.1\"/OPENSTACK_HOST = \"${EXPOSED_IP}\"/g" $
 
 #tail -f /dev/null
 
-/opt/stack/horizon/manage.py collectstatic --noinput
-/opt/stack/horizon/manage.py compress
-/opt/stack/horizon/manage.py runserver 0.0.0.0:80
 
-/usr/sbin/httpd -D FOREGROUND
+/opt/stack/horizon/manage.py runserver 0.0.0.0:80
 
 
 

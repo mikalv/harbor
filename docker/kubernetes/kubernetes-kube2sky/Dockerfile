@@ -4,19 +4,11 @@ MAINTAINER Pete Birley <petebirley@gmail.com>
 
 ENV OS_DISTRO="HarborOS"
 
-LABEL license="Apache-2.0" \
-      vendor="Port Direct" \
-      url="https://port.direct/" \
-      vcs-type="Git" \
-      vcs-url="https://github.com/portdirect/harbor"
-
 ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* /
-
-ENTRYPOINT ["/start.sh"]
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

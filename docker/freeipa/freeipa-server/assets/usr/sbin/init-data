@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Copyright 2015--2016 Jan Pazdziora
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+OS_DISTRO="HarborOS-Fedora"
+echo "${OS_DISTRO}: FreeIPA init starting"
+################################################################################
+cd /
+
+echo "${OS_DISTRO}: checking cgroups"
+################################################################################
+if ls -dZ /sys/fs/cgroup | grep -q :svirt_sandbox_file_t: ; then
+  echo "Invocation error: use -v /sys/fs/cgroup:/sys/fs/cgroup:ro parameter to docker run."
+  exit 1
+fi
+
+echo "${OS_DISTRO}: cleaning up /run and /tmp"
+################################################################################
+for i in /run/* /tmp/* ; do
+  if [ "$i" == '/run/secrets' ] ; then
+    :
+  elif [ -f "$i" ] ; then
+    rm -f "$i"
+  else
+    rm -rf "$i/*"
+  fi
+done
+mkdir -p /run/ipa
+
+
+DATA=/data
+DATA_TEMPLATE=/data-template
+echo "${OS_DISTRO}: setting up data volume links"
+################################################################################
+if [ -f /etc/ipa/ca.crt ] ; then
+  echo "${OS_DISTRO}: /etc/ipa/ca.crt already present in filesystem, not linking to data volume"
+elif [ -f ${DATA}/etc/ipa/ca.crt ] ; then
+  echo "${OS_DISTRO}: ipa has been installed: making sure symlinks are in place"
+  cat /etc/volume-data-list | while read DATA_VOL_ASSET ; do \
+    mkdir -p $( dirname $DATA_VOL_ASSET )
+    rm -rf $DATA_VOL_ASSET
+    echo "linking ${DATA}${DATA_VOL_ASSET%/} <-- ${DATA_VOL_ASSET%/}"
+    ln -sf ${DATA}${DATA_VOL_ASSET%/} ${DATA_VOL_ASSET%/}
+  done
+else
+  echo "${OS_DISTRO}: /etc/ipa/ca.crt or ${DATA}/etc/ipa/ca.crt not found, installing template data"
+
+  echo "${OS_DISTRO}: Loading template data"
+  /bin/cp -rf -dR --preserve=all  $DATA_TEMPLATE/*  $DATA/
+
+  cat /etc/volume-data-list | while read DATA_VOL_ASSET ; do \
+    rm -rf ${DATA_VOL_ASSET%/}
+    DATA_VOL_ASSET_DIR="$( dirname $DATA_VOL_ASSET )/"
+    mkdir -p ${DATA_VOL_ASSET_DIR}
+    mkdir -p ${DATA}${DATA_VOL_ASSET_DIR}
+    echo "linking ${DATA}${DATA_VOL_ASSET%/} <-- ${DATA_VOL_ASSET%/}"
+    ln -sf ${DATA}${DATA_VOL_ASSET%/} ${DATA_VOL_ASSET%/}
+  done
+
+	cat ${DATA_TEMPLATE}/build-id > ${DATA}/build-id
+
+	echo "${OS_DISTRO}: systemd reset"
+  container-base-systemd-reset.sh
+fi
+
+
+echo "${OS_DISTRO}: Launching Systemd"
+################################################################################
+exec /usr/sbin/init
+
+exit 10

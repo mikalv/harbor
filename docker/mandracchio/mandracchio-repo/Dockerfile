@@ -1,26 +1,15 @@
-FROM centos:latest
-MAINTAINER Port Direct <support@port.direct>
-
-LABEL license="Apache-2.0" \
-      vendor="Port Direct" \
-      url="https://port.direct/" \
-      vcs-type="Git" \
-      vcs-url="https://github.com/portdirect/harbor"
-
-ENV OS_DISTRO="HarborOS" \
-    OPENSTACK_COMPONENT="mandracchio-repo" \
-    LC_ALL="en_US.UTF-8" \
-    container=docker \
-    DOCKER_HOST="172.17.0.1:2375"
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
 RUN set -e && \
     set -x && \
-    yum update -y && \
-    yum upgrade -y && \
-    yum install -y \
-        httpd \
-        docker && \
-    yum clean all
+    apk add --no-cache --virtual run-deps \
+        nginx && \
+    apk add --no-cache --virtual build-deps \
+        docker
+
+ENV DOCKER_HOST="172.17.0.1:2375"
+
+LABEL build-uuid="%%BUILD_UUID%%"
 
 RUN set -e && \
     set -x && \
@@ -38,15 +27,13 @@ RUN set -e && \
       port/mandracchio-repo-assets:latest /build.sh && \
     ( docker rm -f mandracchio-build-rpms || true ) && \
     docker cp mandracchio-build-repo:/srv/repo /srv && \
-    ln -s /srv/repo/ /var/www/html/repo && \
-    rm -f /etc/httpd/conf.d/welcome.conf && \
-    mkdir -p /var/www/html/repo/images/pxeboot && \
-    curl -L http://dl.fedoraproject.org/pub/alt/atomic/stable/Cloud_Atomic/x86_64/os/images/pxeboot/vmlinuz > /var/www/html/repo/images/pxeboot/vmlinuz && \
-    curl -L http://dl.fedoraproject.org/pub/alt/atomic/stable/Cloud_Atomic/x86_64/os/images/pxeboot/initrd.img > /var/www/html/repo/images/pxeboot/initrd.img && \
-    chown -R apache:apache /var/www/html/repo
+    ls -lah /srv/repo/refs/heads/harbor-host/7/x86_64/standard
 
 ADD ./assets /opt/harbor/assets
-RUN /bin/cp -rf /opt/harbor/assets/* /
+
+RUN set -e && \
+    set -x && \
+    /bin/cp -rf /opt/harbor/assets/* /
 
 CMD ["/start.sh"]
 

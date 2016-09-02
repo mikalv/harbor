@@ -337,7 +337,7 @@ freeipa_update_service_certs () {
 
   MARINA_SERVICE_VAULT_PASSWORD_FILE=/tmp/$(uuidgen)
   (crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password || \
-  crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password $(uuidgen)) >> /dev/null
+  crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password $(harbor-gen-password 64 96)) >> /dev/null
   crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password > $MARINA_SERVICE_VAULT_PASSWORD_FILE
 
   freeipa_get_service_certs $OS_SERVICE $OS_SERVICE_TYPE $MARINA_SERVICE_NAMESPACE $MARINA_SERVICE_VAULT_PASSWORD_FILE $CERT_OUTPUT_ROOT
@@ -366,7 +366,7 @@ freeipa_update_service_user_certs () {
 
   MARINA_SERVICE_VAULT_PASSWORD_FILE=/tmp/$(uuidgen)
   (crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password || \
-  crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(uuidgen)) >> /dev/null
+  crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(harbor-gen-password 64 96)) >> /dev/null
   crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > $MARINA_SERVICE_VAULT_PASSWORD_FILE
   (crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user || \
   crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user ${IPA_USER}) >> /dev/null

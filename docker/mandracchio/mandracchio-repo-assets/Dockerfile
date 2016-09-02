@@ -12,7 +12,7 @@ LABEL license="Apache-2.0" \
       vcs-type="Git" \
       vcs-url="https://github.com/portdirect/harbor"
 
-ADD ./assets /opt/harbor/assets
+ADD ./assets/etc /opt/harbor/assets/etc
 
 RUN set -e && \
     set -x && \
