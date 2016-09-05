@@ -145,24 +145,18 @@ load_manifest () {
   manifest=$2.yaml
   MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
   cat $MANIFEST_WORK_FILE
-  if [ "$manifest" == "namespace.yaml" ]; then
-    echo "Not deleting namespace"
-    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE || true
-  else
-    #kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f $MANIFEST_WORK_FILE || true
-    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE
-  fi;
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE
 }
 
 
 echo "$OS_DISTRO: Loading namespace manifest"
 ################################################################################
-load_manifest ${LOAD_OS_SERVICE} namespace
+load_manifest ${LOAD_OS_SERVICE} namespace || true
 
 
 echo "$OS_DISTRO: Loading services manifest"
 ################################################################################
-load_manifest ${LOAD_OS_SERVICE} services
+load_manifest ${LOAD_OS_SERVICE} services || true
 
 
 echo "$OS_DISTRO: Loading secrets manifest"
@@ -172,7 +166,7 @@ load_manifest ${LOAD_OS_SERVICE} secrets || true
 
 echo "$OS_DISTRO: Loading controllers manifest"
 ################################################################################
-load_manifest ${LOAD_OS_SERVICE} controllers
+load_manifest ${LOAD_OS_SERVICE} controllers || true
 
 kube () {
   kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} --namespace os-ovn "$@"
