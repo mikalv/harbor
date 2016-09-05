@@ -72,6 +72,9 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
               readOnly: true
@@ -103,6 +106,9 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: neutron-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
         - name: os-config-ssl-secret
           secret:
             secretName: neutron-ssl-secret

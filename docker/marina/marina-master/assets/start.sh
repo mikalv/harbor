@@ -71,13 +71,13 @@ harbor-service-update keystone
 echo "${OS_DISTRO}: Managing neutron service"
 ################################################################################
 harbor-service-update neutron
-tail -f /dev/null
 
- &
-harbor-service-update memcached &
-harbor-service-update messaging &
-harbor-service-update ovn &
-harbor-service-update ipsilon &
-harbor-service-update keystone &
-harbor-service-update neutron &
-harbor-service-update api &
+
+echo "${OS_DISTRO}: Managing (horizon) api service"
+################################################################################
+harbor-service-update api
+
+
+echo "${OS_DISTRO}: Finished management bootstrapping"
+################################################################################
+tail -f /dev/null
