@@ -1,0 +1,92 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting Harbor Services"
+################################################################################
+source /usr/bin/load-environment
+export OS_DOMAIN=${OS_DOMAIN}
+echo "OS_DOMAIN=${OS_DOMAIN}"
+source /opt/harbor/service-hosts.sh
+
+SERVICE_HOST_LIST=" NODE_ETCD_SERVICE_HOST \
+                    DOCKER_ETCD_SERVICE_HOST \
+                    KUBE_ETCD_SERVICE_HOST"
+
+
+KUBE_MANIFESTS_DIR=/etc/kubernetes/manifests
+TEMPLATE_MANIFESTS_DIR=/etc/harbor-kube/manifests
+MANIFESTS_WORK_DIR=/tmp/harbor/manifests
+
+
+HARBOR_KUBE_OPENSTACK_CONFIG=/run/harbor/kube_openstack/config
+mkdir -p /run/harbor/kube_openstack
+LOCAL_ENV_LIST="$LOCAL_ENV_LIST HARBOR_KUBE_OPENSTACK_CONFIG"
+
+HARBOR_HOSTS_FILE=/var/run/harbor/hosts
+HARBOR_RESOLV_FILE=/var/run/harbor/resolv.conf
+mkdir -p /var/run/harbor
+LOCAL_ENV_LIST="$LOCAL_ENV_LIST HARBOR_HOSTS_FILE"
+
+
+
+prep_manifest () {
+  manifest_group=$1
+  manifest=$2
+  MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
+  MANIFEST_FILE="$KUBE_MANIFESTS_DIR/$manifest_group-$manifest"
+  mkdir -p $MANIFESTS_WORK_DIR/$manifest_group
+  cat $TEMPLATE_MANIFESTS_DIR/$manifest_group/$manifest > $MANIFEST_WORK_FILE
+  for LOCAL_ENV in $LOCAL_ENV_LIST; do
+    LOCAL_ENV_VALUE=$(set | grep ^$LOCAL_ENV= | awk -F "$LOCAL_ENV=" '{ print $2 }')
+    #echo $MANIFEST_WORK_FILE {{ $LOCAL_ENV }} $LOCAL_ENV_VALUE
+    sed -i "s&{{ $LOCAL_ENV }}&${LOCAL_ENV_VALUE}&g" $MANIFEST_WORK_FILE
+  done
+  for SERVICE_HOST in $SERVICE_HOST_LIST KUBERNETES_SERVICE_HOST; do
+    LOCAL_ENV_VALUE=$(set | grep ^$SERVICE_HOST= | awk -F "$SERVICE_HOST=" '{ print $2 }')
+    sed -i "s&{{ $SERVICE_HOST }}&${LOCAL_ENV_VALUE}&g" $MANIFEST_WORK_FILE
+  done
+  cat $MANIFEST_WORK_FILE > $MANIFEST_FILE
+}
+
+
+
+list_manifests () {
+  MANIFEST_GROUP=$1
+  COMPONENTS="$(ls ${TEMPLATE_MANIFESTS_DIR}/${MANIFEST_GROUP} | tr '\n' ' ' )"
+  echo $COMPONENTS
+}
+
+prep_manifests () {
+  MANIFEST_GROUP=$1
+  MANIFESTS="$(list_manifests $1)"
+  for MANIFEST in $MANIFESTS; do
+    prep_manifest $MANIFEST_GROUP $MANIFEST
+  done
+}
+
+
+echo "Prepping the Marina Master node manifests"
+prep_manifests marina-master
+
+echo "Prepping the Master node etcd manifests"
+prep_manifests etcd-master
+
+echo "Prepping the Master node kube manifests"
+prep_manifests kube-master
+
+
+echo "BOOTSTRAPPED"> $KUBE_STATUS_FILE

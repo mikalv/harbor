@@ -28,9 +28,53 @@ rpm-ostree-toolbox imagefactory \
       -o /srv/images/aws
 
 
-
-cd /srv/images/aws/images
-
 IMAGE_NAME=harbor-host-7
+IMAGE_ROOT=/srv/images/aws/images
+
+cd ${IMAGE_ROOT}
+
+# MOUNT_ROOT=/tmp/${IMAGE_NAME}/working-mount
+# OFFSET=$(expr $(fdisk -l ${IMAGE_ROOT}/${IMAGE_NAME}.raw  | grep ${IMAGE_ROOT}/${IMAGE_NAME}.raw | awk '{ print $2 }' | tail -n 1) \* 512)
+# OFFSET_BOOT=$(expr $(fdisk -l ${IMAGE_ROOT}/${IMAGE_NAME}.raw  | grep ${IMAGE_ROOT}/${IMAGE_NAME}.raw | awk '{ print $3 }' | tail -n 2 | head -n1 ) \* 512)
+# OFFSET_BOOT_END=$(expr $(fdisk -l ${IMAGE_ROOT}/${IMAGE_NAME}.raw  | grep ${IMAGE_ROOT}/${IMAGE_NAME}.raw | awk '{ print $4 }' | tail -n 2 | head -n1 ) \* 512)
+# mkdir -p ${MOUNT_ROOT}
+# mount -t xfs -o offset=${OFFSET} ${IMAGE_ROOT}/${IMAGE_NAME}.raw ${MOUNT_ROOT}
+#
+# mkdir -p ${MOUNT_ROOT}/boot
+# mount -t ext4 -o offset=${OFFSET_BOOT} ${IMAGE_ROOT}/${IMAGE_NAME}.raw ${MOUNT_ROOT}/boot
+#
+# cat > ${MOUNT_ROOT}/etc/os-release <<EOF
+# NAME="Harbor Linux"
+# VERSION="7 (Core)"
+# ID="centos"
+# ID_LIKE="rhel centos"
+# VERSION_ID="7"
+# PRETTY_NAME="Harbor Linux"
+# ANSI_COLOR="0;31"
+# CPE_NAME="cpe:/o:centos:centos:7"
+# HOME_URL="https://port.direct"
+# BUG_REPORT_URL="https://port.direct/"
+#
+# CENTOS_MANTISBT_PROJECT="CentOS-7"
+# CENTOS_MANTISBT_PROJECT_VERSION="7"
+# REDHAT_SUPPORT_PRODUCT="centos"
+# REDHAT_SUPPORT_PRODUCT_VERSION="7"
+# EOF
+#
+# cat > ${MOUNT_ROOT}/etc/fstab <<EOF
+# #
+# # /etc/fstab
+# # Created by anaconda on Thu Aug 18 14:43:47 2016
+# #
+# # Accessible filesystems, by reference, are maintained under '/dev/disk'
+# # See man pages fstab(5), findfs(8), mount(8) and/or blkid(8) for more info
+# #
+# /dev/sda2	    /                       xfs     defaults        0 0
+# /dev/sda1     /boot                   ext4    defaults        1 2
+# EOF
+#
+#
+# umount ${MOUNT_ROOT}
 
 gzip ${IMAGE_NAME}.raw
+rm -f ${IMAGE_NAME}.qcow*

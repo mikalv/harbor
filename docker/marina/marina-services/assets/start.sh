@@ -1,41 +1,45 @@
-#!/bin/sh
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting Harbor service update"
+################################################################################
 source /etc/os-container.env
 
-echo "$OS_DISTRO: Createing service cert"
-/usr/bin/manage-harbor-service-cert.sh
 
-if [ "$MARINA_SERVICE" = "kubernetes" ]; then
-  echo "$OS_DISTRO: Service is Kubernetes, no action required"
+echo "${OS_DISTRO}: Launching service certificate management"
+################################################################################
+/usr/bin/harbor-manage-service-certs
+
+
+echo "${OS_DISTRO}: Launching user certificate management"
+################################################################################
+/usr/bin/harbor-manage-user-certs
+
+
+if [ "$MARINA_SERVICE" == "kubernetes" ]; then
+  echo "${OS_DISTRO}: Not launching kube service management (we are kube!)"
+  ##############################################################################
 else
-  echo "$OS_DISTRO: Updating kube service"
-
+  echo "${OS_DISTRO}: Launching kube management"
+  ##############################################################################
+  /usr/bin/harbor-manage-kube || true
 fi
 
-tail -f /dev/null
-echo "$OS_DISTRO: Loaded Harbor Service"
+
+echo "${OS_DISTRO}: Finished service update"
+################################################################################
 shutdown -h now
-
-
-rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/secrets.yaml && \
-vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/secrets.yaml && \
-  /usr/bin/load-harbor-service.sh
-
-rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/controllers.yaml && \
-vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/controllers.yaml && \
-  /usr/bin/load-harbor-service.sh
-
-
-rm -f /opt/harbor/kubernetes/templates/$MARINA_SERVICE/services.yaml && \
-vi /opt/harbor/kubernetes/templates/$MARINA_SERVICE/services.yaml && \
-/usr/bin/load-harbor-service.sh
-
-prep_manifests ${LOAD_OS_SERVICE}
-
-load_manifest ${LOAD_OS_SERVICE} namespace
-load_manifest ${LOAD_OS_SERVICE} services
-load_manifest ${LOAD_OS_SERVICE} secrets
-
-load_manifest ${LOAD_OS_SERVICE} controllers
-)
-
-kube get pods

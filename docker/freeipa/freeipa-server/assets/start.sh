@@ -122,6 +122,11 @@ else
 fi
 
 
+echo "${OS_DISTRO}: Setting Up Apache"
+################################################################################
+mkdir -p /etc/httpd/logs
+
+
 echo "${OS_DISTRO}: Installing IPA Server if required"
 ################################################################################
 if [ -f /etc/ipa/ca.crt ] ; then

@@ -1,0 +1,193 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting Harbor FreeIPA Initialiazation"
+################################################################################
+LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
+rm -f ${LOCAL_ENV}
+touch ${LOCAL_ENV}
+
+cfg_auth=/etc/harbor/auth.conf
+cfg_harbor_auth=/etc/harbor/harbor-auth.conf
+cfg_network=/etc/harbor/network.conf
+cfg_node=/etc/harbor/node.conf
+cfg_roles=/etc/harbor/roles.conf
+
+
+echo "${OS_DISTRO}: Loading Network config"
+################################################################################
+for CONF_SECTION in $(crudini --get $cfg_network); do
+  for COMPONENT in $(crudini --get $cfg_network ${CONF_SECTION}); do
+    VALUE="$(crudini --get $cfg_network ${CONF_SECTION} ${COMPONENT})"
+    NAME="$(echo NETWORK_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+    echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  done
+done
+export OS_DOMAIN=${NETWORK_DEFAULT_OS_DOMAIN}
+echo "OS_DOMAIN=${OS_DOMAIN}"
+
+
+echo "${OS_DISTRO}: Loading Common functions"
+################################################################################
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/harbor-common.sh
+
+
+echo "${OS_DISTRO}: Loading Auth Config"
+################################################################################
+for CONF_SECTION in DEFAULT; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+for CONF_SECTION in freeipa; do
+  if [ "${CONF_SECTION}" = "DEFAULT" ]; then
+    DEBUG=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} debug)
+    HARBOR_ROLES=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} roles)
+    LOCAL_ENV_LIST="${LOCAL_ENV_LIST} DEBUG HARBOR_ROLES"
+    echo "DEBUG=${DEBUG}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+    echo "HARBOR_ROLES=${HARBOR_ROLES}" > ${LOCAL_ENV}
+    source ${LOCAL_ENV}
+    rm -f ${LOCAL_ENV}
+  else
+      IMAGE_NAME_PREFIX=$CONF_SECTION
+      for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
+        VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
+        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+        source ${LOCAL_ENV}
+        rm -f ${LOCAL_ENV}
+      done
+  fi;
+done
+
+
+retry_freeipa_command () {
+  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin > /dev/null && $(echo $@)"
+  do
+    echo "Command Failed, retying in 60s"
+    sleep 60s
+  done
+  docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+}
+
+
+echo "${OS_DISTRO}: Waiting For DNS from freeipa@${NETWORK_FREEIPA_FREEIPA_MASTER_IP} to resolve ${FREEIPA_SERVICE_HOST}"
+################################################################################
+retry_freeipa_command dig  +short ${FREEIPA_SERVICE_HOST} @${NETWORK_FREEIPA_FREEIPA_MASTER_IP}
+
+
+echo "${OS_DISTRO}: Setting default password policy to 1 year"
+################################################################################
+PWD_POLICY_MAX=$(retry_freeipa_command ipa pwpolicy-show global_policy | grep "Max lifetime" | awk '{ print $NF }')
+PWD_POLICY_MIN=$(retry_freeipa_command ipa pwpolicy-show global_policy | grep "Min lifetime" | awk '{ print $NF }')
+if ! [ "${PWD_POLICY_MAX}" == "360" ]; then
+  retry_freeipa_command ipa pwpolicy-mod --maxlife=360 global_policy
+fi
+if ! [ "${PWD_POLICY_MIN}" == "1" ]; then
+  retry_freeipa_command ipa pwpolicy-mod --minlife=1 global_policy
+fi
+
+
+
+################################################################################
+create_freeipa_admin_user () {
+  USER=$1
+  PASSWORD=$2
+  TMP_PASSWORD=$(harbor-gen-password 12 24)
+  retry_freeipa_command "(ipa user-show ${USER} || ( \
+  echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${USER} && \
+  harbor-user-password-reset ${USER} $TMP_PASSWORD ${PASSWORD} > /dev/null )) && \
+  (kdestroy -A && echo ${PASSWORD} | kinit ${USER} > /dev/null && kdestroy -A)"
+  if ! retry_freeipa_command ipa group-show admins | grep "^  Member users:" | grep -q ${USER}; then
+    retry_freeipa_command ipa group-add-member admins --users=${USER}
+  fi
+}
+
+
+echo "${OS_DISTRO}: Managing the user admin user: ${AUTH_FREEIPA_USER_ADMIN_USER}"
+################################################################################
+create_freeipa_admin_user ${AUTH_FREEIPA_USER_ADMIN_USER} ${AUTH_FREEIPA_USER_ADMIN_PASSWORD}
+
+
+echo "${OS_DISTRO}: Managing the host admin user: ${AUTH_FREEIPA_HOST_ADMIN_USER}"
+################################################################################
+create_freeipa_admin_user ${AUTH_FREEIPA_HOST_ADMIN_USER} ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}
+
+
+IPA_CERT_PROFILE=caIPAclientCert
+echo "${OS_DISTRO}: Managing the client cert profile: ${IPA_CERT_PROFILE}"
+################################################################################
+retry_freeipa_command "(ipa certprofile-show ${IPA_CERT_PROFILE} || (\
+    ipa certprofile-show --out /tmp/webclient.cfg IECUserRoles && \
+    sed -i \"s|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.1,1.3.6.1.5.5.7.3.2|policyset.serverCertSet.7.default.params.exKeyUsageOIDs=1.3.6.1.5.5.7.3.2|g\" /tmp/webclient.cfg && \
+    sed -i \"s|profileId=IECUserRoles|profileId=${IPA_CERT_PROFILE}|g\" /tmp/webclient.cfg && \
+    sed -i \"s|name=IPA-RA Agent-Authenticated Server Certificate Enrollment|name=IPA-RA Agent-Authenticated Client Certificate Enrollment|g\" /tmp/webclient.cfg && \
+    ipa certprofile-import ${IPA_CERT_PROFILE} --file /tmp/webclient.cfg --desc \"Standard profile for network clients\" --store TRUE && \
+    rm -f /tmp/webclient.cfg))"
+
+
+echo "${OS_DISTRO}: Setting up DNS"
+################################################################################
+export KUBE_IP_FROM_SKYDNS=$(retry_freeipa_command dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @$MY_IP)
+check_required_vars KUBE_IP_FROM_SKYDNS MY_IP OS_DOMAIN
+(
+retry_freeipa_command "(ipa dnsforwardzone-del svc.${OS_DOMAIN}. || true && \
+                        ipa dnsforwardzone-del pod.${OS_DOMAIN}. || true && \
+                        ipa dnsforwardzone-add svc.${OS_DOMAIN}. --forwarder $MY_IP && \
+                        ipa dnsforwardzone-add pod.${OS_DOMAIN}. --forwarder $MY_IP)"
+
+retry_freeipa_command "(ipa dnsrecord-del ${OS_DOMAIN} skydns --a-rec $MY_IP || true && \
+                        ipa dnsrecord-add ${OS_DOMAIN} skydns --a-rec $MY_IP)"
+
+retry_freeipa_command "(ipa dnsrecord-del ${OS_DOMAIN}. svc --ns-rec=skydns || true && \
+                        ipa dnsrecord-add ${OS_DOMAIN}. svc --ns-rec=skydns)"
+
+retry_freeipa_command "(ipa dnsrecord-del ${OS_DOMAIN}. pod --ns-rec=skydns || true && \
+                        ipa dnsrecord-add ${OS_DOMAIN}. pod --ns-rec=skydns)"
+
+)
+export KUBE_IP_FROM_IPA=$(retry_freeipa_command dig +short -t A kubernetes.default.svc.${OS_DOMAIN}. @${NETWORK_FREEIPA_FREEIPA_MASTER_IP})
+check_required_vars KUBE_IP_FROM_IPA
+
+
+echo "${OS_DISTRO}: FreeIPA Configured"
+################################################################################

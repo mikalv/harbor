@@ -18,6 +18,7 @@ RUN set -e && \
     setcap cap_net_raw,cap_net_admin+p /usr/bin/ping || true && \
     echo LANG=C > /etc/locale.conf && \
     /sbin/ldconfig -X && \
+    mkdir -p /etc/httpd/logs && \
     groupadd -g 288 kdcproxy ; useradd -u 288 -g 288 -c 'IPA KDC Proxy User' -d '/var/lib/kdcproxy' -s '/sbin/nologin' kdcproxy && \
     container-base-systemd-reset.sh
 

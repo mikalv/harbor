@@ -23,11 +23,12 @@ cfg_images=/etc/harbor/images.conf
 IMAGE_REPO=$(crudini --get $cfg_images DEFAULT repo)
 IMAGE_NAMESPACE=$(crudini --get $cfg_images DEFAULT namespace)
 IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
-IMAGE_NAME=$(crudini --get $cfg_images openvswitch ovsdb)
+IMAGE_NAME=$(crudini --get $cfg_images ovn ovsdb)
 IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 exec docker run \
      --rm \
      --net=host \
+     --entrypoint=/usr/bin/ovs-ofctl \
      -v /var/run/openvswitch:/var/run/openvswitch:rw \
-     ${IMAGE} ovs-ofctl "$@"
+     ${IMAGE} "$ARGS"

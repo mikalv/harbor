@@ -1,0 +1,375 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting IPA host update for kube service"
+################################################################################
+source /etc/os-container.env
+export OS_DOMAIN=$(hostname -d)
+source /etc/os-container.env
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/freeipa-login-helper.sh
+source /opt/harbor/marina/load-config-helper.sh
+KUBE_AUTH_ROOT=/var/lib/harbor/kube
+KUBE_ADMIN_USER=admin
+KUBE_ADMIN_TOKEN=$(cat ${KUBE_AUTH_ROOT}/known_tokens.csv | grep ",$KUBE_ADMIN_USER$" | awk -F ',' '{ print $1 }')
+
+LOCAL_AUTH_DATA=/root/.harbor
+mkdir -p ${LOCAL_AUTH_DATA}
+SERVICE_VAULT_PASSWORD_FILE=${LOCAL_AUTH_DATA}/$(uuidgen)
+
+echo "${OS_DISTRO}: Loading Network Config"
+################################################################################
+load_network_config
+
+
+echo "${OS_DISTRO}: Defining Services to manage"
+################################################################################
+if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+  SERVICE_SERVICES="HTTP"
+elif [ "$MARINA_SERVICE" = "ipsilon" ]; then
+  SERVICE_SERVICES="HTTP pgsql"
+elif [ "$MARINA_SERVICE" = "memcached" ]; then
+  SERVICE_SERVICES="memcache"
+elif [ "$MARINA_SERVICE" = "messaging" ]; then
+  SERVICE_SERVICES="AMQP"
+elif [ "$MARINA_SERVICE" = "ovn" ]; then
+  SERVICE_SERVICES="ovsdb-sb ovsdb-nb"
+else
+  SERVICE_SERVICES="HTTP mysql"
+fi;
+echo "${OS_DISTRO}: Managing: ${SERVICE_SERVICES}"
+
+
+echo "${OS_DISTRO}: Managing Services"
+################################################################################
+for SERVICE in $SERVICE_SERVICES; do
+  echo "${OS_DISTRO}: Managing ${SERVICE} service"
+
+  HARBOR_SERVICE_PREFIX=$(echo ${MARINA_SERVICE}  | tr '[:lower:]' '[:upper:]')
+
+  if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+    HOSTNAME_VAR_MIDFIX=""
+  elif [ "$MARINA_SERVICE" = "ipsilon" ]; then
+    HOSTNAME_VAR_MIDFIX=""
+  elif [ "$MARINA_SERVICE" = "memcached" ]; then
+    HOSTNAME_VAR_MIDFIX=""
+    HARBOR_SERVICE_PREFIX="MEMCACHE"
+  elif [ "$MARINA_SERVICE" = "messaging" ]; then
+    HOSTNAME_VAR_MIDFIX=""
+    HARBOR_SERVICE_PREFIX="RABBITMQ"
+  elif [ "$MARINA_SERVICE" = "api" ]; then
+    HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    HARBOR_SERVICE_PREFIX="HORIZON"
+  elif [ "$MARINA_SERVICE" = "ovn" ]; then
+    if [ "$SERVICE" = "ovsdb-sb" ]; then
+      HOSTNAME_VAR_MIDFIX="_SB_DB_SERVICE"
+    elif [ "$SERVICE" = "ovsdb-nb" ]; then
+      HOSTNAME_VAR_MIDFIX="_NB_DB_SERVICE"
+    fi;
+    SERVICE=ovsdb
+  else
+    HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+  fi;
+
+  SERVICE_NAMESPACE_VAR="${HARBOR_SERVICE_PREFIX}_SERVICE_NAMESPACE"
+  SERVICE_NAMESPACE=${!SERVICE_NAMESPACE_VAR}
+  SERVICE_HOSTNAME_VAR="${HARBOR_SERVICE_PREFIX}${HOSTNAME_VAR_MIDFIX}_HOSTNAME"
+  SERVICE_SERVICE_HOST_SVC_VAR="${HARBOR_SERVICE_PREFIX}${HOSTNAME_VAR_MIDFIX}_SERVICE_HOST_SVC"
+
+  echo "${OS_DISTRO}: Harbor Service: ${MARINA_SERVICE}"
+
+  if [ "$SERVICE" = "HTTP" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  elif [ "$SERVICE" = "pgsql" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}-db
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  elif [ "$SERVICE" = "mysql" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}-db
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  elif [ "$SERVICE" = "memcache" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  elif [ "$SERVICE" = "AMQP" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  elif [ "$SERVICE" = "ovsdb" ]; then
+    SERVICE_HOSTNAME=${!SERVICE_HOSTNAME_VAR}
+    SERVICE_SERVICE_HOST=${SERVICE_HOSTNAME}
+    SERVICE_SERVICE_HOST_SVC=${SERVICE_HOSTNAME}.${SERVICE_NAMESPACE}.svc
+  fi;
+
+
+  echo "${OS_DISTRO}: Domain: ${OS_DOMAIN}"
+  echo "${OS_DISTRO}: Namespace: ${SERVICE_NAMESPACE}"
+  echo "${OS_DISTRO}: Public Hostname: ${SERVICE_SERVICE_HOST}.${OS_DOMAIN}"
+  echo "${OS_DISTRO}: Cluster Hostname: ${SERVICE_SERVICE_HOST_SVC}.${OS_DOMAIN}"
+  check_required_vars OS_DOMAIN \
+                       SERVICE_NAMESPACE \
+                       SERVICE_HOSTNAME \
+                       SERVICE_SERVICE_HOST \
+                       SERVICE_SERVICE_HOST_SVC
+
+
+  echo "${OS_DISTRO}: Determining IPS"
+  ##############################################################################
+  if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+    SERVICE_SERVICE_HOST_IP=${HARBOR_SERVICE_DEFAULT_IP}
+    SERVICE_SERVICE_HOST_SVC_IP=${NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_KUBE}
+  else
+    SERVICE_SERVICE_HOST_IP=${HARBOR_SERVICE_DEFAULT_IP}
+    SERVICE_SERVICE_HOST_SVC_IP=${HARBOR_SERVICE_DEFAULT_IP}
+  fi;
+  check_required_vars SERVICE_SERVICE_HOST_IP \
+                      SERVICE_SERVICE_HOST_SVC_IP
+
+  echo "${OS_DISTRO}: Public IP: ${SERVICE_SERVICE_HOST_IP}"
+  echo "${OS_DISTRO}: Cluster IP: ${SERVICE_SERVICE_HOST_SVC_IP}"
+
+  echo "${OS_DISTRO}: Managing Virtual Hosts"
+  ##############################################################################
+  freeipa_login
+
+
+  echo "${OS_DISTRO}: Managing DNS"
+  ##############################################################################
+  for HOST_ENV in SERVICE_SERVICE_HOST; do
+    HOST=${!HOST_ENV}
+    HOST_IP_ENV=${HOST_ENV}_IP
+    HOST_IP=${!HOST_IP_ENV}
+    #ipa dnsrecord-del ${OS_DOMAIN} ${HOST} --a-rec=${HOST_IP}
+    (ipa dnsrecord-show ${OS_DOMAIN} ${HOST} --raw && (
+    IPA_HOST_IP=$(ipa dnsrecord-show ${OS_DOMAIN} ${HOST} --raw | grep "arecord" | awk '{printf $NF}' | head -1)
+    if [ "${IPA_HOST_IP}" != "${HOST_IP}" ]; then
+      ipa dnsrecord-del ${OS_DOMAIN} ${HOST} --del-all
+      ipa dnsrecord-add ${OS_DOMAIN} ${HOST} --a-rec=${HOST_IP}
+    fi
+    )) || ipa dnsrecord-add ${OS_DOMAIN} ${HOST} --a-rec=${HOST_IP}
+  done
+
+  echo "${OS_DISTRO}: Managing Hosts"
+  ##############################################################################
+  OS_SERVICE_LOCALITY="HarborOS"
+  OS_SERVICE_LOCATION="RegionOne"
+  OS_SERVICE_PLATFORM="Kubernetes"
+  OS_SERVICE_DESC="${OS_SERVICE_LOCALITY} ${OS_SERVICE_PLATFORM} ${MARINA_SERVICE^} ${SERVICE,,} service (${OS_SERVICE_LOCATION})"
+
+  for HOST_ENV in SERVICE_SERVICE_HOST SERVICE_SERVICE_HOST_SVC; do
+    HOST=${!HOST_ENV}
+    if [[ ${HOST} = *.svc ]]; then
+      FORCE="--force"
+    else
+      FORCE=""
+    fi
+    #ipa host-del ${HOST}.${OS_DOMAIN}
+    echo "${OS_DISTRO}: Managing ${HOST}.${OS_DOMAIN} host"
+    ipa host-show ${HOST}.${OS_DOMAIN} > /dev/null || \
+     /bin/sh -c "ipa host-add ${HOST}.${OS_DOMAIN} ${FORCE} \
+     --class=kubernetes_service \
+     --locality=${OS_SERVICE_LOCALITY} \
+     --location=${OS_SERVICE_LOCATION} \
+     --platform=${OS_SERVICE_PLATFORM} \
+     --desc='${OS_SERVICE_DESC}'"
+
+     ipa host-show ${HOST}.${OS_DOMAIN} | grep "^  Managed by:" | grep -q "$(hostname -s).${OS_DOMAIN}" || ( \
+      ipa host-add-managedby ${HOST}.${OS_DOMAIN} --hosts=$(hostname -s).${OS_DOMAIN} || true
+     )
+
+     ipa host-show ${HOST}.${OS_DOMAIN} | grep "^  Managed by:" | grep -q "${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" || ( \
+      ipa host-add-managedby ${HOST}.${OS_DOMAIN} --hosts=${SERVICE_SERVICE_HOST}.${OS_DOMAIN} || true
+     )
+  done
+
+  echo "${OS_DISTRO}: Managing Service: $SERVICE"
+  ##############################################################################
+  for HOST_ENV in SERVICE_SERVICE_HOST SERVICE_SERVICE_HOST_SVC; do
+    HOST=${!HOST_ENV}
+    if [[ ${HOST} = *.svc ]]; then
+      FORCE="--force"
+    else
+      FORCE=""
+    fi
+    #ipa service-del ${HOST}.${OS_DOMAIN}
+    echo "${OS_DISTRO}: Managing ${SERVICE}/${HOST}.${OS_DOMAIN} service"
+    ipa service-show ${SERVICE}/${HOST}.${OS_DOMAIN} > /dev/null || \
+    ipa service-add ${FORCE} ${SERVICE}/${HOST}.${OS_DOMAIN}
+
+    ipa service-show ${SERVICE}/${HOST}.${OS_DOMAIN} | grep "^  Managed by:" | grep -q "$(hostname -s).${OS_DOMAIN}" || ( \
+     ipa service-add-host ${SERVICE}/${HOST}.${OS_DOMAIN} --hosts=$(hostname -s).${OS_DOMAIN} || true
+    )
+
+    ipa service-show ${SERVICE}/${HOST}.${OS_DOMAIN} | grep "^  Managed by:" | grep -q "${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" || ( \
+     ipa service-add-host ${SERVICE}/${HOST}.${OS_DOMAIN} --hosts=${SERVICE_SERVICE_HOST}.${OS_DOMAIN} || true
+    )
+  done
+
+  echo "${OS_DISTRO}: Defining Cert Storage Params"
+  ##############################################################################
+  CERT_FILE_ROOT="${LOCAL_AUTH_DATA}/${SERVICE}-${SERVICE_SERVICE_HOST}"
+
+
+  echo "${OS_DISTRO}: Defining vault functions"
+  ##############################################################################
+  freeipa_add_file_to_service_vault () {
+
+    FILE=$1
+    VAULT_NAME=$(basename $FILE)
+
+    echo "${OS_DISTRO}: Retreving Vault Password from /etc/harbor/harbor-auth.conf"
+    ############################################################################
+    crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password &> /dev/null || ( \
+    echo "${OS_DISTRO}: created new password: /etc/harbor/harbor-auth.conf: [$MARINA_SERVICE] harbor_auth_vault_cert_password" && \
+    crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password $(harbor-gen-password 64 96) > /dev/null )
+    crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password > $SERVICE_VAULT_PASSWORD_FILE
+
+    ipa vault-show --service ${SERVICE}/${SERVICE_SERVICE_HOST}.${OS_DOMAIN} ${VAULT_NAME} > /dev/null || \
+    ipa vault-add ${VAULT_NAME} --service ${SERVICE}/${SERVICE_SERVICE_HOST}.${OS_DOMAIN} --type symmetric --password-file ${SERVICE_VAULT_PASSWORD_FILE}
+
+    ipa vault-archive ${VAULT_NAME} \
+    --service ${SERVICE}/${SERVICE_SERVICE_HOST}.${OS_DOMAIN} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --in ${FILE}
+  }
+
+  freeipa_get_file_from_service_vault () {
+    FILE=$1
+    VAULT_NAME=$(basename $FILE)
+
+    echo "${OS_DISTRO}: Retreving Vault Password from /etc/harbor/harbor-auth.conf"
+    ################################################################################
+    (crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_cert_password > $SERVICE_VAULT_PASSWORD_FILE ) && \
+    ipa vault-retrieve ${VAULT_NAME} \
+    --service ${SERVICE}/${SERVICE_SERVICE_HOST}.${OS_DOMAIN} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --out $FILE
+  }
+
+
+  echo "${OS_DISTRO}: Defining service functions"
+  ##############################################################################
+  generate_new_service_cert () {
+    echo "${OS_DISTRO}: Generating Service cert"
+    ############################################################################
+    echo "${OS_DISTRO}: Service cert: ${CERT_FILE_ROOT}.crt"
+    echo "${OS_DISTRO}: Service key:  ${CERT_FILE_ROOT}.key"
+    echo "${OS_DISTRO}: Service ca:   ${CERT_FILE_ROOT}-ca.crt"
+
+    PREV_TRACKING_REQUEST_ID=$(ipa-getcert list -f ${CERT_FILE_ROOT}.crt | grep "Request ID" | awk -F "'" '{ print $2}')
+    if ! [ "${PREV_TRACKING_REQUEST_ID}" == "" ]; then
+      echo "${OS_DISTRO}: WARNING! Previous traking request found, removing it"
+      ipa-getcert stop-tracking -i ${PREV_TRACKING_REQUEST_ID}
+    fi
+
+    echo "${OS_DISTRO}: Requesting certs"
+    ############################################################################
+    rm -f ${CERT_FILE_ROOT}.crt ${CERT_FILE_ROOT}.key ${CERT_FILE_ROOT}-ca.crt
+    ipa-getcert request -w -r \
+        -f ${CERT_FILE_ROOT}.crt \
+        -k ${CERT_FILE_ROOT}.key \
+        -F ${CERT_FILE_ROOT}-ca.crt \
+        -N "CN=${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" \
+        -D "${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" \
+        -D "${SERVICE_SERVICE_HOST_SVC}.${OS_DOMAIN}" \
+        -K "${SERVICE}/${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" \
+        -C "openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt"
+
+
+    echo "${OS_DISTRO}: Verifying Certs"
+    ############################################################################
+    openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
+    #openssl x509 -in ${CERT_FILE_ROOT}.crt -noout -text
+
+
+    echo "${OS_DISTRO}: Adding Certs to Vault"
+    ############################################################################
+    freeipa_add_file_to_service_vault ${CERT_FILE_ROOT}-ca.crt
+    freeipa_add_file_to_service_vault ${CERT_FILE_ROOT}.crt
+    freeipa_add_file_to_service_vault ${CERT_FILE_ROOT}.key
+
+
+    echo "${OS_DISTRO}: Cleaning Up"
+    ############################################################################
+    rm -f ${CERT_FILE_ROOT}-ca.crt
+    rm -f ${CERT_FILE_ROOT}.crt
+    rm -f ${CERT_FILE_ROOT}.key
+  }
+
+  get_service_cert_from_vault () {
+    echo "${OS_DISTRO}: Getting Certs from Vault"
+    ############################################################################
+    freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}-ca.crt && \
+    freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}.crt && \
+    freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}.key && \
+    openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
+  }
+
+
+  echo "${OS_DISTRO}: Managing Service Cert"
+  ##############################################################################
+  get_service_cert_from_vault || ( \
+    generate_new_service_cert && \
+    get_service_cert_from_vault )
+
+
+  echo "${OS_DISTRO}: Defining kube functions"
+  ##############################################################################
+  kube_load_service_certs () {
+    openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
+    cat ${CERT_FILE_ROOT}-ca.crt > ${KUBE_AUTH_ROOT}/ca.crt
+    cat ${CERT_FILE_ROOT}.crt > ${KUBE_AUTH_ROOT}/server.cert
+    cat ${CERT_FILE_ROOT}.key > ${KUBE_AUTH_ROOT}/server.key
+    openssl verify -CAfile ${KUBE_AUTH_ROOT}/ca.crt ${KUBE_AUTH_ROOT}/server.cert
+    #openssl x509 -in ${KUBE_AUTH_ROOT}/server.cert -noout -text
+  }
+
+  kube_upload_service_certs () {
+    cat > ${CERT_FILE_ROOT}-ssl-secret.yaml <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${SERVICE_SERVICE_HOST}-ssl-secret
+  namespace: ${SERVICE_NAMESPACE}
+type: Opaque
+data:
+  host: $( echo "${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" | base64 --wrap=0 )
+  ca: $( cat ${CERT_FILE_ROOT}-ca.crt | base64 --wrap=0 )
+  crt: $( cat ${CERT_FILE_ROOT}.crt | base64 --wrap=0 )
+  key: $( cat ${CERT_FILE_ROOT}.key | base64 --wrap=0 )
+EOF
+
+    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${CERT_FILE_ROOT}-ssl-secret.yaml || true
+    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${CERT_FILE_ROOT}-ssl-secret.yaml
+  }
+
+
+  echo "${OS_DISTRO}: Managing Kube Secret for Service Cert"
+  ##############################################################################
+  if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+    echo "Service is Kubernetes"
+    kube_load_service_certs
+  else
+    echo "$MARINA_SERVICE"
+    kube_upload_service_certs
+  fi;
+
+done

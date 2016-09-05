@@ -18,7 +18,8 @@ RUN set -e && \
         mariadb \
         jq \
         crudini \
-        docker-engine && \
+        docker-engine \
+        dmidecode && \
     chmod 0640 /etc/sudoers && \
     sed -i '/Defaults    requiretty/s/^/#/' /etc/sudoers && \
     chmod 0440 /etc/sudoers && \

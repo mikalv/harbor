@@ -14,15 +14,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+echo "${OS_DISTRO}: Starting Harbor kubernetes service update"
+################################################################################
 source /etc/os-container.env
 export OS_DOMAIN=$(hostname -d)
-source /etc/os-container.env
 source /opt/harbor/harbor-common.sh
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/freeipa-login-helper.sh
 source /opt/harbor/marina/load-config-helper.sh
 source /opt/harbor/marina/manifest-helper.sh
+export LOAD_OS_SERVICE=$MARINA_SERVICE
 
+
+echo "$OS_DISTRO: Loading Network config"
+################################################################################
+load_network_config
+
+
+echo "$OS_DISTRO: Retreiving Container Secrets from vaults"
+################################################################################
 freeipa_get_service_env_vault () {
   OS_SERVICE=$1
   VAULT_PASSWORD_FILE=$2
@@ -69,17 +80,6 @@ freeipa_get_service_env_vault () {
     fi
 }
 
-service_env_build_list_from_file () {
-  ENV_FILE=$1
-  LOCAL_ENV_LIST=""
-  while read ENV_VAR; do
-    ENV_VAR_NAME=$(echo $ENV_VAR | awk -F '=' '{ print $1}')
-    LOCAL_ENV_LIST="$LOCAL_ENV_LIST $ENV_VAR_NAME"
-    echo $LOCAL_ENV_LIST
-  done <${ENV_FILE}
-  export LOCAL_ENV_LIST
-}
-
 freeipa_retreve_all_env_vars () {
   freeipa_login
   rm -rf /tmp/env-vars
@@ -91,6 +91,51 @@ freeipa_retreve_all_env_vars () {
   freeipa_logout
 }
 
+freeipa_retreve_all_env_vars
+
+
+echo "$OS_DISTRO: Building List of environment vars to popuulate templates with"
+################################################################################
+service_env_build_list_from_file () {
+  ENV_FILE=$1
+  LOCAL_ENV_LIST=""
+  while read ENV_VAR; do
+    ENV_VAR_NAME=$(echo $ENV_VAR | awk -F '=' '{ print $1}')
+    LOCAL_ENV_LIST="$LOCAL_ENV_LIST $ENV_VAR_NAME"
+    #echo $LOCAL_ENV_LIST
+  done <${ENV_FILE}
+  export LOCAL_ENV_LIST
+}
+service_env_build_list_from_file /tmp/env-vars
+source /tmp/env-vars
+HARBOR_SERVICE_DEFAULT_DEV=eth0
+export NODE_NETWORK_DEFAULT_DEVICE=$HARBOR_SERVICE_DEFAULT_DEV
+export NODE_NETWORK_DEFAULT_IP=$HARBOR_SERVICE_DEFAULT_IP
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
+export KUBE_ENDPOINT="https://${KUBERNETES_SERVICE_HOST}:6443"
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
+export LOAD_OS_SERVICE=$MARINA_SERVICE
+
+
+echo "$OS_DISTRO: Loading Image configuration"
+################################################################################
+load_image_config ${LOAD_OS_SERVICE}
+load_image_config etcd
+load_image_config marina
+load_image_config mariadb
+load_image_config mongodb
+load_image_config memcached
+load_image_config rabbitmq
+
+
+
+echo "$OS_DISTRO: Prepping Manifest"
+################################################################################
+prep_manifests ${LOAD_OS_SERVICE}
+
+
+echo "$OS_DISTRO: Loading Manifests"
+################################################################################
 load_manifest () {
   KUBE_ADMIN_USER=admin
   KUBE_BASE=/var/lib/harbor/kube
@@ -102,50 +147,33 @@ load_manifest () {
   cat $MANIFEST_WORK_FILE
   if [ "$manifest" == "namespace.yaml" ]; then
     echo "Not deleting namespace"
-    kubectl --server https://kubernetes.${OS_DOMAIN}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE || true
+    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE || true
   else
-    kubectl --server https://kubernetes.${OS_DOMAIN}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f $MANIFEST_WORK_FILE || true
-    kubectl --server https://kubernetes.${OS_DOMAIN}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE
+    #kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f $MANIFEST_WORK_FILE || true
+    kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE
   fi;
 }
 
-echo "$OS_DISTRO: Loading Network config"
-load_network_config
-export LOAD_OS_SERVICE=$MARINA_SERVICE
 
-
-echo "$OS_DISTRO: Retreiving env vars from config file and vaults"
-freeipa_retreve_all_env_vars
-service_env_build_list_from_file /tmp/env-vars
-source /tmp/env-vars
-HARBOR_SERVICE_DEFAULT_DEV=eth0
-export NODE_NETWORK_DEFAULT_DEVICE=$HARBOR_SERVICE_DEFAULT_DEV
-export NODE_NETWORK_DEFAULT_IP=$HARBOR_SERVICE_DEFAULT_IP
-export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
-export KUBE_ENDPOINT="http://kubernetes.${OS_DOMAIN}:6443"
-export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
-export LOAD_OS_SERVICE=$MARINA_SERVICE
-
-echo "$OS_DISTRO: Loading Image config"
-load_image_config ${LOAD_OS_SERVICE}
-load_image_config etcd
-load_image_config marina
-load_image_config mariadb
-load_image_config mongodb
-load_image_config memcached
-load_image_config rabbitmq
-
-echo "$OS_DISTRO: Reloading Network config"
-load_network_config
-
-prep_manifests ${LOAD_OS_SERVICE}
-
+echo "$OS_DISTRO: Loading namespace manifest"
+################################################################################
 load_manifest ${LOAD_OS_SERVICE} namespace
-load_manifest ${LOAD_OS_SERVICE} services
-load_manifest ${LOAD_OS_SERVICE} secrets
 
+
+echo "$OS_DISTRO: Loading services manifest"
+################################################################################
+load_manifest ${LOAD_OS_SERVICE} services
+
+
+echo "$OS_DISTRO: Loading secrets manifest"
+################################################################################
+load_manifest ${LOAD_OS_SERVICE} secrets || true
+
+
+echo "$OS_DISTRO: Loading controllers manifest"
+################################################################################
 load_manifest ${LOAD_OS_SERVICE} controllers
 
 kube () {
-  kubectl --server https://kubernetes.${OS_DOMAIN}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} --namespace os-ipsilon "$@"
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} --namespace os-ovn "$@"
 }

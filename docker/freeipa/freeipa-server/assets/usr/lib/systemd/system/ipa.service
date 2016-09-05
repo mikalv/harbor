@@ -7,11 +7,12 @@ After=network.target
 Restart=always
 RestartSec=20
 Type=simple
-ExecStart=/usr/sbin/ipactl restart
+ExecStartPre=/usr/sbin/ipactl restart
+ExecStart=/usr/bin/true
 ExecStop=/usr/sbin/ipactl stop
 StandardOutput=tty
 RemainAfterExit=yes
 TimeoutSec=0
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=container-up.target

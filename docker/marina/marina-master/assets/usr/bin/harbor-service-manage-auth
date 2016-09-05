@@ -1,6 +1,22 @@
-#!/bin/sh
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 set -e
-export OS_DOMAIN=novalocal
+echo "${OS_DISTRO}: Starting service auth update"
+################################################################################
 source /etc/os-container.env
 source /opt/harbor/marina/load-config-helper.sh
 source /opt/harbor/harbor-common.sh
@@ -8,34 +24,62 @@ check_required_vars OS_DOMAIN
 source /opt/harbor/service-hosts.sh
 load_node_config
 load_network_config
-check_required_vars MY_DEVICE MY_IP
+check_required_vars MY_DEVICE MY_IP OS_DOMAIN
 export NODE_NETWORK_DEFAULT_DEVICE=$MY_DEVICE
 export NODE_NETWORK_DEFAULT_IP=$MY_IP
 export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
 export KUBE_ENDPOINT="http://127.0.0.1:8080"
 export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
 source /opt/harbor/marina/manifest-helper.sh
-echo $OS_DOMAIN
 
 
 
-
+echo "${OS_DISTRO}: Loading docker image config"
+################################################################################
 load_image_config marina
 check_required_vars IMAGE_MARINA_AUTH
 IMAGE=$IMAGE_MARINA_AUTH
 
-load_auth_config freeipa
 
+echo "${OS_DISTRO}: Loading freeipa config"
+################################################################################
+load_auth_config freeipa
+check_required_vars FREEIPA_SERVICE_HOST \
+                    AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
+                    AUTH_FREEIPA_HOST_ADMIN_USER
+
+
+
+echo "${OS_DISTRO}: Testing FreeIPA Server"
+################################################################################
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null"
+do
+  echo "${OS_DISTRO}: Waiting for auth"
+  sleep 60s
+done
+TEST_VAULT="marina-test-$(uuidgen)"
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null ) && \
+                                                          ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
+                                                          ipa vault-del ${TEST_VAULT} && \
+                                                          kdestroy -A"
+do
+  echo "${OS_DISTRO}: Waiting for vaults to be active"
+  sleep 60s
+done
+
+
+echo "${OS_DISTRO}: Starting service manager conontainer for auth"
+################################################################################
 service_manager_container_start () {
   OS_SERVICE=$1
-
   CONTAINER_NAME="manager-${OS_SERVICE}"
-  MARINA_SERVICE=$1
+  echo "${OS_DISTRO}: Creating container ${CONTAINER_NAME} to run management scripts"
 
   CONTAINER_CONFIG_DIR="/var/run/harbor/containers/${CONTAINER_NAME}"
 
   rm -rf ${CONTAINER_CONFIG_DIR}
   mkdir -p ${CONTAINER_CONFIG_DIR}/secrets
+
 
   check_required_vars AUTH_FREEIPA_HOST_ADMIN_USER \
                       AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
@@ -43,7 +87,6 @@ service_manager_container_start () {
                       HARBOR_RESOLV_FILE \
                       IMAGE \
                       CONTAINER_NAME \
-                      MARINA_SERVICE \
                       OS_DOMAIN \
                       NETWORK_FREEIPA_FREEIPA_MASTER_IP
 
@@ -55,12 +98,11 @@ service_manager_container_start () {
   echo "HARBOR_HOSTS_FILE=${HARBOR_HOSTS_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_HOSTS_FILE | tr '[:upper:]' '[:lower:]' )
   echo "HARBOR_RESOLV_FILE=${HARBOR_RESOLV_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_RESOLV_FILE | tr '[:upper:]' '[:lower:]' )
 
+
   if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
     docker pull ${IMAGE} || true
   fi
-
   docker rm -v -f ${CONTAINER_NAME}.${OS_DOMAIN} || true
-
   FREEIPA_CLIENT_CONTAINER=$(docker create \
       --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
       --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
@@ -83,45 +125,34 @@ service_manager_container_start () {
 
   export FREEIPA_CLIENT_CONTAINER
 
+  echo "${OS_DISTRO}: Writing auth config to container: ${CONTAINER_NAME}"
   for ENV_VAR in ${CONTAINER_CONFIG_DIR}/secrets/*; do
     docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/harbor/secrets/$(basename $ENV_VAR)
     rm -f $ENV_VAR
     #echo "moved $ENV_VAR -> $(basename $ENV_VAR)"
   done
 
+
+  echo "${OS_DISTRO}: Starting ${CONTAINER_NAME}"
   docker start ${FREEIPA_CLIENT_CONTAINER}
 }
+service_manager_container_start auth
+check_required_vars FREEIPA_CLIENT_CONTAINER
 
+
+echo "${OS_DISTRO}: Monitoring logs"
+################################################################################
 service_manager_container_logs () {
   check_required_vars FREEIPA_CLIENT_CONTAINER
   docker logs -f ${FREEIPA_CLIENT_CONTAINER}
 }
+service_manager_container_logs
 
+
+echo "${OS_DISTRO}: Cleaning up containers"
+################################################################################
 service_manager_container_clean () {
   check_required_vars FREEIPA_CLIENT_CONTAINER
   docker rm -f -v ${FREEIPA_CLIENT_CONTAINER}
 }
-
-
-check_required_vars FREEIPA_SERVICE_HOST \
-                    AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
-                    AUTH_FREEIPA_HOST_ADMIN_USER
-
-until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER}"
-do
-  echo "Waiting for auth"
-  sleep 60s
-done
-TEST_VAULT="marina-test-$(uuidgen)"
-until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && ipa vault-del ${TEST_VAULT}"
-do
-  echo "Waiting for vaults to be active"
-  sleep 60s
-done
-docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
-
-
-service_manager_container_start auth
-check_required_vars FREEIPA_CLIENT_CONTAINER
-service_manager_container_logs
 service_manager_container_clean

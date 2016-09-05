@@ -161,6 +161,14 @@ spec:
               value: {{ OS_DOMAIN }}
           securityContext:
             privileged: false
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+      volumes:
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ovn-user-ssl-secret
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -198,10 +206,16 @@ spec:
           securityContext:
             privileged: false
           volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
             - mountPath: /var/lib/ovn
               name: os-ovn-northbound-db
               readOnly: false
       volumes:
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ovn-northbound-db-ssl-secret
         - name: os-ovn-northbound-db
           persistentVolumeClaim:
             claimName: os-ovn-northbound-db
@@ -242,10 +256,16 @@ spec:
           securityContext:
             privileged: false
           volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
             - mountPath: /var/lib/ovn
               name: os-ovn-southbound-db
               readOnly: false
       volumes:
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ovn-ssl-secret
         - name: os-ovn-southbound-db
           persistentVolumeClaim:
             claimName: os-ovn-southbound-db

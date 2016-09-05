@@ -9,7 +9,7 @@ metadata:
 spec:
   hostNetwork: true
   containers:
-  - name: kube2sky
+  - name: kube-2-sky
     image: {{ IMAGE_KUBERNETES_KUBE2SKY }}
     imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     env:

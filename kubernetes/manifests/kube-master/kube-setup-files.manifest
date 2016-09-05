@@ -2,20 +2,21 @@ apiVersion: v1
 kind: Pod
 metadata:
   labels:
-    harbor-app: kube-setup-files
+    harbor-app: kube-bootstrap
     version: v0.1.0
-  name: kube-setup-files
+  name: kube-bootstrap
   namespace: kube-system
 spec:
   hostNetwork: true
   containers:
-  - name: kube-setup-files
-    image: docker.io/port/system-hyperkube:latest
+  - name: kube-bootstrap
+    image: {{ IMAGE_KUBERNETES_BOOTSTRAP }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
     env:
       - name: OS_DOMAIN
         value: {{ OS_DOMAIN }}
     command:
-      - /setup-files.sh
+      - /init
       - IP:{{ NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_KUBE }},DNS:kubernetes,DNS:kubernetes.default,DNS:kubernetes.default.svc,DNS:kubernetes.default.svc.{{ OS_DOMAIN }}
     volumeMounts:
       - mountPath: /data

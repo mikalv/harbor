@@ -60,7 +60,7 @@ else
     echo "FreeIPA server upgraded."
   fi
 
-  echo "${OS_DISTRO}: Restarting Freeip"
+  echo "${OS_DISTRO}: Restarting Freeipa"
   ################################################################################
-  /usr/sbin/ipactl restart
+  systemctl restart ipa
 fi

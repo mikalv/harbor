@@ -1,0 +1,215 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting IPA host update for kube service"
+################################################################################
+source /etc/os-container.env
+export OS_DOMAIN=$(hostname -d)
+source /etc/os-container.env
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/freeipa-login-helper.sh
+source /opt/harbor/marina/load-config-helper.sh
+KUBE_AUTH_ROOT=/var/lib/harbor/kube
+KUBE_ADMIN_USER=admin
+KUBE_ADMIN_TOKEN=$(cat ${KUBE_AUTH_ROOT}/known_tokens.csv | grep ",$KUBE_ADMIN_USER$" | awk -F ',' '{ print $1 }')
+LOCAL_AUTH_DATA=/root/.harbor
+mkdir -p ${LOCAL_AUTH_DATA}
+
+
+echo "${OS_DISTRO}: Defining user defaults"
+################################################################################
+if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+  IPA_USER=kubecfg
+else
+  IPA_USER=${MARINA_SERVICE}
+fi
+IPA_USER_EMAIL="${IPA_USER}@${OS_DOMAIN}.local"
+IPA_USER_GROUP="keystone_pki_users"
+IPA_CERT_PROFILE=caIPAclientCert
+
+
+echo "${OS_DISTRO}: Getting user vault auth params"
+################################################################################
+SERVICE_VAULT_PASSWORD_FILE=${LOCAL_AUTH_DATA}/$(uuidgen)
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > /dev/null || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(harbor-gen-password 64 96)) >> /dev/null
+crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > $SERVICE_VAULT_PASSWORD_FILE
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user ${IPA_USER}) >> /dev/null
+IPA_VAULT_USER=$(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user)
+
+
+echo "${OS_DISTRO}: Logging into FreeIPA"
+################################################################################
+freeipa_login
+
+
+echo "${OS_DISTRO}: Managing Group: ${IPA_USER_GROUP}"
+################################################################################
+ipa group-show ${IPA_USER_GROUP} > /dev/null || ipa group-add ${IPA_USER_GROUP}
+
+
+echo "${OS_DISTRO}: Managing Ca ACLs"
+################################################################################
+ipa caacl-show ${IPA_USER_GROUP}_acl > /dev/null || ipa caacl-add ${IPA_USER_GROUP}_acl
+ipa caacl-add-user ${IPA_USER_GROUP}_acl --group ${IPA_USER_GROUP} &> /dev/null || true
+ipa caacl-add-profile ${IPA_USER_GROUP}_acl --certprofile ${IPA_CERT_PROFILE} &> /dev/null || true
+
+
+echo "${OS_DISTRO}: Managing User ${IPA_USER}@${OS_DOMAIN}"
+################################################################################
+if echo ${OS_DOMAIN} | grep -q "."; then
+  USER_EMAIL="${IPA_USER}@${OS_DOMAIN}.local"
+else
+  USER_EMAIL="${IPA_USER}@${OS_DOMAIN}"
+fi
+ipa user-show ${IPA_USER} > /dev/null || (ipa user-add ${IPA_USER} --first=${IPA_USER^} --last=HarborOS --email ${USER_EMAIL} --shell="/bin/false" && \
+ipa group-add-member ${IPA_USER_GROUP} --users=${IPA_USER} )
+
+
+echo "${OS_DISTRO}: Defining cert management functions"
+################################################################################
+generate_user_cert () {
+  rm -rf ${LOCAL_AUTH_DATA}/user
+  mkdir -p ${LOCAL_AUTH_DATA}/user
+
+  openssl genrsa -out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key 2048
+
+  cat > ${LOCAL_AUTH_DATA}/user/${IPA_USER}.conf <<EOF
+[ req ]
+prompt = no
+encrypt_key = no
+
+distinguished_name = dn
+req_extensions = exts
+
+[ dn ]
+commonName = "${IPA_USER}"
+
+[ exts ]
+subjectAltName=email:${USER_EMAIL}
+EOF
+
+  openssl req -new \
+    -key ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key \
+    -out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr \
+    -config ${LOCAL_AUTH_DATA}/user/${IPA_USER}.conf
+
+  #openssl req -text -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr
+
+  IPA_USER_CERT_SN=$(ipa cert-request ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr --principal ${IPA_USER} --profile-id ${IPA_CERT_PROFILE} | grep "^  Serial number:" | awk '{ print $NF }')
+  ipa cert-show ${IPA_USER_CERT_SN} --out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
+
+  #openssl x509 -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt -noout -text
+
+  cat /etc/ipa/ca.crt > ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt
+  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
+
+  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+  do
+    ipa vault-show --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || \
+    ipa vault-add ${VAULT_NAME} --user ${IPA_VAULT_USER} --type symmetric --password-file ${SERVICE_VAULT_PASSWORD_FILE}
+
+    ipa vault-archive --user ${IPA_VAULT_USER} \
+    ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --in ${LOCAL_AUTH_DATA}/user/${VAULT_NAME}
+  done
+
+  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+  do
+    rm -f ${LOCAL_AUTH_DATA}/user/${VAULT_NAME}
+  done
+
+}
+
+
+retreive_user_cert () {
+  rm -rf ${LOCAL_AUTH_DATA}/user
+  mkdir -p ${LOCAL_AUTH_DATA}/user
+  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+  do
+    ipa vault-retrieve --user ${IPA_VAULT_USER} ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --out ${LOCAL_AUTH_DATA}/user/${VAULT_NAME} || (
+      for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+      do
+        ipa vault-del --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || true
+      done
+    )
+  done
+  #openssl x509 -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt -noout -text
+  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
+}
+
+
+echo "${OS_DISTRO}: Managing user certs"
+################################################################################
+retreive_user_cert || ( \
+    echo "${OS_DISTRO}: The scary looking output above is normal on the first run of this script" && \
+    generate_user_cert && \
+    retreive_user_cert )
+
+
+echo "${OS_DISTRO}: Logging out of FreeIPA"
+################################################################################
+freeipa_logout
+
+
+echo "${OS_DISTRO}: Determining Service namespace"
+################################################################################
+HARBOR_SERVICE_PREFIX=$(echo ${MARINA_SERVICE}  | tr '[:lower:]' '[:upper:]')
+if [ "$MARINA_SERVICE" = "memcached" ]; then
+  HARBOR_SERVICE_PREFIX="MEMCACHE"
+elif [ "$MARINA_SERVICE" = "messaging" ]; then
+  HARBOR_SERVICE_PREFIX="RABBITMQ"
+elif [ "$MARINA_SERVICE" = "api" ]; then
+  HARBOR_SERVICE_PREFIX="HORIZON"
+fi;
+SERVICE_NAMESPACE_VAR="${HARBOR_SERVICE_PREFIX}_SERVICE_NAMESPACE"
+SERVICE_NAMESPACE=${!SERVICE_NAMESPACE_VAR}
+
+
+echo "${OS_DISTRO}: Managing Kube Secret"
+################################################################################
+if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+  cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt > ${KUBE_AUTH_ROOT}/${IPA_USER}.crt
+  cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key > ${KUBE_AUTH_ROOT}/${IPA_USER}.key
+  openssl verify -CAfile ${KUBE_AUTH_ROOT}/ca.crt ${KUBE_AUTH_ROOT}/${IPA_USER}.crt
+else
+  cat > ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: ${IPA_USER}-user-ssl-secret
+  namespace: ${SERVICE_NAMESPACE}
+type: Opaque
+data:
+  user: $( echo "${IPA_USER}" | base64 --wrap=0 )
+  ca: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt | base64 --wrap=0 )
+  crt: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt | base64 --wrap=0 )
+  key: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key | base64 --wrap=0 )
+EOF
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml || true
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml
+fi;
+
+
+echo "${OS_DISTRO}: Cleaning up"
+################################################################################
+rm -rf ${LOCAL_AUTH_DATA}/user

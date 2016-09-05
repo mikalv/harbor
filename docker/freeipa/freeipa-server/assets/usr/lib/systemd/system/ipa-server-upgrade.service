@@ -1,14 +1,13 @@
 [Unit]
 Description=Upgrade IPA server
-Requires=ipa.service
-After=ipa.service
 After=container-configure-first.service
 
 [Service]
 Restart=always
 RestartSec=20
 Type=simple
-ExecStart=/usr/sbin/ipa-server-upgrade-data
+ExecStartPre=/usr/sbin/ipa-server-upgrade-data
+ExecStart=/usr/bin/true
 RemainAfterExit=yes
 StandardOutput=tty
 TimeoutSec=0

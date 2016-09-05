@@ -1,77 +1,88 @@
-#!/bin/sh
-set -x
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Kubelet Starting"
+################################################################################
 : ${SECRETS_DIR:="/var/run/harbor/secrets"}
 : ${OVS_INTERGRATION_BRIDGE:="br-int"}
-
+. /usr/sbin/container-gen-env
 cfg_node=/etc/harbor/node.conf
 cfg_network=/etc/harbor/network.conf
-
 export OS_DOMAIN=$(crudini --get $cfg_network DEFAULT os_domain)
 export NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
-
-find $SECRETS_DIR -type f -printf "\n#%p\n" -exec bash -c "cat {} | sed  's|\\\n$||g'" \; > /etc/os-container.env
-
 source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-
 export KUBELET_CMD='exec kubelet'
-
-KUBE_STATUS_DIR="/run/harbor"
+export KUBE_STATUS_DIR="/run/harbor"
 export KUBE_STATUS_FILE="${KUBE_STATUS_DIR}/kube-status"
-mkdir -p ${KUBE_STATUS_DIR}
 
+
+echo "${OS_DISTRO}: Ensuring Required Assets Exist"
+################################################################################
+mkdir -p /var/run/harbor
+mkdir -p /var/run/swarm
+touch /var/run/swarm/docker.sock
+mkdir -p ${KUBE_STATUS_DIR}
+touch ${KUBE_STATUS_FILE}
+rm -rf /var/run/harbor/hosts
+touch /var/run/harbor/hosts
+
+
+echo "${OS_DISTRO}: Determining node status"
+################################################################################
 KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
 if [ -z "$KUBE_STATUS" ]; then
-    echo "No status found, launching as bootrapper"
+    echo "${OS_DISTRO}: No status found, launching as bootrapper"
     export KUBE_STATUS="BOOTSTRAPPING"
     echo "$KUBE_STATUS" > ${KUBE_STATUS_FILE}
 elif [ "$KUBE_STATUS" = "BOOTSTRAPPING" ]; then
-    echo "This node is bootstrapping"
+    echo "${OS_DISTRO}: This node is currently bootstrapping"
     export KUBE_STATUS="BOOTSTRAPPING"
 elif [ "$KUBE_STATUS" = "BOOTSTRAPPED" ]; then
-    echo "This node has been boostrapped, just prepping manifests"
+    echo "${OS_DISTRO}: This node has been boostrapped, just prepping manifests"
     export KUBE_STATUS="INITALIZING"
 fi;
 
 
-cfg_node=/etc/harbor/node.conf
-NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
-
+echo "${OS_DISTRO}: Kubelet Bootstrap Starting"
+################################################################################
 if [ "$NODE_ROLE" = "master" ]; then
-    echo "This is a master node."
-    cfg_images=/etc/harbor/images.conf
-    IMAGE_TAG=$(crudini --get $cfg_images DEFAULT tag)
-    IMAGE_PULL_POLICY=$(crudini --get $cfg_images DEFAULT pull_policy)
-    PASSWD_GEN_IMAGE=docker.io/port/marina-password-gen:${IMAGE_TAG}
-    if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
-      docker pull ${PASSWD_GEN_IMAGE} || true
-    fi
-    docker run --rm -v /etc/harbor:/etc/harbor:rw ${PASSWD_GEN_IMAGE}
-    source /usr/bin/start-services
-    #/opt/harbor/roles/master &>/var/log/harbor-boostrap &
-else
-    echo "Launching node boostrap script."
-    source /usr/bin/start-services
-    #/opt/harbor/roles/node &>/var/log/harbor-boostrap &
-fi;
-
-#/opt/harbor/roles/ovn
-
-echo "Configuring Kuryr"
-#/opt/harbor/scripts/config-kuryr
+  echo "${OS_DISTRO}: Running Passwd Gen Script to convert templated values"
+  ##############################################################################
+  /usr/bin/harbor-passwd-gen
+fi
 
 
-echo "Ensuring Required Host Assets Exist"
-mkdir -p /var/run/swarm
-touch /var/run/swarm/docker.sock
+echo "${OS_DISTRO}: Generating Node Config Files"
+################################################################################
+/usr/bin/harbor-generate-cfgs
 
 
+echo "${OS_DISTRO}: Generating Services Manifests"
+################################################################################
+source /usr/bin/harbor-prep-node-manifests
+
+
+echo "${OS_DISTRO}: Prepping Kubelet start command and env"
+################################################################################
 export NODE_HOSTNAME="$(hostname -s).${OS_DOMAIN}"
 export KUBERNETES_API_SERVER="http://${KUBERNETES_SERVICE_HOST}:8080"
-echo "Kubernetes Api Server: ${KUBERNETES_API_SERVER}"
-
-
+echo "${OS_DISTRO}: Kubernetes Api Server: ${KUBERNETES_API_SERVER}"
 check_required_vars NODE_HOSTNAME \
                     KUBERNETES_API_SERVER \
                     NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA \
@@ -81,10 +92,13 @@ check_required_vars NODE_HOSTNAME \
                     KUBE_STATUS_FILE \
                     NODE_NETWORK_DEFAULT_IP
 
-export KUBE_LAUNCH_PARAMS="--hostname-override=${NODE_HOSTNAME} \
+
+echo "${OS_DISTRO}: Dropping shell and launching Kubelet"
+################################################################################
+exec kubelet  --hostname-override=${NODE_HOSTNAME} \
               --allow-privileged=true \
               --api-servers=${KUBERNETES_API_SERVER} \
-              --v=2 \
+              --v=1 \
               --node-ip=${NODE_NETWORK_DEFAULT_IP} \
               --address=${NODE_NETWORK_DEFAULT_IP} \
               --enable-server \
@@ -94,33 +108,4 @@ export KUBE_LAUNCH_PARAMS="--hostname-override=${NODE_HOSTNAME} \
               --network-plugin=cni \
               --config=/etc/kubernetes/manifests \
               --node-labels=harbor-role=$NODE_ROLE \
-              --pod-infra-container-image=docker.io/port/system-pause:latest"
-
-
-echo "Running Kubelet in background untill br-int appears"
-kubelet ${KUBE_LAUNCH_PARAMS} &
-KUBELET_PID=$!
-
-
-echo "Waiting for ${OVS_INTERGRATION_BRIDGE} to exist"
-until ovs-vsctl br-exists ${OVS_INTERGRATION_BRIDGE}; do
-  sleep 30; echo "Waiting for ${OVS_INTERGRATION_BRIDGE}...";
-done;
-
-
-echo "Waiting for Node Bootstrap to complete"
-export KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
-until [ "$KUBE_STATUS" = "BOOTSTRAPPED" ]; do
-  echo "Waiting for Node Bootstrap to complete";
-  sleep 30;
-  export KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
-done;
-
-
-echo "Stopping Kubelet"
-kill ${KUBELET_PID}
-wait ${KUBELET_PID}
-
-
-echo "Dropping shell and launching Kubelet"
-exec kubelet ${KUBE_LAUNCH_PARAMS}
+              --pod-infra-container-image=docker.io/port/pause:latest

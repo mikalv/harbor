@@ -6,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -14,16 +14,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+set -e
+echo "${OS_DISTRO}: Loading auth params into FreeIPA vaults"
+################################################################################
 source /etc/os-container.env
 export OS_DOMAIN=$(hostname -d)
 source /etc/os-container.env
 source /opt/harbor/harbor-common.sh
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/freeipa-login-helper.sh
-
 source /opt/harbor/marina/load-config-helper.sh
 load_network_config
 
+
+echo "${OS_DISTRO}: Defining vault functions"
+################################################################################
 load_auth_config_into_vault () {
   SERVICE=$@
   for CONF_SECTION in ${SERVICE}; do
@@ -41,17 +46,20 @@ load_auth_config_into_vault () {
         HARBOR_VAULT_ACTIVE=$(crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault || echo "Prime")
         if [ "$HARBOR_VAULT_ACTIVE" == "Prime" ]; then
           for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
-            VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
-            if [ "$CONF_SECTION" == "freeipa" ]; then
-              echo "$CONF_SECTION - leaving config params on host"
+            if [[ $COMPONENT == harbor_auth_vault* ]]; then
+              echo "${OS_DISTRO}: Not archiving [${CONF_SECTION}] $COMPONENT"
             else
-              crudini --del $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT}
+              VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
+              echo "${OS_DISTRO}: Archiving [${CONF_SECTION}] $COMPONENT"
+              if ! [ "$CONF_SECTION" == "freeipa" ]; then
+                crudini --del $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT}
+              fi
+              NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+              LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+              echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+              source ${LOCAL_ENV}
+              rm -f ${LOCAL_ENV}
             fi
-            NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
-            LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
-            echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
-            source ${LOCAL_ENV}
-            rm -f ${LOCAL_ENV}
           done
           if [ "$CONF_SECTION" == "freeipa" ]; then
             if [ "$CURRENT_AUTH_SERVICE" == "$CONF_SECTION-master" ]; then
@@ -61,7 +69,7 @@ load_auth_config_into_vault () {
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_user || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
-              crudini --get $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password || \
+              crudini --get $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password > /dev/null || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-master harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             elif [ "$CURRENT_AUTH_SERVICE" == "$CONF_SECTION-user" ]; then
               VAULT_NAME="env-${CONF_SECTION}-user"
@@ -69,7 +77,7 @@ load_auth_config_into_vault () {
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_user || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
-              crudini --get $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password || \
+              crudini --get $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password > /dev/null || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-user harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             elif [ "$CURRENT_AUTH_SERVICE" == "$CONF_SECTION-host" ]; then
               VAULT_NAME="env-${CONF_SECTION}-host"
@@ -77,7 +85,7 @@ load_auth_config_into_vault () {
               crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_user || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
-              crudini --get $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password || \
+              crudini --get $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password > /dev/null || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION}-host harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             else
               VAULT_NAME="env-${CONF_SECTION}"
@@ -85,7 +93,7 @@ load_auth_config_into_vault () {
               crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_name "${VAULT_NAME}"
               crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
-              crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password || \
+              crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password > /dev/null || \
                 crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(harbor-gen-password 64 96)"
             fi
           else
@@ -94,7 +102,7 @@ load_auth_config_into_vault () {
             crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_name "${VAULT_NAME}"
             crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user || \
               crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_user "${AUTH_FREEIPA_HOST_ADMIN_USER}"
-            crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password || \
+            crudini --get $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password > /dev/null || \
               crudini --set $cfg_harbor_auth ${CONF_SECTION} harbor_auth_vault_password "$(harbor-gen-password 64 96)"
           fi
         fi
@@ -117,7 +125,7 @@ freeipa_create_service_env_vault () {
   export CURRENT_AUTH_SERVICE
   LOCAL_ENV_LIST=""
   if [ "$CURRENT_AUTH_SERVICE" == "freeipa-master" ]; then
-    echo "not filering auth section as freeipa"
+    echo "not filtering auth section as freeipa"
     load_auth_config_into_vault ${AUTH_SECTION}
     export LOCAL_ENV_LIST=$(echo $LOCAL_ENV_LIST | xargs -n1 | sort -u)
   elif [ "$CURRENT_AUTH_SERVICE" == "freeipa-user" ]; then
@@ -160,7 +168,13 @@ freeipa_create_service_env_vault () {
 }
 
 
+echo "${OS_DISTRO}: Logging into FreeIPA"
+################################################################################
 freeipa_login
+
+
+echo "${OS_DISTRO}: Managing Vaults"
+################################################################################
 for OS_AUTH_CFG_SECTION in $(crudini --get $cfg_harbor_auth); do
   if [ "$OS_AUTH_CFG_SECTION" == "freeipa" ]; then
     for OS_AUTH_SUB_CFG_SECTION in freeipa-master freeipa-user freeipa-host; do
@@ -170,4 +184,7 @@ for OS_AUTH_CFG_SECTION in $(crudini --get $cfg_harbor_auth); do
     freeipa_create_service_env_vault ${OS_AUTH_CFG_SECTION} $OS_SERVICE_VAULT_PASSWORD_FILE ${OS_AUTH_CFG_SECTION}
   fi
 done
+
+echo "${OS_DISTRO}: Logging out from FreeIPA"
+################################################################################
 freeipa_logout
