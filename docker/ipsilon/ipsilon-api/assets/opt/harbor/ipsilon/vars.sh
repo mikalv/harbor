@@ -1,15 +1,15 @@
 #!/bin/bash
 : ${IPSILON_API_SERVICE_PORT:="4143"}
-: ${IPSILON_API_TLS_CA:="/run/harbor/auth/ssl/ca"}
-: ${IPSILON_API_TLS_KEY:="/run/harbor/auth/ssl/key"}
-: ${IPSILON_API_TLS_CERT:="/run/harbor/auth/ssl/crt"}
+: ${IPSILON_API_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
+: ${IPSILON_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
+: ${IPSILON_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
 
 : ${IPSILON_DATA_DIR:="/data"}
 
 : ${IPSILON_DB_SERVICE_PORT:="5432"}
-: ${IPSILON_DB_CA:="/run/harbor/auth/user/ca"}
-: ${IPSILON_DB_KEY:="/run/harbor/auth/user/key"}
-: ${IPSILON_DB_CERT:="/run/harbor/auth/user/crt"}
+: ${IPSILON_DB_CA:="/run/harbor/auth/user/tls.ca"}
+: ${IPSILON_DB_KEY:="/run/harbor/auth/user/tls.key"}
+: ${IPSILON_DB_CERT:="/run/harbor/auth/user/tls.crt"}
 : ${IPSILON_DB_SERVICE_HOST_SVC:="${IPSILON_HOSTNAME}-db.${IPSILON_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}
 : ${IPSILON_DATABASES:="DB ADMIN_DB USERS_DB TRANS_DB SAML2SESSION_DB SAMLSESSION_DB OPENID_DB OPENIDC_DB"}
 

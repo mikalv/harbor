@@ -1,4 +1,7 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-horizon-httpd:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%nginx:%%DOCKER_TAG%%
+
+ENV HARBOR_COMPONENT="kubernetes" \
+    KUBE_COMPONENT="error-server"
 
 COPY ./assets /opt/harbor/assets
 

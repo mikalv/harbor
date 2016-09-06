@@ -48,37 +48,37 @@ spec:
     targetPort: 35357
   selector:
     openstack-app: keystone
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    openstack-app: keystone-v2
-  name: keystone-v2
-  namespace: os-keystone
-spec:
-  clusterIP: None
-  sessionAffinity: ClientIP
-  ports:
-  - port: 443
-    targetPort: 5001
-    protocol: TCP
-  selector:
-    openstack-app: keystone-v2
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    openstack-app: keystone-v2
-  name: keystone-v2-admin
-  namespace: os-keystone
-spec:
-  clusterIP: None
-  sessionAffinity: ClientIP
-  ports:
-  - port: 35357
-    targetPort: 35358
-    protocol: TCP
-  selector:
-    openstack-app: keystone-v2
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     openstack-app: keystone-v2
+#   name: keystone-v2
+#   namespace: os-keystone
+# spec:
+#   clusterIP: None
+#   sessionAffinity: ClientIP
+#   ports:
+#   - port: 443
+#     targetPort: 5001
+#     protocol: TCP
+#   selector:
+#     openstack-app: keystone-v2
+# ---
+# apiVersion: v1
+# kind: Service
+# metadata:
+#   labels:
+#     openstack-app: keystone-v2
+#   name: keystone-v2-admin
+#   namespace: os-keystone
+# spec:
+#   clusterIP: None
+#   sessionAffinity: ClientIP
+#   ports:
+#   - port: 35357
+#     targetPort: 35358
+#     protocol: TCP
+#   selector:
+#     openstack-app: keystone-v2

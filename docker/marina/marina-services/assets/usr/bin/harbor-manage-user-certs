@@ -201,9 +201,9 @@ metadata:
 type: Opaque
 data:
   user: $( echo "${IPA_USER}" | base64 --wrap=0 )
-  ca: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt | base64 --wrap=0 )
-  crt: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt | base64 --wrap=0 )
-  key: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key | base64 --wrap=0 )
+  tls.ca: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt | base64 --wrap=0 )
+  tls.crt: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt | base64 --wrap=0 )
+  tls.key: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key | base64 --wrap=0 )
 EOF
   kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml || true
   kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml

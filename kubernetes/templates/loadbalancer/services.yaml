@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: ingress-loadbalancer
+  name: ingress-loadbalancer
+  namespace: os-loadbalancer
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 80
+  - port: 443
+    protocol: TCP
+    targetPort: 443
+  selector:
+    openstack-app: ingress-loadbalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: error-page-server
+  name: error-page-server
+  namespace: os-loadbalancer
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 81
+  selector:
+    openstack-app: error-page-server

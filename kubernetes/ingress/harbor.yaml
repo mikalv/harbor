@@ -1,0 +1,119 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: keystone
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: keystone
+  namespace: os-keystone
+spec:
+  tls:
+    - hosts:
+      - _
+  rules:
+  - http:
+      paths:
+      - path: /identity
+        backend:
+          serviceName: keystone
+          servicePort: 5000
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: neutron
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: neutron
+  namespace: os-neutron
+spec:
+  tls:
+    - hosts:
+      - _
+  rules:
+  - http:
+      paths:
+      - path: /network
+        backend:
+          serviceName: neutron
+          servicePort: 9696
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: api
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: api
+  namespace: os-api
+spec:
+  tls:
+    - hosts:
+      - _
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: api
+          servicePort: 4433
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: freeipa
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /ipa
+  name: freeipa
+  namespace: freeipa
+spec:
+  tls:
+    - hosts:
+      - _
+  rules:
+  - http:
+      paths:
+      - path: /ipa
+        backend:
+          serviceName: freeipa
+          servicePort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: ipsilon-api
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /idp
+  name: ipsilon
+  namespace: os-ipsilon
+spec:
+  tls:
+    - hosts:
+      - _
+  rules:
+  - http:
+      paths:
+      - path: /idp
+        backend:
+          serviceName: ipsilon
+          servicePort: 4143

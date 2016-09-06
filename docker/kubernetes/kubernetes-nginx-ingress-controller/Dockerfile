@@ -1,11 +1,18 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-horizon-httpd:%%DOCKER_TAG%%
+FROM gcr.io/google_containers/nginx-ingress-controller:0.8.3
 
-COPY ./assets /opt/harbor/assets
+MAINTAINER Pete Birley <petebirley@gmail.com>
+
+ENV OS_DISTRO="HarborOS"
+
+ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
+    cp -rf /opt/harbor/assets/* /
+
+ENTRYPOINT ["/start.sh"]
+
+CMD []
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

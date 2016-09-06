@@ -15,16 +15,10 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching Container Startup Scripts"
-################################################################################
-/usr/bin/mysql-test
+set -x
 
+: ${PORT:="80"}
 
-echo "${OS_DISTRO}: Configuring Container"
-################################################################################
-/opt/harbor/config-keystone.sh
+sed -i "s/{{ PORT }}/${PORT}/g" /etc/nginx/nginx.conf
 
-
-echo "${OS_DISTRO}: Launching Container Application"
-################################################################################
-exec httpd -D FOREGROUND
+exec nginx -g "daemon off;"

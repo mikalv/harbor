@@ -15,16 +15,15 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching Container Startup Scripts"
+echo "${OS_DISTRO}: Starting kubernetes ingress controller container"
 ################################################################################
-/usr/bin/mysql-test
+RESPONSE=$(curl --fail --silent --max-time 1 127.0.0.1:8080/healthz/ping)
+if [ "$RESPONSE" = "ok" ]; then
+  echo "${OS_DISTRO}: We have localhost access to the api, disabling in-cluster config"
+  export KUBERNETES_SERVICE_HOST=""
+  export KUBERNETES_SERVICE_PORT=""
+fi;
 
-
-echo "${OS_DISTRO}: Configuring Container"
+echo "${OS_DISTRO}: Launching kubernetes ingress controller"
 ################################################################################
-/opt/harbor/config-keystone.sh
-
-
-echo "${OS_DISTRO}: Launching Container Application"
-################################################################################
-exec httpd -D FOREGROUND
+exec /nginx-ingress-controller --v=3 --default-backend-service=os-loadbalancer/error-page-server

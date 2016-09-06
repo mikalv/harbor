@@ -1,11 +1,11 @@
 #!/bin/bash
 : ${NEUTRON_MARIADB_SERVICE_PORT:="3308"}
-: ${NEUTRON_DB_CA:="/run/harbor/auth/user/ca"}
-: ${NEUTRON_DB_KEY:="/run/harbor/auth/user/key"}
-: ${NEUTRON_DB_CERT:="/run/harbor/auth/user/crt"}
-: ${NEUTRON_API_TLS_CA:="/run/harbor/auth/ssl/ca"}
-: ${NEUTRON_API_TLS_KEY:="/run/harbor/auth/ssl/key"}
-: ${NEUTRON_API_TLS_CERT:="/run/harbor/auth/ssl/crt"}
+: ${NEUTRON_DB_CA:="/run/harbor/auth/user/tls.ca"}
+: ${NEUTRON_DB_KEY:="/run/harbor/auth/user/tls.key"}
+: ${NEUTRON_DB_CERT:="/run/harbor/auth/user/tls.crt"}
+: ${NEUTRON_API_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
+: ${NEUTRON_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
+: ${NEUTRON_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
 : ${NEUTRON_API_SVC_PORT:="9696"}
 : ${NEUTRON_MARIADB_SERVICE_HOST_SVC:="${NEUTRON_API_SERVICE_HOSTNAME}-db.${NEUTRON_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}
 

@@ -17,8 +17,8 @@ mysql -h ${KEYSTONE_MARIADB_SERVICE_HOST_SVC} \
       --port ${KEYSTONE_MARIADB_SERVICE_PORT} \
       -u ${AUTH_KEYSTONE_MARIADB_USER} \
       -p"${AUTH_KEYSTONE_MARIADB_PASSWORD}" \
-      --ssl-key /run/harbor/auth/user/key \
-      --ssl-cert /run/harbor/auth/user/crt \
-      --ssl-ca /run/harbor/auth/user/ca \
+      --ssl-key /run/harbor/auth/user/tls.key \
+      --ssl-cert /run/harbor/auth/user/tls.crt \
+      --ssl-ca /run/harbor/auth/user/tls.ca \
       --secure-auth \
       ${AUTH_KEYSTONE_MARIADB_DATABASE}

@@ -31,7 +31,7 @@ docker run -d --name ipsilon-repo -p 172.17.0.1:82:80/tcp port/ipsilon-rpm:lates
 cd /home/harbor/Documents/Builder/github/harbor
 ./tools/update-build-links
 ./tools/make-scripts-exec.sh
-./tools/build-all-docker-images --release --push --squash
+./tools/build-all-docker-images --release --push #--squash
 EOF
 chmod +x /usr/local/bin/build-harbor
 

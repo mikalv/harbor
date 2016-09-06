@@ -15,16 +15,16 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching Container Startup Scripts"
+echo "${OS_DISTRO}: Writing ISO file to USB Key"
 ################################################################################
-/usr/bin/mysql-test
 
+DOCKER_IMAGE=port/mandracchio-installer
 
-echo "${OS_DISTRO}: Configuring Container"
-################################################################################
-/opt/harbor/config-keystone.sh
+IMAGE_NAME=harbor-host-7
+IMAGE_ROOT=/srv/images/installer/images/images
+DOCKER_IMAGE=port/mandracchio-installer
+COMPRESSED_IMAGE_LOC="${IMAGE_ROOT}/installer.iso"
 
+DOCKER_CONTAINER=$(docker run -d --privileged -v /dev:/dev:rw ${DOCKER_IMAGE})
 
-echo "${OS_DISTRO}: Launching Container Application"
-################################################################################
-exec httpd -D FOREGROUND
+docker exec ${DOCKER_CONTAINER} /bin/sh -c "dd bs=4M if=${COMPRESSED_IMAGE_LOC} of=/dev/sdc && sync"

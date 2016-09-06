@@ -1,0 +1,96 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: ingress-loadbalancer
+    version: v0.1.0
+  name: ingress-loadbalancer
+  namespace: os-loadbalancer
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: ingress-loadbalancer
+        version: v0.1.0
+      name: ingress-loadbalancer
+      namespace: os-loadbalancer
+    spec:
+      hostNetwork: true
+      containers:
+      - name: ingress-loadbalancer
+        image: docker.io/port/kubernetes-nginx-ingress-controller:latest
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 80
+            hostPort: 80
+            protocol: TCP
+            name: http
+          - containerPort: 443
+            hostPort: 443
+            protocol: TCP
+            name: https
+        env:
+          - name: OS_DOMAIN
+            value: novalocal
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+        volumeMounts:
+          - name: os-config-kubecfg
+            mountPath: /var/run/harbor/secrets/config-kubecfg
+            readOnly: true
+          - name: os-config-ssl-secret
+            mountPath: /run/harbor/auth/ssl
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: false
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: loadbalancer-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: loadbalancer-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: loadbalancer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: error-page-server
+    version: v0.1.0
+  name: error-page-server
+  namespace: os-loadbalancer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: error-page-server
+        version: v0.1.0
+      name: error-page-server
+      namespace: os-loadbalancer
+    spec:
+      hostNetwork: true
+      containers:
+      - name: error-page-server
+        image: docker.io/port/kubernetes-error-server:latest
+        imagePullPolicy: Always
+        env:
+          - name: PORT
+            value: '81'
+        ports:
+          - containerPort: 81
+            hostPort: 81
+            protocol: TCP
+            name: http

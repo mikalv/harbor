@@ -39,9 +39,9 @@ if [ -z "${!DB_TLS}" ]; then
   echo "${OS_DISTRO}: This database supports and requires TLS auth"
   MARIADB_X509="REQUIRE X509"
   sed -i "/\[mysqld\]/a ssl-cipher = TLSv1.2" $server_cnf
-  sed -i "/\[mysqld\]/a ssl-ca = ${DB_TLS}/ca" $server_cnf
-  sed -i "/\[mysqld\]/a ssl-key = ${DB_TLS}/key" $server_cnf
-  sed -i "/\[mysqld\]/a ssl-cert = ${DB_TLS}/crt " $server_cnf
+  sed -i "/\[mysqld\]/a ssl-ca = ${DB_TLS}/tls.ca" $server_cnf
+  sed -i "/\[mysqld\]/a ssl-key = ${DB_TLS}/tls.key" $server_cnf
+  sed -i "/\[mysqld\]/a ssl-cert = ${DB_TLS}/tls.crt " $server_cnf
 else
   MARIADB_X509=""
 fi

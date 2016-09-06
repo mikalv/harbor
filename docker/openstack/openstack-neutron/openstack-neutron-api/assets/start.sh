@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Keystone Config Starting"
+echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -23,6 +23,12 @@ echo "${OS_DISTRO}: Keystone Config Starting"
 . /opt/harbor/neutron/vars.sh
 
 
+echo "${OS_DISTRO}: Testing service dependancies"
+################################################################################
+/usr/bin/mysql-test
+
+
+echo "${OS_DISTRO}: Configuring Container"
 ################################################################################
 check_required_vars NEUTRON_CONFIG_FILE \
                     OS_DOMAIN

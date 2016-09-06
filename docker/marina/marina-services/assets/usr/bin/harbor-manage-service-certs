@@ -41,6 +41,8 @@ echo "${OS_DISTRO}: Defining Services to manage"
 ################################################################################
 if [ "$MARINA_SERVICE" = "kubernetes" ]; then
   SERVICE_SERVICES="HTTP"
+elif [ "$MARINA_SERVICE" = "loadbalancer" ]; then
+  SERVICE_SERVICES="HTTP"
 elif [ "$MARINA_SERVICE" = "ipsilon" ]; then
   SERVICE_SERVICES="HTTP pgsql"
 elif [ "$MARINA_SERVICE" = "memcached" ]; then
@@ -352,9 +354,9 @@ metadata:
 type: Opaque
 data:
   host: $( echo "${SERVICE_SERVICE_HOST}.${OS_DOMAIN}" | base64 --wrap=0 )
-  ca: $( cat ${CERT_FILE_ROOT}-ca.crt | base64 --wrap=0 )
-  crt: $( cat ${CERT_FILE_ROOT}.crt | base64 --wrap=0 )
-  key: $( cat ${CERT_FILE_ROOT}.key | base64 --wrap=0 )
+  tls.ca: $( cat ${CERT_FILE_ROOT}-ca.crt | base64 --wrap=0 )
+  tls.crt: $( cat ${CERT_FILE_ROOT}.crt | base64 --wrap=0 )
+  tls.key: $( cat ${CERT_FILE_ROOT}.key | base64 --wrap=0 )
 EOF
 
     kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${CERT_FILE_ROOT}-ssl-secret.yaml || true
