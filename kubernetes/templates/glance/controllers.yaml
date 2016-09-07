@@ -1,0 +1,374 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: glance-db
+  name: os-glance-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/glance/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: glance-db
+  name: os-glance-db
+  namespace: os-glance
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: glance
+  name: os-glance-images
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /var/lib/harbor/glance/images
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: glance
+  name: os-glance-images
+  namespace: os-glance
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: glance-manager
+    version: v0.1.0
+  name: glance-manager
+  namespace: os-glance
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: glance-manager
+        version: v0.1.0
+      name: glance-manager
+      namespace: os-glance
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: glance-manager
+          image: {{ IMAGE_GLANCE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: glance-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: glance-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: glance-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: glance-db-root
+        - name: os-config-db
+          secret:
+            secretName: glance-db
+        - name: os-config-keystone
+          secret:
+            secretName: glance-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: glance-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: glance-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: glance-db
+    version: v0.1.0
+  name: glance-db
+  namespace: os-glance
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: glance-db
+        version: v0.1.0
+      name: glance-db
+      namespace: os-glance
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: glance-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3310
+              hostPort: 3310
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3310'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_GLANCE_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_GLANCE_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_GLANCE_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_GLANCE_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_GLANCE_DB_NAME
+            - name: DB_USER
+              value: AUTH_GLANCE_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_GLANCE_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-glance-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: glance-db-root
+        - name: os-config-db
+          secret:
+            secretName: glance-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: glance-db-ssl-secret
+        - name: os-glance-db
+          persistentVolumeClaim:
+            claimName: os-glance-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: glance
+    version: v0.1.0
+  name: glance-api-master
+  namespace: os-glance
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: glance
+        version: v0.1.0
+      name: glance-api-master
+      namespace: os-glance
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: glance-api
+          image: {{ IMAGE_GLANCE_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9292
+              hostPort: 9292
+              protocol: TCP
+              name: g-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-glance-images
+              mountPath: /var/lib/glance
+              readOnly: false
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: glance-db
+        - name: os-config-keystone
+          secret:
+            secretName: glance-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: glance-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: glance-user-ssl-secret
+        - name: os-glance-images
+          persistentVolumeClaim:
+            claimName: os-glance-images
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: glance-reg
+    version: v0.1.0
+  name: glance-reg-master
+  namespace: os-glance
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: glance-reg
+        version: v0.1.0
+      name: glance-reg-master
+      namespace: os-glance
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: glance-reg
+          image: {{ IMAGE_GLANCE_REGISTRY }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9191
+              hostPort: 9191
+              protocol: TCP
+              name: g-reg
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-glance-images
+              mountPath: /var/lib/glance
+              readOnly: false
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: glance-db
+        - name: os-config-keystone
+          secret:
+            secretName: glance-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: glance-registry-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: glance-user-ssl-secret
+        - name: os-glance-images
+          persistentVolumeClaim:
+            claimName: os-glance-images

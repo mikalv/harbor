@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: nova-db
+  name: nova-db
+  namespace: os-nova
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3312
+    protocol: TCP
+    targetPort: 3312
+  selector:
+    openstack-app: nova-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: nova
+  name: nova
+  namespace: os-nova
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8774
+  selector:
+    openstack-app: nova

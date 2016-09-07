@@ -51,6 +51,12 @@ elif [ "$MARINA_SERVICE" = "messaging" ]; then
   SERVICE_SERVICES="AMQP"
 elif [ "$MARINA_SERVICE" = "ovn" ]; then
   SERVICE_SERVICES="ovsdb-sb ovsdb-nb"
+elif [ "$MARINA_SERVICE" = "glance" ]; then
+  SERVICE_SERVICES="HTTP HTTP-registry"
+elif [ "$MARINA_SERVICE" = "nova" ]; then
+  SERVICE_SERVICES="HTTP HTTP-metadata HTTP-serial HTTP-spice HTTP-vnc"
+elif [ "$MARINA_SERVICE" = "heat" ]; then
+  SERVICE_SERVICES="HTTP HTTP-cfn HTTP-cloudwatch"
 else
   SERVICE_SERVICES="HTTP mysql"
 fi;
@@ -84,6 +90,35 @@ for SERVICE in $SERVICE_SERVICES; do
       HOSTNAME_VAR_MIDFIX="_NB_DB_SERVICE"
     fi;
     SERVICE=ovsdb
+  elif [ "$MARINA_SERVICE" = "glance" ]; then
+    if [ "$SERVICE" = "HTTP" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    elif [ "$SERVICE" = "HTTP-registry" ]; then
+      HOSTNAME_VAR_MIDFIX="_REGISTRY_SERVICE"
+    fi;
+    SERVICE=HTTP
+  elif [ "$MARINA_SERVICE" = "nova" ]; then
+    if [ "$SERVICE" = "HTTP" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    elif [ "$SERVICE" = "HTTP-metadata" ]; then
+      HOSTNAME_VAR_MIDFIX="_METADATA_SERVICE"
+    elif [ "$SERVICE" = "HTTP-serial" ]; then
+      HOSTNAME_VAR_MIDFIX="_SERIAL_SERVICE"
+    elif [ "$SERVICE" = "HTTP-spice" ]; then
+      HOSTNAME_VAR_MIDFIX="_SPICE_SERVICE"
+    elif [ "$SERVICE" = "HTTP-vnc" ]; then
+      HOSTNAME_VAR_MIDFIX="_VNC_SERVICE"
+    fi;
+    SERVICE=HTTP
+  elif [ "$MARINA_SERVICE" = "heat" ]; then
+    if [ "$SERVICE" = "HTTP" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    elif [ "$SERVICE" = "HTTP-cfn" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_CFN_SERVICE"
+    elif [ "$SERVICE" = "HTTP-cloudwatch" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_CLOUDWATCH_SERVICE"
+    fi;
+    SERVICE=HTTP
   else
     HOSTNAME_VAR_MIDFIX="_API_SERVICE"
   fi;

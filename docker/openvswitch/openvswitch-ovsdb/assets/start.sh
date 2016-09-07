@@ -28,7 +28,7 @@ check_required_vars OS_DOMAIN \
 
 
 ################################################################################
-if [ ! -f  $OVN_DIR/conf.db ]; then
+if [ ! -f /var/run/openvswitch/conf.db ]; then
     echo "Creating DB"
     ovsdb-tool create /var/run/openvswitch/conf.db /usr/share/openvswitch/vswitch.ovsschema
 fi

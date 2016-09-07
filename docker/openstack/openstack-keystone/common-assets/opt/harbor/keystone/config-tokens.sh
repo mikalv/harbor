@@ -42,23 +42,30 @@ crudini --set ${KEYSTONE_CONFIG_FILE} token driver "sql"
 echo "${OS_DISTRO}: Downloading tokens from ${KEYSTONE_MARIADB_SERVICE_HOST_SVC}/${AUTH_KEYSTONE_MARIADB_DATABASE} database"
 ################################################################################
 mkdir -p ${KEYSTONE_FERNET_KEYS_ROOT}
-(IFS='
+echo "SELECT * FROM fernet_keys;" | mysql -h ${KEYSTONE_MARIADB_SERVICE_HOST_SVC} \
+    --port ${KEYSTONE_MARIADB_SERVICE_PORT} \
+    -u ${AUTH_KEYSTONE_MARIADB_USER} \
+    -p"${AUTH_KEYSTONE_MARIADB_PASSWORD}" \
+    --ssl-key /run/harbor/auth/user/tls.key \
+    --ssl-cert /run/harbor/auth/user/tls.crt \
+    --ssl-ca /run/harbor/auth/user/tls.ca \
+    --secure-auth \
+    ${AUTH_KEYSTONE_MARIADB_DATABASE} > ${KEYSTONE_FERNET_KEYS_ROOT}/fernet_keys
+
+
+echo "${OS_DISTRO}: Unpacking tokens"
+################################################################################
+IFS='
 '
-for FERNET_KEY in $( (mysql -h ${KEYSTONE_MARIADB_SERVICE_HOST_SVC} \
-      --port ${KEYSTONE_MARIADB_SERVICE_PORT} \
-      -u ${AUTH_KEYSTONE_MARIADB_USER} \
-      -p"${AUTH_KEYSTONE_MARIADB_PASSWORD}" \
-      --ssl-key /run/harbor/auth/user/tls.key \
-      --ssl-cert /run/harbor/auth/user/tls.crt \
-      --ssl-ca /run/harbor/auth/user/tls.ca \
-      --secure-auth \
-      ${AUTH_KEYSTONE_MARIADB_DATABASE} <<EOF
-SELECT * FROM fernet_keys;
-EOF
-) | sed '1d' | awk '{$1="";  sub("  ", " "); print}'); do (
+for FERNET_KEY in $( cat ${KEYSTONE_FERNET_KEYS_ROOT}/fernet_keys | sed '1d' | awk '{$1="";  sub("  ", " "); print}'); do
   TOKEN_ID=$(echo $FERNET_KEY | awk '{ print $1 }')
   TOKEN_VALUE=$(echo $FERNET_KEY | awk '{ print $2 }' | base64 -d)
-  echo "$TOKEN_VALUE" > ${KEYSTONE_FERNET_KEYS_ROOT}/$TOKEN_ID )
-done)
+  echo "$TOKEN_VALUE" > ${KEYSTONE_FERNET_KEYS_ROOT}/$TOKEN_ID
+done
+unset IFS
+rm -f ${KEYSTONE_FERNET_KEYS_ROOT}/fernet_keys
 
+
+echo "${OS_DISTRO}: Fixing token permissions"
+################################################################################
 chown -R keystone:keystone ${KEYSTONE_FERNET_KEYS_ROOT}

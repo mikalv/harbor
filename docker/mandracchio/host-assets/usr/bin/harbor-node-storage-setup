@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "Harbor: Starting Docker storage setup"
+################################################################################
+DOCKER_STORAGE_DEVICE=/dev/xvde
+DOCKER_VG_NAME=docker
+DOCKER_VOL_NAME=overlay2
+
+pvdisplay ${DOCKER_STORAGE_DEVICE}1 || (
+              parted  --script ${DOCKER_STORAGE_DEVICE} mklabel GPT
+              parted  --script ${DOCKER_STORAGE_DEVICE} mkpart primary 1MiB 100%
+              parted  --script ${DOCKER_STORAGE_DEVICE} set 1 lvm on
+              pvcreate ${DOCKER_STORAGE_DEVICE}1
+              pvdisplay ${DOCKER_STORAGE_DEVICE}1
+            )
+
+vgdisplay ${DOCKER_VG_NAME} &> /dev/null ||vgcreate ${DOCKER_VG_NAME} ${DOCKER_STORAGE_DEVICE}1
+
+lvdisplay ${DOCKER_VG_NAME}/${DOCKER_VOL_NAME} &> /dev/null || (
+  echo y | lvcreate -n ${DOCKER_VOL_NAME} -l 100%FREE ${DOCKER_VG_NAME}
+  mkfs.xfs -L ${DOCKER_VOL_NAME} -n ftype=1 /dev/${DOCKER_VG_NAME}/${DOCKER_VOL_NAME}
+  rm -rf /var/lib/docker
+  mkdir -p /var/lib/docker
+  echo "/dev/mapper/docker-overlay2 /var/lib/docker xfs defaults 0 2" >> /etc/fstab
+)
+
+mountpoint -q /var/lib/docker || mount /var/lib/docker

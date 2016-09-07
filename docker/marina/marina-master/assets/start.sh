@@ -78,6 +78,36 @@ echo "${OS_DISTRO}: Managing (horizon) api service"
 harbor-service-update api
 
 
+echo "${OS_DISTRO}: Managing loadbalancer service"
+################################################################################
+harbor-service-update loadbalancer
+
+
+echo "${OS_DISTRO}: Managing cinder service"
+################################################################################
+harbor-service-update cinder
+
+
+echo "${OS_DISTRO}: Managing glance service"
+################################################################################
+harbor-service-update glance
+
+
+echo "${OS_DISTRO}: Managing nova service"
+################################################################################
+harbor-service-update nova
+
+
+echo "${OS_DISTRO}: Managing heat service"
+################################################################################
+harbor-service-update heat
+
+
+echo "${OS_DISTRO}: Managing murano service"
+################################################################################
+harbor-service-update murano
+
+
 echo "${OS_DISTRO}: Finished management bootstrapping"
 ################################################################################
 tail -f /dev/null

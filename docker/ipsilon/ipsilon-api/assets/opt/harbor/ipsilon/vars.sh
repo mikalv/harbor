@@ -5,6 +5,7 @@
 : ${IPSILON_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
 
 : ${IPSILON_DATA_DIR:="/data"}
+: ${IPSILON_LDAP_BASE_DN:="dc=$(echo ${OS_DOMAIN} | sed 's/\./,dc=/g')"}
 
 : ${IPSILON_DB_SERVICE_PORT:="5432"}
 : ${IPSILON_DB_CA:="/run/harbor/auth/user/tls.ca"}

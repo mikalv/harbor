@@ -14,6 +14,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "started"
+set -e
+echo "${OS_DISTRO}: Launching"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/cinder/vars.sh
 
+
+
+echo "${OS_DISTRO}: Testing service dependancies"
+################################################################################
+/usr/bin/mysql-test
+
+
+echo "${OS_DISTRO}: Config Starting"
+################################################################################
+/opt/harbor/config-cinder.sh
+
+
+echo "${OS_DISTRO}: Managing database"
+################################################################################
+/opt/harbor/cinder/manage/bootstrap-database.sh
+
+
+echo "${OS_DISTRO}: Managing User"
+################################################################################
+/opt/harbor/cinder/manage/manage-keystone-user.sh
+
+
+echo "${OS_DISTRO}: Managing Service"
+################################################################################
+/opt/harbor/cinder/manage/manage-keystone-service.sh
+
+
+echo "${OS_DISTRO}: Finished management"
+################################################################################
 tail -f /dev/null

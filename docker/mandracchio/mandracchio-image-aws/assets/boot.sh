@@ -19,9 +19,9 @@ set -x
 
 
 IMAGE_ID="ami-59addf2a"
-IMAGE_ID="ami-01412b16"
+IMAGE_ID="ami-7ee89d69"
 
-IMAGE_USER="centos"
+IMAGE_USER="harbor"
 INSTANCE_TYPE="r3.xlarge"
 
 KEY_PAIR_NAME=harbor-dev
@@ -39,7 +39,7 @@ aws ec2 run-instances \
 --key-name ${KEY_PAIR_NAME} \
 --instance-type ${INSTANCE_TYPE} \
 --count 1 \
---block-device-mappings "VirtualName=/dev/sde,DeviceName=/dev/sde,Ebs={VolumeSize=12,DeleteOnTermination=false,VolumeType=gp2,Encrypted=true}" > ${TMP_JSON}
+--block-device-mappings "VirtualName=/dev/sde,DeviceName=/dev/sde,Ebs={VolumeSize=120,DeleteOnTermination=false,VolumeType=gp2,Encrypted=true}" > ${TMP_JSON}
 INSTANCE_ID=$(jq --raw-output '.Instances | .[0] | .InstanceId' ${TMP_JSON})
 aws ec2 describe-instances --instance-ids ${INSTANCE_ID} > ${TMP_JSON}
 INSTANCE_IP=$(jq --raw-output '.Reservations | .[0] | .Instances | .[0] | .PublicIpAddress' ${TMP_JSON})

@@ -4,8 +4,12 @@ COPY ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    yum install -y \
+        mariadb && \
+    yum clean all && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
+    rm -rf /opt/harbor/assets && \
+    container-base-systemd-reset.sh
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

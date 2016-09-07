@@ -24,11 +24,6 @@ DOCKER_IMAGE=port/mandracchio-image-aws
 COMPRESSED_IMAGE_LOC="${IMAGE_ROOT}/${IMAGE_NAME}.raw.gz"
 
 
-echo "${OS_DISTRO}: Please confirm AWS account settings"
-################################################################################
-aws configure
-
-
 echo "${OS_DISTRO}: Defining cloud provider specific vars"
 ################################################################################
 UPSTREAM_IMAGE_USER="fedora"
@@ -72,7 +67,7 @@ INSTANCE_VOL=$(jq --raw-output '.Reservations | .[0] | .Instances | .[0] | .Bloc
 echo "${OS_DISTRO}: Waiting for host to come up and start docker"
 ################################################################################
 IMAGE_HOST_CMD="ssh -oStrictHostKeyChecking=no -i /root/.aws/${KEY_PAIR_NAME}.pem ${UPSTREAM_IMAGE_USER}@$INSTANCE_IP sudo"
-while ! ${IMAGE_HOST_CMD} sudo systemctl start docker
+while ! ${IMAGE_HOST_CMD} systemctl start docker
 do
     sleep 10
     echo "Trying again..."
@@ -116,7 +111,7 @@ aws ec2 terminate-instances --instance-ids ${INSTANCE_ID}
 echo "${OS_DISTRO}: registering image"
 ################################################################################
 aws ec2 register-image \
---name "Harbor Host" \
+--name "Harbor Host 7" \
 --virtualization-type hvm \
 --block-device-mappings "DeviceName=/dev/sda1,Ebs={SnapshotId=${SNAPSHOT_ID},VolumeSize=12,DeleteOnTermination=true,VolumeType=gp2}" \
 --root-device-name /dev/sda1 \

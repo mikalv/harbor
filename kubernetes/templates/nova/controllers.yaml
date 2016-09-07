@@ -1,0 +1,290 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: nova-db
+  name: os-nova-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/nova/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: nova-db
+  name: os-nova-db
+  namespace: os-nova
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: nova-manager
+    version: v0.1.0
+  name: nova-manager
+  namespace: os-nova
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: nova-manager
+        version: v0.1.0
+      name: nova-manager
+      namespace: os-nova
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: nova-manager
+          image: {{ IMAGE_NOVA_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-api-db
+              mountPath: /var/run/harbor/secrets/config-api-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: nova-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: nova-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: nova-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: nova-db-root
+        - name: os-config-db
+          secret:
+            secretName: nova-db
+        - name: os-config-api-db
+          secret:
+            secretName: nova-api-db
+        - name: os-config-keystone
+          secret:
+            secretName: nova-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: nova-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: nova-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: nova-db
+    version: v0.1.0
+  name: nova-db
+  namespace: os-nova
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: nova-db
+        version: v0.1.0
+      name: nova-db
+      namespace: os-nova
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: nova-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3312
+              hostPort: 3312
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3312'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_NOVA_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_NOVA_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_NOVA_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_NOVA_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_NOVA_DB_NAME
+            - name: DB_USER
+              value: AUTH_NOVA_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_NOVA_DB_PASSWORD
+            - name: DB_NAME_1
+              value: AUTH_NOVA_API_DB_NAME
+            - name: DB_USER_1
+              value: AUTH_NOVA_API_DB_USER
+            - name: DB_PASSWORD_1
+              value: AUTH_NOVA_API_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-api-db
+              mountPath: /var/run/harbor/secrets/config-api-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-nova-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: nova-db-root
+        - name: os-config-db
+          secret:
+            secretName: nova-db
+        - name: os-config-api-db
+          secret:
+            secretName: nova-api-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: nova-db-ssl-secret
+        - name: os-nova-db
+          persistentVolumeClaim:
+            claimName: os-nova-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: nova
+    version: v0.1.0
+  name: nova-api-master
+  namespace: os-nova
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: nova
+        version: v0.1.0
+      name: nova-api-master
+      namespace: os-nova
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: nova-api
+          image: {{ IMAGE_NOVA_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8774
+              hostPort: 8774
+              protocol: TCP
+              name: n-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-api-db
+              mountPath: /var/run/harbor/secrets/config-api-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: nova-db
+        - name: os-config-api-db
+          secret:
+            secretName: nova-api-db
+        - name: os-config-keystone
+          secret:
+            secretName: nova-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: nova-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: nova-user-ssl-secret

@@ -122,8 +122,8 @@ PWD_POLICY_MIN=$(retry_freeipa_command ipa pwpolicy-show global_policy | grep "M
 if ! [ "${PWD_POLICY_MAX}" == "360" ]; then
   retry_freeipa_command ipa pwpolicy-mod --maxlife=360 global_policy
 fi
-if ! [ "${PWD_POLICY_MIN}" == "1" ]; then
-  retry_freeipa_command ipa pwpolicy-mod --minlife=1 global_policy
+if ! [ "${PWD_POLICY_MIN}" == "0" ]; then
+  retry_freeipa_command ipa pwpolicy-mod --minlife=0 global_policy
 fi
 
 

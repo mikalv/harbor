@@ -1,0 +1,266 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: cinder-db
+  name: os-cinder-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/cinder/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: cinder-db
+  name: os-cinder-db
+  namespace: os-cinder
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: cinder-manager
+    version: v0.1.0
+  name: cinder-manager
+  namespace: os-cinder
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder-manager
+        version: v0.1.0
+      name: cinder-manager
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-manager
+          image: {{ IMAGE_CINDER_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: cinder-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: cinder-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: cinder-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: cinder-db-root
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-keystone
+          secret:
+            secretName: cinder-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: cinder-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: cinder-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: cinder-db
+    version: v0.1.0
+  name: cinder-db
+  namespace: os-cinder
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder-db
+        version: v0.1.0
+      name: cinder-db
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3311
+              hostPort: 3311
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3311'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_CINDER_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_CINDER_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_CINDER_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_CINDER_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_CINDER_DB_NAME
+            - name: DB_USER
+              value: AUTH_CINDER_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_CINDER_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-cinder-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: cinder-db-root
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: cinder-db-ssl-secret
+        - name: os-cinder-db
+          persistentVolumeClaim:
+            claimName: os-cinder-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: cinder
+    version: v0.1.0
+  name: cinder-api-master
+  namespace: os-cinder
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder
+        version: v0.1.0
+      name: cinder-api-master
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-api
+          image: {{ IMAGE_CINDER_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8776
+              hostPort: 8776
+              protocol: TCP
+              name: c-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-keystone
+          secret:
+            secretName: cinder-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: cinder-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: cinder-user-ssl-secret

@@ -15,14 +15,26 @@
 # limitations under the License.
 
 set -e
-source /etc/harbor/docker.env
-DOCKER_IP=$(ip -f inet -o addr show ${DOCKER_DEV}|cut -d\  -f 7 | cut -d/ -f 1)
-DOCKER_DEV_MTU=$(ip -f inet -o link show ${DOCKER_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
-DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
-DOCKER_CMD="-H tcp://${DOCKER_IP}:${DOCKER_PORT} \
---cluster-advertise=${DOCKER_DEV}:${DOCKER_PORT} \
---cluster-store etcd://127.0.0.1:4001 \
---swarm-default-advertise-addr=${DOCKER_DEV}:${DOCKER_PORT}"
+DOCKER_PORT=2375
+HOST_PRIMARY_NETWORK_DEV=eth0
+DOCKER_MTU_OVERHEAD=68
+
+ROUTES="$(ip route show)"
+if [ "${ROUTES}" == "" ] ; then
+  MY_IP=127.0.0.1
+else
+  MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
+      awk '$4 == "src" {print $5}')
+  MY_DEVICE=$(ip route | awk '$1 == "default" {print $5}')
+  MY_MTU=$(ip -f inet -o link show ${MY_DEVICE}|cut -d\  -f 5 | cut -d/ -f 1)
+fi
+
+
+if ! [ "${MY_DEVICE}" == "${HOST_PRIMARY_NETWORK_DEV}" ] ; then
+  ip link set ${MY_DEVICE} down
+  ip link set ${MY_DEVICE} name ${HOST_PRIMARY_NETWORK_DEV}
+  ip link set ${HOST_PRIMARY_NETWORK_DEV} up
+fi
 
 
 ( IFS='
@@ -32,6 +44,15 @@ for BRIDGE in $(brctl show | grep "^qbr" | awk '{ print $1 }'); do
   brctl delbr ${BRIDGE}) || true
 done
 )
+
+
+DOCKER_DEV_MTU=$(ip -f inet -o link show ${HOST_PRIMARY_NETWORK_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
+DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
+DOCKER_CMD="-H tcp://${MY_IP}:${DOCKER_PORT} \
+--cluster-advertise=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT} \
+--cluster-store etcd://127.0.0.1:4001 \
+--swarm-default-advertise-addr=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT}"
+
 
 mkdir -p /var/lib/docker
 exec dockerd \

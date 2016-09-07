@@ -1,0 +1,266 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: heat-db
+  name: os-heat-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/heat/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: heat-db
+  name: os-heat-db
+  namespace: os-heat
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: heat-manager
+    version: v0.1.0
+  name: heat-manager
+  namespace: os-heat
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: heat-manager
+        version: v0.1.0
+      name: heat-manager
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-manager
+          image: {{ IMAGE_HEAT_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: heat-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: heat-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: heat-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: heat-db-root
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-keystone
+          secret:
+            secretName: heat-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: heat-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: heat-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: heat-db
+    version: v0.1.0
+  name: heat-db
+  namespace: os-heat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: heat-db
+        version: v0.1.0
+      name: heat-db
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3313
+              hostPort: 3313
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3313'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_HEAT_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_HEAT_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_HEAT_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_HEAT_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_HEAT_DB_NAME
+            - name: DB_USER
+              value: AUTH_HEAT_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_HEAT_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-heat-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: heat-db-root
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: heat-db-ssl-secret
+        - name: os-heat-db
+          persistentVolumeClaim:
+            claimName: os-heat-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: heat
+    version: v0.1.0
+  name: heat-api-master
+  namespace: os-heat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: heat
+        version: v0.1.0
+      name: heat-api-master
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-api
+          image: {{ IMAGE_HEAT_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8004
+              hostPort: 8004
+              protocol: TCP
+              name: h-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-keystone
+          secret:
+            secretName: heat-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: heat-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: heat-user-ssl-secret

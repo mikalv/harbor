@@ -24,24 +24,14 @@ echo "${OS_DISTRO}: Priming horizon"
 
 
 ################################################################################
-check_required_vars OS_DOMAIN \
-                    API_CONFIG_FILE \
-                    API_CONFIG_FILE_TEMPLATE \
-                    KEYSTONE_API_SERVICE_HOST_SVC \
-                    API_DB_KEY \
-                    API_DB_CERT \
-                    API_DB_CA \
-                    API_MARIADB_SERVICE_HOST_SVC \
-                    API_MARIADB_SERVICE_PORT \
-                    AUTH_API_DB_PASSWORD \
-                    AUTH_API_DB_USER \
-                    AUTH_API_DB_NAME \
-                    MEMCACHE_SERVICE_HOST_SVC
+check_required_vars OS_DOMAIN
 
 
+echo "${OS_DISTRO}: Collecting static files"
 ################################################################################
 /opt/stack/horizon/manage.py collectstatic --noinput
 
 
+echo "${OS_DISTRO}: Collecting compressing assets"
 ################################################################################
 /opt/stack/horizon/manage.py compress

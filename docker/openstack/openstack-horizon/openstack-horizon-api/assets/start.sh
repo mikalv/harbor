@@ -8,6 +8,11 @@ echo "${OS_DISTRO}: Launching"
 . /opt/harbor/horizon/vars.sh
 
 
+echo "${OS_DISTRO}: Testing environment"
+################################################################################
+/usr/bin/mysql-test
+
+
 echo "${OS_DISTRO}: Configuring horizon"
 ################################################################################
 /opt/harbor/horizon/config-horizon.sh

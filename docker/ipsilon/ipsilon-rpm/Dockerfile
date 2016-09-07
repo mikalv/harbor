@@ -100,18 +100,15 @@ USER root
 
 WORKDIR /
 
+COPY ./assets/ /opt/harbor/assets
+
 RUN set -e && \
     set -x && \
     cp /opt/stack/${OS_COMP}/dist/rpms/* /srv && \
     cd /srv && \
        createrepo . && \
     rm -rf /usr/share/nginx/html/* && \
-    mv /srv/* /usr/share/nginx/html/
-
-COPY ./assets/ /opt/harbor/assets
-
-RUN set -e && \
-    set -x && \
+    mv /srv/* /usr/share/nginx/html/ && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

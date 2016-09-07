@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 Port Direct
 #
@@ -15,24 +15,25 @@
 # limitations under the License.
 
 set -e
-
-systemd-machine-id-setup
-
-
-# We do it this way for maxium portability accross shells and implementations of the ip command
+echo "Harbor: Starting node setup"
+################################################################################
 ROUTES="$(ip route show)"
 if [ "${ROUTES}" == "" ] ; then
   MY_IP=127.0.0.1
 else
   MY_IP=$(ip route get $(ip route | awk '$1 == "default" {print $3}') |
       awk '$4 == "src" {print $5}')
-  MY_DEVICE=$(ip route | awk '$1 == "default" {print $5}')
-  MY_MTU=$(ip -f inet -o link show ${MY_DEVICE}|cut -d\  -f 5 | cut -d/ -f 1)
 fi
 
 
+echo "Harbor: getting hostname config from systemd-machine-id and os_domain"
+################################################################################
+systemd-machine-id-setup
+NODE_HOSTNAME=$(cat /etc/machine-id)
 OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
 
 
-echo "${MY_IP} $(hostname -s).${OS_DOMAIN} $(hostname -s)" >> /etc/hosts
-hostnamectl set-hostname $(hostname -s).${OS_DOMAIN}
+echo "Harbor: Setting hostname to ${NODE_HOSTNAME}.${OS_DOMAIN} @ ${MY_IP}"
+################################################################################
+echo "${MY_IP} ${NODE_HOSTNAME}.${OS_DOMAIN} ${NODE_HOSTNAME}" >> /etc/hosts
+hostnamectl set-hostname ${NODE_HOSTNAME}.${OS_DOMAIN}

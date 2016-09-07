@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: murano-db
+  name: murano-db
+  namespace: os-murano
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3314
+    protocol: TCP
+    targetPort: 3314
+  selector:
+    openstack-app: murano-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: murano
+  name: murano
+  namespace: os-murano
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8082
+  selector:
+    openstack-app: murano

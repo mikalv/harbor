@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Keystone Config Starting"
+echo "${OS_DISTRO}: Neutron Config Starting"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh

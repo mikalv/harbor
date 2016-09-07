@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Copyright 2016 Port Direct
 #
@@ -15,33 +15,38 @@
 # limitations under the License.
 
 set -e
-echo "Harbor: Starting host update"
+echo "${OS_DISTRO}: Nova Config Starting"
 ################################################################################
-: ${UPDATE_IMAGE:="docker.io/port/mandracchio-repo:latest"}
-
-
-echo "Harbor: Pulling ${UPDATE_IMAGE}"
-################################################################################
-docker pull ${UPDATE_IMAGE}
-
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/nova/vars.sh
 
 
 ################################################################################
-UPDATE_CONTAINER=$(docker run -d ${UPDATE_IMAGE})
-UPDATE_CONTAINER_IP=$(docker inspect --format '{{ .NetworkSettings.IPAddress }}' ${UPDATE_CONTAINER})
-cat > /etc/ostree/remotes.d/harbor-host.conf <<EOF
-[remote "harbor-host"]
-url=http://${UPDATE_CONTAINER_IP}:80/repo/
-gpg-verify=false
-EOF
-echo "Harbor: Update container ${UPDATE_CONTAINER} started with ip address: ${UPDATE_CONTAINER_IP}"
+check_required_vars NOVA_CONFIG_FILE \
+                    OS_DOMAIN
 
 
-echo "Harbor: Upgrading Host"
 ################################################################################
-rpm-ostree upgrade
+mkdir -p /etc/nova
 
 
-echo "Harbor: Removing upgrade container"
+echo "${OS_DISTRO}: Starting logging config"
 ################################################################################
-docker rm -f -v  ${UPDATE_CONTAINER}
+/opt/harbor/nova/config-logging.sh
+
+
+echo "${OS_DISTRO}: Starting database config"
+################################################################################
+/opt/harbor/nova/config-database.sh
+
+
+echo "${OS_DISTRO}: Starting messaging config"
+################################################################################
+/opt/harbor/nova/config-messaging.sh
+
+
+echo "${OS_DISTRO}: Starting keystone config"
+################################################################################
+/opt/harbor/nova/config-keystone.sh

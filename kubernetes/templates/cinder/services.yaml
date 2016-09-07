@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: cinder-db
+  name: cinder-db
+  namespace: os-cinder
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3311
+    protocol: TCP
+    targetPort: 3311
+  selector:
+    openstack-app: cinder-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: cinder
+  name: cinder
+  namespace: os-cinder
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8776
+  selector:
+    openstack-app: cinder

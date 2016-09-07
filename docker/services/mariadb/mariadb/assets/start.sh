@@ -27,6 +27,9 @@ MARIADB_PASSWORD=${!MARIADB_PASSWORD}
 DB_NAME=${!DB_NAME}
 DB_USER=${!DB_USER}
 DB_PASSWORD=${!DB_PASSWORD}
+DB_NAME_1=${!DB_NAME_1}
+DB_USER_1=${!DB_USER_1}
+DB_PASSWORD_1=${!DB_PASSWORD_1}
 DB_PORT=$DB_PORT
 source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh
@@ -69,9 +72,7 @@ if [ -z "$(ls /var/lib/mysql)" -a "${MYSQLD_CMD}" = 'mysqld_safe' ]; then
   mysql_install_db --user=mysql --datadir="$DATADIR"
 
   echo "${OS_DISTRO}: Writing 1st boot script"
-  # These statements _must_ be on individual lines, and _must_ end with
-  # semicolons (no line breaks or comments are permitted).
-  # TODO proper SQL escaping on ALL the things D:
+
   TEMP_FILE='/tmp/mysql-first-time.sql'
   echo "${OS_DISTRO}: Writing 1st boot script: root auth"
   cat > "$TEMP_FILE" <<EOSQL
@@ -81,30 +82,21 @@ GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
 DROP DATABASE IF EXISTS test ;
 EOSQL
 
-  echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database"
-  if [ "$MARIADB_DATABASE" ]; then
-    echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
-  fi
   echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database: $MARIADB_USER"
-  if [ "$MARIADB_USER" -a "$MARIADB_PASSWORD" ]; then
-    echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
+  echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
+  echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
+  echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
 
-    if [ "$MARIADB_DATABASE" ]; then
-            echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
-    fi
-  fi
-
-  echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database"
-  if [ "$DB_NAME" ]; then
-    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
-  fi
   echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database: $DB_USER"
-  if [ "$DB_USER" -a "$DB_PASSWORD" ]; then
-    echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
+  echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
+  echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
+  echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
 
-    if [ "$DB_NAME" ]; then
-            echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
-    fi
+  if [ -z "$DB_NAME_1" -a -z "$DB_USER_1" -a -z "$DB_PASSWORD_1" ]; then
+    echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME_1 database: $DB_USER_1"
+    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME_1 ;" >> "$TEMP_FILE"
+    echo "CREATE USER '$DB_USER_1'@'%' IDENTIFIED BY '$DB_PASSWORD_1' ;" >> "$TEMP_FILE"
+    echo "GRANT ALL ON $DB_NAME_1.* TO '$DB_USER_1'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
   fi
 
   echo 'FLUSH PRIVILEGES ;' >> "$TEMP_FILE"

@@ -20,3 +20,14 @@ OS_COMPONENT=api
 : ${API_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
 : ${API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
 : ${API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
+
+
+
+: ${MARIADB_TEST_HOST:="${API_MARIADB_SERVICE_HOST_SVC}"}
+: ${MARIADB_TEST_PORT:="${API_MARIADB_SERVICE_PORT}"}
+: ${MARIADB_TEST_USER:="${AUTH_API_MARIADB_USER}"}
+: ${MARIADB_TEST_PASSWORD:="${AUTH_API_MARIADB_PASSWORD}"}
+: ${MARIADB_TEST_DATABASE:="${AUTH_API_MARIADB_DATABASE}"}
+: ${MARIADB_TEST_KEY:="/run/harbor/auth/user/tls.key"}
+: ${MARIADB_TEST_CERT:="/run/harbor/auth/user/tls.crt"}
+: ${MARIADB_TEST_CA:="/run/harbor/auth/user/tls.ca"}

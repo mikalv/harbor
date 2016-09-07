@@ -59,7 +59,8 @@ check_required_vars OS_DOMAIN \
                     AUTH_IPSILON_OPENID_DB_NAME \
                     AUTH_IPSILON_OPENIDC_DB_USER \
                     AUTH_IPSILON_OPENIDC_DB_PASSWORD \
-                    AUTH_IPSILON_OPENIDC_DB_NAME
+                    AUTH_IPSILON_OPENIDC_DB_NAME \
+                    IPSILON_LDAP_BASE_DN
 
 
 ################################################################################
@@ -103,14 +104,14 @@ ipsilon-server-install \
 --secure=yes \
 --ldap=yes \
 --ldap-server-url="ldap://${FREEIPA_SERVICE_HOST}" \
---ldap-bind-dn-template="uid=%(username)s,cn=users,cn=accounts,dc=${OS_DOMAIN}" \
+--ldap-bind-dn-template="uid=%(username)s,cn=users,cn=accounts,${IPSILON_LDAP_BASE_DN}" \
 --ldap-tls-level="Never" \
---ldap-base-dn "dc=${OS_DOMAIN}" \
+--ldap-base-dn "${IPSILON_LDAP_BASE_DN}" \
 --info-nss=no \
 --info-ldap=yes \
 --info-ldap-server-url="ldap://${FREEIPA_SERVICE_HOST}" \
---info-ldap-user-dn-template="uid=%(username)s,cn=users,cn=accounts,dc=${OS_DOMAIN}" \
---info-ldap-bind-dn="uid=${AUTH_FREEIPA_USER_ADMIN_USER},cn=users,cn=accounts,dc=${OS_DOMAIN}" \
+--info-ldap-user-dn-template="uid=%(username)s,cn=users,cn=accounts,${IPSILON_LDAP_BASE_DN}" \
+--info-ldap-bind-dn="uid=${AUTH_FREEIPA_USER_ADMIN_USER},cn=users,cn=accounts,${IPSILON_LDAP_BASE_DN}" \
 --info-ldap-bind-pwd="${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" \
 --info-ldap-base-dn="cn=accounts,dc=${OS_DOMAIN}"\
 --admin-dburi="postgres://${AUTH_IPSILON_ADMIN_DB_USER}:${AUTH_IPSILON_ADMIN_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_ADMIN_DB_NAME}" \
