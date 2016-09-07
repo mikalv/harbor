@@ -1,0 +1,87 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+HARBOR_AUTH_SECTION=$1
+echo "${OS_DISTRO}: Starting service auth edit for: $HARBOR_AUTH_SECTION"
+################################################################################
+source /etc/os-container.env
+source /opt/harbor/marina/load-config-helper.sh
+source /opt/harbor/harbor-common.sh
+check_required_vars OS_DOMAIN HARBOR_AUTH_SECTION
+source /opt/harbor/service-hosts.sh
+load_node_config
+load_network_config
+check_required_vars MY_DEVICE MY_IP OS_DOMAIN
+source /opt/harbor/marina/manifest-helper.sh
+
+
+echo "${OS_DISTRO}: Loading freeipa config"
+################################################################################
+load_auth_config freeipa
+check_required_vars FREEIPA_SERVICE_HOST \
+                    AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
+                    AUTH_FREEIPA_HOST_ADMIN_USER \
+                    HARBOR_AUTH_SECTION
+
+
+
+echo "${OS_DISTRO}: Testing FreeIPA Server"
+################################################################################
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null"
+do
+  echo "${OS_DISTRO}: Waiting for auth"
+  sleep 60s
+done
+TEST_VAULT="marina-test-$(uuidgen)"
+until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null ) && \
+                                                          ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
+                                                          ipa vault-del ${TEST_VAULT} && \
+                                                          kdestroy -A"
+do
+  echo "${OS_DISTRO}: Waiting for vaults to be active"
+  sleep 60s
+done
+
+
+echo "${OS_DISTRO}: Defining freeipa functions"
+################################################################################
+freeipa_command () {
+  docker exec "${FREEIPA_SERVICE_HOST}" /bin/bash -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null && $(echo $@); kdestroy -A"
+}
+
+VAULT_NAME="$(crudini --get /etc/harbor/harbor-auth.conf ${HARBOR_AUTH_SECTION} harbor_auth_vault_name)"
+VAULT_USER="$(crudini --get /etc/harbor/harbor-auth.conf ${HARBOR_AUTH_SECTION} harbor_auth_vault_user)"
+VAULT_PASS="$(crudini --get /etc/harbor/harbor-auth.conf ${HARBOR_AUTH_SECTION} harbor_auth_vault_password)"
+
+
+echo "${OS_DISTRO}: Getting Env File from vault and saving at $HOME/.tmpenv"
+################################################################################
+freeipa_command ipa vault-retrieve ${VAULT_NAME} --user=${VAULT_USER} --password=${VAULT_PASS} --out=/dev/stdout | head -n -3 > $HOME/.tmpenv
+
+echo "${OS_DISTRO}: Making Backup at $HOME/.tmpenv-$(uuidgen)"
+################################################################################
+cat $HOME/.tmpenv > $HOME/.tmpenv-$(uuidgen)
+
+echo "${OS_DISTRO}: Opening env file in editor"
+################################################################################
+vi $HOME/.tmpenv
+
+echo "${OS_DISTRO}: Loading env back into vault"
+################################################################################
+ENV_FILE=$(cat $HOME/.tmpenv | base64 -w0)
+freeipa_command "echo ${ENV_FILE} | base64 --decode > $HOME/.tmpenv && \
+                ipa vault-archive ${VAULT_NAME} --user=${VAULT_USER} --password=${VAULT_PASS} --in=$HOME/.tmpenv; rm -f $HOME/.tmpenv"
