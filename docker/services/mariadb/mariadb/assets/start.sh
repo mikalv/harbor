@@ -82,17 +82,21 @@ GRANT ALL ON *.* TO 'root'@'localhost' WITH GRANT OPTION ;
 DROP DATABASE IF EXISTS test ;
 EOSQL
 
-  echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database: $MARIADB_USER"
-  echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
-  echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
-  echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
+  if ! [ -z "$MARIADB_DATABASE" -a -z "$MARIADB_USER" -a -z "$MARIADB_PASSWORD" ]; then
+    echo "${OS_DISTRO}: Writing 1st boot script: $MARIADB_DATABASE database: $MARIADB_USER"
+    echo "CREATE DATABASE IF NOT EXISTS $MARIADB_DATABASE ;" >> "$TEMP_FILE"
+    echo "CREATE USER '$MARIADB_USER'@'%' IDENTIFIED BY '$MARIADB_PASSWORD' ;" >> "$TEMP_FILE"
+    echo "GRANT ALL ON $MARIADB_DATABASE.* TO '$MARIADB_USER'@'%' $MARIADB_X509  ;" >> "$TEMP_FILE"
+  fi
 
-  echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database: $DB_USER"
-  echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
-  echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
-  echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
+  if ! [ -z "$DB_NAME" -a -z "$DB_USER" -a -z "$DB_PASSWORD" ]; then
+    echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME database: $DB_USER"
+    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME ;" >> "$TEMP_FILE"
+    echo "CREATE USER '$DB_USER'@'%' IDENTIFIED BY '$DB_PASSWORD' ;" >> "$TEMP_FILE"
+    echo "GRANT ALL ON $DB_NAME.* TO '$DB_USER'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
+  fi
 
-  if [ -z "$DB_NAME_1" -a -z "$DB_USER_1" -a -z "$DB_PASSWORD_1" ]; then
+  if ! [ -z "$DB_NAME_1" -a -z "$DB_USER_1" -a -z "$DB_PASSWORD_1" ]; then
     echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME_1 database: $DB_USER_1"
     echo "CREATE DATABASE IF NOT EXISTS $DB_NAME_1 ;" >> "$TEMP_FILE"
     echo "CREATE USER '$DB_USER_1'@'%' IDENTIFIED BY '$DB_PASSWORD_1' ;" >> "$TEMP_FILE"
