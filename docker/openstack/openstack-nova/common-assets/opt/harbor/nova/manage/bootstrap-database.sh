@@ -28,8 +28,9 @@ check_required_vars NOVA_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "nova-manage --config-file ${NOVA_CONFIG_FILE} --debug db sync" nova
+su -s /bin/sh -c "nova-manage --config-file ${NOVA_CONFIG_FILE} db sync" nova
+
 
 echo "${OS_DISTRO}: Bootstrapping api database"
 ################################################################################
-su -s /bin/sh -c "nova-manage --config-file ${NOVA_CONFIG_FILE} --debug api_db sync" nova
+su -s /bin/sh -c "nova-manage --config-file ${NOVA_CONFIG_FILE} api_db sync" nova

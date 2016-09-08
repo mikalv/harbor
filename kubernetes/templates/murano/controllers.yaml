@@ -84,8 +84,6 @@ spec:
             - name: os-config-keystone-admin-user
               mountPath: /var/run/harbor/secrets/config-keystone-admin-user
               readOnly: true
-          securityContext:
-            privileged: false
       restartPolicy: OnFailure
       volumes:
         - name: os-config-kubecfg
@@ -222,11 +220,6 @@ spec:
         - name: murano-api
           image: {{ IMAGE_MURANO_API }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
-          ports:
-            - containerPort: 8082
-              hostPort: 8082
-              protocol: TCP
-              name: v-api
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
@@ -240,14 +233,28 @@ spec:
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
-            - name: os-config-ssl-secret
-              mountPath: /run/harbor/auth/ssl
-              readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
-          securityContext:
-            privileged: false
+        - name: murano-api-tls
+          image: {{ IMAGE_HAPROXY_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8082
+              hostPort: 8082
+              protocol: TCP
+              name: v-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '8082'
+            - name: PORT_LOCAL
+              value: '8082'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
       volumes:
         - name: os-config-db
           secret:
@@ -295,16 +302,22 @@ spec:
               hostPort: 5673
               protocol: TCP
               name: rabbit
+            - containerPort: 25673
+              hostPort: 25673
+              protocol: TCP
+              name: rmq-dist
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
             - name: RABBIT_PORT
               value: '5673'
+            - name: RABBIT_NODENAME
+              value: murano-ampq
             - name: RABBIT_TLS
               value: /run/harbor/auth/ssl
-            - name: AUTH_MESSAGING_USER
+            - name: RABBIT_USER
               value: AUTH_MURANO_RABBITMQ_USER
-            - name: AUTH_MESSAGING_PASS
+            - name: RABBIT_PASS
               value: AUTH_MURANO_RABBITMQ_PASS
           volumeMounts:
             - name: os-config-messaging-auth
@@ -313,8 +326,6 @@ spec:
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
               readOnly: true
-          securityContext:
-            privileged: false
       volumes:
         - name: os-config-messaging-auth
           secret:

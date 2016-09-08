@@ -76,7 +76,7 @@ echo "${OS_DISTRO}: Starting lbaas config"
 
 echo "${OS_DISTRO}: Starting api-server config"
 ################################################################################
-/opt/harbor/neutron/config-api-server.sh
+/opt/harbor/neutron/components/config-api.sh
 
 
 ################################################################################

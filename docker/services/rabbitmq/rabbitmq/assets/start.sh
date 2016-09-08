@@ -13,7 +13,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -e
 echo "${OS_DISTRO}: Starting Rabbitmq Container"
 ################################################################################
@@ -21,40 +20,68 @@ source /etc/os-container.env
 source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/harbor-common.sh
-: ${RABBITMQ_NODENAME:="messaging"}
-: ${RABBITMQ_LOG_BASE:="/var/log/rabbitmq"}
+: ${RABBIT_NODENAME:="messaging"}
+: ${RABBIT_LOG_BASE:="/var/log/rabbitmq"}
+: ${RABBIT_PORT:="5672"}
+: ${RABBIT_DIST_PORT:="$(($RABBIT_PORT + 20000))"}
 
 
 ################################################################################
 check_required_vars OS_DOMAIN \
-                    AUTH_MESSAGING_USER \
-                    AUTH_MESSAGING_PASS \
-                    RABBITMQ_NODENAME \
-                    RABBITMQ_LOG_BASE
+                    RABBIT_PORT \
+                    RABBIT_USER \
+                    RABBIT_PASS \
+                    RABBIT_NODENAME \
+                    MY_IP
 
 
+echo "${OS_DISTRO}: Translating env vars"
+################################################################################
+RABBIT_USER_VAL=${!RABBIT_USER}
+RABBIT_PASS_VAL=${!RABBIT_PASS}
+
+check_required_vars OS_DOMAIN \
+                    RABBIT_USER_VAL \
+                    RABBIT_PASS_VAL
+
+
+echo "${OS_DISTRO}: This container will run on:"
+################################################################################
+echo "${OS_DISTRO}:    Node name:        ${RABBIT_NODENAME}"
+echo "${OS_DISTRO}:    Node ip:          ${MY_IP}"
+echo "${OS_DISTRO}:    Client port:      ${RABBIT_PORT}"
+echo "${OS_DISTRO}:    Dist Port:        ${RABBIT_DIST_PORT}"
+
+
+echo "${OS_DISTRO}: Writing config files"
 ################################################################################
 sed -i '
-  s|@RABBITMQ_USER@|'"$AUTH_MESSAGING_USER"'|g
-  s|@RABBITMQ_PASS@|'"$AUTH_MESSAGING_PASS"'|g
+  s|@RABBIT_USER@|'"$RABBIT_USER_VAL"'|g
+  s|@RABBIT_PASS@|'"$RABBIT_PASS_VAL"'|g
+  s|@RABBIT_PORT@|'"$RABBIT_PORT"'|g
 ' /etc/rabbitmq/rabbitmq.config
 
 sed -i '
-  s|@RABBITMQ_NODENAME@|'"$RABBITMQ_NODENAME"'|g
-  s|@RABBITMQ_LOG_BASE@|'"$RABBITMQ_LOG_BASE"'|g
+  s|@RABBIT_NODENAME@|'"$RABBIT_NODENAME"'|g
+  s|@RABBIT_LOG_BASE@|'"$RABBIT_LOG_BASE"'|g
+  s|@RABBIT_PORT@|'"$RABBIT_PORT"'|g
+  s|@RABBIT_DIST_PORT@|'"$RABBIT_DIST_PORT"'|g
+  s|@RABBIT_NODE_IP_ADDRESS@|'"$MY_IP"'|g
 ' /etc/rabbitmq/rabbitmq-env.conf
 
 
+echo "${OS_DISTRO}: Setting up hosts file"
 ################################################################################
 echo "127.0.0.1 $(hostname)" >> /etc/hosts
-echo "127.0.0.1 ${RABBITMQ_NODENAME}" >> /etc/hosts
+echo "127.0.0.1 ${RABBIT_NODENAME}" >> /etc/hosts
 
 
+echo "${OS_DISTRO}: Ensuring correct permissions"
 ################################################################################
 mkdir -p /var/lib/rabbitmq
 chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
-mkdir -p ${RABBITMQ_LOG_BASE}
-chown -R rabbitmq:rabbitmq ${RABBITMQ_LOG_BASE}
+mkdir -p ${RABBIT_LOG_BASE}
+chown -R rabbitmq:rabbitmq ${RABBIT_LOG_BASE}
 
 
 echo "${OS_DISTRO}: Starting Container Application"

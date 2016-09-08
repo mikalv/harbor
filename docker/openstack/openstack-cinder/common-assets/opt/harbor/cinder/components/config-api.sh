@@ -15,20 +15,33 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring API Server"
+echo "${OS_DISTRO}: Configuring Cinder API"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/glance/vars.sh
+. /opt/harbor/cinder/vars.sh
+PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
+: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
 
 ################################################################################
-check_required_vars GLANCE_CONFIG_FILE \
+check_required_vars CINDER_CONFIG_FILE \
                     OS_DOMAIN \
-                    MY_IP
+                    CINDER_API_SVC_PORT \
+                    API_WORKERS
 
 
+echo "${OS_DISTRO}: Configuring worker params"
 ################################################################################
-crudini --set ${GLANCE_CONFIG_FILE} paste_deploy flavor "keystone"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
+echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
+echo "${OS_DISTRO}:    Port: ${CINDER_API_SVC_PORT}"
+echo "${OS_DISTRO}:    Listen: 127.0.0.1"
+crudini --set ${CINDER_CONFIG_FILE} DEFAULT osapi_volume_listen_port "${CINDER_API_SVC_PORT}"
+crudini --set ${CINDER_CONFIG_FILE} DEFAULT osapi_volume_workers "${API_WORKERS}"
+crudini --set ${CINDER_CONFIG_FILE} DEFAULT osapi_volume_listen "127.0.0.1"
+
+
+echo "${OS_DISTRO}: Api paste deploy"
+################################################################################
+crudini --set ${CINDER_CONFIG_FILE} DEFAULT api_paste_config "/etc/cinder/api-paste.ini"

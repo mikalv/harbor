@@ -15,21 +15,30 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring logging"
+echo "${OS_DISTRO}: Testing tls certs"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/glance/vars.sh
+. /opt/harbor/horizon/vars.sh
 
 
 ################################################################################
-check_required_vars GLANCE_CONFIG_FILE
+check_required_vars OS_DOMAIN \
+                    API_APACHE_CONFIG_FILE \
+                    API_TLS_KEY \
+                    API_TLS_CERT \
+                    API_TLS_CA
 
 
 ################################################################################
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT use_syslog "False"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_exception_prefix "%(color)s%(asctime)s.%(msecs)03d TRACE %(name)s %(instance)s"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_debug_format_suffix "from (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_default_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [-%(color)s] %(instance)s%(color)s%(message)s"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_id)s%(color)s] %(instance)s%(color)s%(message)s"
+openssl verify -CAfile ${API_TLS_CA} ${API_TLS_CERT}
+CERT_MOD="$(openssl x509 -noout -modulus -in ${API_TLS_CERT})"
+KEY_MOD="$(openssl rsa -noout -modulus -in ${API_TLS_KEY})"
+if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then
+  echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."
+  exit 1
+fi
+KEY_MOD=""
+CERT_MOD=""
+echo "${OS_DISTRO}: TLS certs: OK"

@@ -33,8 +33,21 @@ check_required_vars KEYSTONE_CONFIG_FILE\
 
 
 ################################################################################
-su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} --debug db_sync" keystone
-su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} --debug bootstrap \
+su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} db_sync" keystone
+
+
+echo "${OS_DISTRO}: Database version"
+################################################################################
+su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} db_version" keystone
+
+
+echo "${OS_DISTRO}: Initializing database"
+################################################################################
+echo "${OS_DISTRO}: Cloud Admin (default domain) User: ${AUTH_KEYSTONE_ADMIN_USER}"
+echo "${OS_DISTRO}: Admin URL:                         https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
+echo "${OS_DISTRO}: Internal URL:                      https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000/v3"
+echo "${OS_DISTRO}: Public URL:                        https://${KEYSTONE_API_SERVICE_HOST}/v3"
+su -s /bin/sh -c "keystone-manage --config-file=${KEYSTONE_CONFIG_FILE} bootstrap \
                   --bootstrap-username ${AUTH_KEYSTONE_ADMIN_USER} \
                   --bootstrap-password ${AUTH_KEYSTONE_ADMIN_PASSWORD} \
                   --bootstrap-project-name ${AUTH_KEYSTONE_ADMIN_PROJECT} \

@@ -1,5 +1,6 @@
 #!/bin/bash
 : ${NOVA_CONFIG_FILE:="/etc/nova/nova.conf"}
+: ${NOVA_APACHE_API_CONFIG_FILE:="/etc/httpd/conf.d/wsgi-nova-api.conf"}
 
 : ${NOVA_MARIADB_SERVICE_PORT:="3312"}
 : ${NOVA_MARIADB_SERVICE_HOST_SVC:="${NOVA_API_SERVICE_HOSTNAME}-db.${NOVA_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}

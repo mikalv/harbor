@@ -1,12 +1,11 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-glance-httpd:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-glance-alpine:%%DOCKER_TAG%%
 
 COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
-    container-base-systemd-reset.sh
+    rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

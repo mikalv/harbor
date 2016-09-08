@@ -13,15 +13,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
-check_required_vars OS_DOMAIN \
-                    NOVA_CONFIG_FILE
+. /opt/harbor/cinder/vars.sh
+
 
 
 echo "${OS_DISTRO}: Testing service dependancies"
@@ -29,24 +29,16 @@ echo "${OS_DISTRO}: Testing service dependancies"
 /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Common config starting"
+echo "${OS_DISTRO}: Config Starting"
 ################################################################################
-/opt/harbor/config-nova.sh
+/opt/harbor/config-cinder.sh
 
 
 echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/nova/components/config-api.sh
+/opt/harbor/cinder/components/config-api.sh
 
 
-echo "${OS_DISTRO}: Fixing permissions"
+echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-mkdir -p /var/cache/nova
-chown -R nova:nova /var/cache/nova
-mkdir -p /usr/lib/python2.7/site-packages/keys
-chown -R nova:nova /usr/lib/python2.7/site-packages/keys
-
-
-echo "${OS_DISTRO}: Launching container application"
-################################################################################
-exec su -s /bin/sh -c "exec nova-api-os-compute --config-file=${NOVA_CONFIG_FILE} --debug" nova
+exec su -s /bin/sh -c "exec cinder-api --config-file=${CINDER_CONFIG_FILE} --debug" cinder

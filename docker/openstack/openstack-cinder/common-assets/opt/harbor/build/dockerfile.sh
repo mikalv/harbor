@@ -46,3 +46,6 @@ chown -R ${OS_COMP}:${OS_COMP} /home/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /etc/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/log/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/lib/${OS_COMP}
+
+mkdir -p /var/cache/${OS_COMP}
+chown -R ${OS_COMP}:${OS_COMP} /var/cache/${OS_COMP}

@@ -15,14 +15,30 @@
 # limitations under the License.
 
 set -e
-set -x
-echo "${OS_DISTRO}: ${OS_COMP}: Starting Container"
-source /etc/os-container.env
+echo "${OS_DISTRO}: Launching"
+################################################################################
+. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-# File path and name used by crudini tool
-export cfg=/etc/${OS_COMP}/${OS_COMP}.conf
+. /opt/harbor/glance/vars.sh
 
 
-echo "${OS_DISTRO}: ${OS_COMP}: Launching"
-exec tail -f /dev/null
+
+echo "${OS_DISTRO}: Testing service dependancies"
+################################################################################
+/usr/bin/mysql-test
+
+
+echo "${OS_DISTRO}: Config Starting"
+################################################################################
+/opt/harbor/config-glance.sh
+
+
+echo "${OS_DISTRO}: Component specific config starting"
+################################################################################
+/opt/harbor/glance/components/config-api.sh
+
+
+echo "${OS_DISTRO}: Starting container application"
+################################################################################
+exec su -s /bin/sh -c "exec glance-api --config-file=${GLANCE_CONFIG_FILE} --debug" glance

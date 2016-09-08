@@ -28,18 +28,29 @@ spec:
               hostPort: 5672
               protocol: TCP
               name: rabbit
+            - containerPort: 25672
+              hostPort: 25672
+              protocol: TCP
+              name: rmq-dist
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
+            - name: RABBIT_PORT
+              value: '5672'
+            - name: RABBIT_NODENAME
+              value: messaging
+            - name: RABBIT_TLS
+              value: /run/harbor/auth/ssl
+            - name: RABBIT_USER
+              value: AUTH_MESSAGING_USER
+            - name: RABBIT_PASS
+              value: AUTH_MESSAGING_PASS
           volumeMounts:
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
-              readOnly: true
-            - name: os-config-ssl-user-secret
-              mountPath: /run/harbor/auth/user
               readOnly: true
           securityContext:
             privileged: false
@@ -50,6 +61,3 @@ spec:
         - name: os-config-ssl-secret
           secret:
             secretName: messaging-ssl-secret
-        - name: os-config-ssl-user-secret
-          secret:
-            secretName: messaging-user-ssl-secret

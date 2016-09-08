@@ -33,3 +33,4 @@ crudini --set ${NOVA_CONFIG_FILE} DEFAULT logging_exception_prefix "%(color)s%(a
 crudini --set ${NOVA_CONFIG_FILE} DEFAULT logging_debug_format_suffix "from (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d"
 crudini --set ${NOVA_CONFIG_FILE} DEFAULT logging_default_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [-%(color)s] %(instance)s%(color)s%(message)s"
 crudini --set ${NOVA_CONFIG_FILE} DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_id)s%(color)s] %(instance)s%(color)s%(message)s"
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT wsgi_log_format "%(client_ip)s \"%(request_line)s\" status: %(status_code)s len: %(body_length)s time: %(wall_seconds).7f"

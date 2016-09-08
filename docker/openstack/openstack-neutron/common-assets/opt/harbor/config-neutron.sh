@@ -70,8 +70,3 @@ echo "${OS_DISTRO}: Starting nova config (allowed to fail)"
 echo "${OS_DISTRO}: Starting lbaas config"
 ################################################################################
 /opt/harbor/neutron/config-lbaas.sh
-
-
-echo "${OS_DISTRO}: Starting api-server config"
-################################################################################
-/opt/harbor/neutron/config-api-server.sh

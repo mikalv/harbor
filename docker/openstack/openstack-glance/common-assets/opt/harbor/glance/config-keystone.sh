@@ -50,5 +50,5 @@ crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken username "${AUTH_GLANCE_K
 crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
 crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken auth_type "password"
 crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken auth_version "v3"
-crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/neutron"
+crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/glance"
 crudini --set ${GLANCE_CONFIG_FILE} keystone_authtoken cafile "${GLANCE_DB_CA}"

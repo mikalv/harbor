@@ -58,7 +58,7 @@ elif [ "$MARINA_SERVICE" = "nova" ]; then
 elif [ "$MARINA_SERVICE" = "heat" ]; then
   SERVICE_SERVICES="HTTP HTTP-cfn HTTP-cloudwatch mysql"
 elif [ "$MARINA_SERVICE" = "murano" ]; then
-  SERVICE_SERVICES="HTTP AMQP"
+  SERVICE_SERVICES="HTTP AMQP mysql"
 else
   SERVICE_SERVICES="HTTP mysql"
 fi;
@@ -134,8 +134,10 @@ for SERVICE in $SERVICE_SERVICES; do
   elif [ "$MARINA_SERVICE" = "murano" ]; then
     if [ "$SERVICE" = "HTTP" ]; then
       HOSTNAME_VAR_MIDFIX="_API_SERVICE"
-    elif [ "$SERVICE" = "AMPQ" ]; then
+    elif [ "$SERVICE" = "AMQP" ]; then
       HOSTNAME_VAR_MIDFIX="_MESSAGING_SERVICE"
+    elif [ "$SERVICE" = "mysql" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
     fi;
   else
     HOSTNAME_VAR_MIDFIX="_API_SERVICE"
@@ -352,7 +354,10 @@ for SERVICE in $SERVICE_SERVICES; do
     echo "${OS_DISTRO}: Verifying Certs"
     ############################################################################
     openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
-    #openssl x509 -in ${CERT_FILE_ROOT}.crt -noout -text
+    CERT_MOD="$(openssl x509 -noout -modulus -in  ${CERT_FILE_ROOT}.crt)"
+    KEY_MOD="$(openssl rsa -noout -modulus -in  ${CERT_FILE_ROOT}.key)"
+    if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then ! echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."; fi
+    echo "${OS_DISTRO}: TLS certs: OK"
 
 
     echo "${OS_DISTRO}: Adding Certs to Vault"
@@ -375,7 +380,11 @@ for SERVICE in $SERVICE_SERVICES; do
     freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}-ca.crt && \
     freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}.crt && \
     freeipa_get_file_from_service_vault ${CERT_FILE_ROOT}.key && \
-    openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
+    openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt && \
+    CERT_MOD="$(openssl x509 -noout -modulus -in  ${CERT_FILE_ROOT}.crt)" && \
+    KEY_MOD="$(openssl rsa -noout -modulus -in  ${CERT_FILE_ROOT}.key)" && \
+    if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then ! echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."; fi && \
+    echo "${OS_DISTRO}: TLS certs: OK"
   }
 
 
@@ -417,13 +426,12 @@ EOF
   }
 
 
-  echo "${OS_DISTRO}: Managing Kube Secret for Service Cert"
+  echo "${OS_DISTRO}: Managing Kube Cert Secret for Service ${MARINA_SERVICE}"
   ##############################################################################
-  if [ "$MARINA_SERVICE" = "kubernetes" ]; then
+  if [ "${MARINA_SERVICE}" = "kubernetes" ]; then
     echo "Service is Kubernetes"
     kube_load_service_certs
   else
-    echo "$MARINA_SERVICE"
     kube_upload_service_certs
   fi;
 

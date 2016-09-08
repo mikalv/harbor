@@ -11,7 +11,7 @@ echo "${OS_DISTRO}: Launching"
 echo "${OS_DISTRO}: Testing environment"
 ################################################################################
 /usr/bin/mysql-test
-
+/opt/harbor/horizon/test-horizon-tls.sh
 
 echo "${OS_DISTRO}: Configuring horizon"
 ################################################################################
@@ -25,12 +25,7 @@ echo "${OS_DISTRO}: Configuring apache"
 
 echo "${OS_DISTRO}: Priming horizon"
 ################################################################################
-/opt/harbor/horizon/config-apache.sh
-
-
-echo "${OS_DISTRO}: Finished configuration"
-################################################################################
-tail -f /dev/null
+/opt/harbor/horizon/prime-horizon.sh
 
 
 echo "${OS_DISTRO}: Launching Container Application"

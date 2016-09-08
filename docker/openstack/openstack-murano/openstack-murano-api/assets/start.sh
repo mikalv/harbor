@@ -13,33 +13,31 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -e
-echo "${OS_DISTRO}: Configuring API Server"
+echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/neutron/vars.sh
+. /opt/harbor/murano/vars.sh
+check_required_vars OS_DOMAIN \
+                    MURANO_CONFIG_FILE
 
 
+echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN \
-                    NEUTRON_API_TLS_KEY \
-                    NEUTRON_API_TLS_CERT \
-                    MY_IP \
-                    NEUTRON_API_SVC_PORT \
-                    NEUTRON_API_SERVICE_HOST_SVC
+/usr/bin/mysql-test
 
 
+echo "${OS_DISTRO}: Config Starting"
 ################################################################################
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT host "${NEUTRON_API_SERVICE_HOST_SVC}"
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT bind_port "${NEUTRON_API_SVC_PORT}"
+/opt/harbor/config-murano.sh
 
 
+echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT use_ssl "True"
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT ssl_cert_file "${NEUTRON_API_TLS_CERT}"
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT ssl_key_file "${NEUTRON_API_TLS_KEY}"
+/opt/harbor/murano/components/config-api.sh
+
+
+echo "${OS_DISTRO}: Launching container application"
+################################################################################
+exec su -s /bin/sh -c "exec murano-api --config-file=${MURANO_CONFIG_FILE} --debug" murano

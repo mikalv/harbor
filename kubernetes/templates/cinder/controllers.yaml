@@ -222,11 +222,6 @@ spec:
         - name: cinder-api
           image: {{ IMAGE_CINDER_API }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
-          ports:
-            - containerPort: 8776
-              hostPort: 8776
-              protocol: TCP
-              name: c-api
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
@@ -240,11 +235,29 @@ spec:
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
-            - name: os-config-ssl-secret
-              mountPath: /run/harbor/auth/ssl
-              readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: cinder-api-tls
+          image: {{ IMAGE_HAPROXY_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8776
+              hostPort: 8776
+              protocol: TCP
+              name: c-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '8776'
+            - name: PORT_LOCAL
+              value: '8776'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
               readOnly: true
           securityContext:
             privileged: false

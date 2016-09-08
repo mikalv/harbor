@@ -1,6 +1,6 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-nova-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-cinder-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="nova-api"
+ENV OPENSTACK_COMPONENT="cinder-api"
 
 COPY ./assets/ /opt/harbor/assets
 

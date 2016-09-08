@@ -154,7 +154,11 @@ retreive_user_cert () {
     )
   done
   #openssl x509 -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt -noout -text
-  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
+  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt && \
+  CERT_MOD="$(openssl x509 -noout -modulus -in  ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt)" && \
+  KEY_MOD="$(openssl rsa -noout -modulus -in  ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key)" && \
+  if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then ! echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."; fi
+
 }
 
 

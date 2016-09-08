@@ -1,11 +1,15 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-nova-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="nova-api"
+ENV HARBOR_COMPONENT="haproxy"
 
-COPY ./assets/ /opt/harbor/assets
+COPY ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    apk add --no-cache --virtual run-deps \
+        haproxy && \
+    mkdir -p /var/lib/haproxy && \
+    chown -R haproxy:haproxy /var/lib/haproxy && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

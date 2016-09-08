@@ -15,21 +15,28 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring logging"
+echo "${OS_DISTRO}: Configuring api"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/glance/vars.sh
-
-
-################################################################################
-check_required_vars GLANCE_CONFIG_FILE
-
+. /opt/harbor/murano/vars.sh
+PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
+: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
 ################################################################################
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT use_syslog "False"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_exception_prefix "%(color)s%(asctime)s.%(msecs)03d TRACE %(name)s %(instance)s"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_debug_format_suffix "from (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_default_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [-%(color)s] %(instance)s%(color)s%(message)s"
-crudini --set ${GLANCE_CONFIG_FILE} DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_id)s%(color)s] %(instance)s%(color)s%(message)s"
+check_required_vars MURANO_CONFIG_FILE \
+                    OS_DOMAIN \
+                    MURANO_API_SVC_PORT \
+                    MY_IP \
+                    API_WORKERS
+
+
+echo "${OS_DISTRO}: Configuring worker params"
+################################################################################
+echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
+echo "${OS_DISTRO}:    Port: ${MURANO_API_SVC_PORT}"
+echo "${OS_DISTRO}:    Listen: 127.0.0.1"
+crudini --set ${MURANO_CONFIG_FILE} DEFAULT bind_port "${MURANO_API_SVC_PORT}"
+crudini --set ${MURANO_CONFIG_FILE} murano api_workers "${API_WORKERS}"
+crudini --set ${MURANO_CONFIG_FILE} DEFAULT bind_host "127.0.0.1"
