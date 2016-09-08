@@ -15,38 +15,38 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Cinder Config Starting"
+echo "${OS_DISTRO}: Heat Config Starting"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
+. /opt/harbor/heat/vars.sh
 
 
 ################################################################################
-check_required_vars NOVA_CONFIG_FILE \
+check_required_vars HEAT_CONFIG_FILE \
                     OS_DOMAIN
 
 
 ################################################################################
-mkdir -p /etc/nova
+mkdir -p /etc/heat
 
 
 echo "${OS_DISTRO}: Starting logging config"
 ################################################################################
-/opt/harbor/nova/config-logging.sh
+/opt/harbor/heat/config-logging.sh
 
 
 echo "${OS_DISTRO}: Starting database config"
 ################################################################################
-/opt/harbor/nova/config-database.sh
+/opt/harbor/heat/config-database.sh
 
 
 echo "${OS_DISTRO}: Starting messaging config"
 ################################################################################
-/opt/harbor/nova/config-messaging.sh
+/opt/harbor/heat/config-messaging.sh
 
 
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
-/opt/harbor/nova/config-keystone.sh
+/opt/harbor/heat/config-keystone.sh

@@ -1,6 +1,6 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-nova-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-heat-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="nova-manager"
+ENV OPENSTACK_COMPONENT="heat-manager"
 
 COPY ./assets/ /opt/harbor/assets
 

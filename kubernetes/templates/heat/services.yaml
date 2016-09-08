@@ -31,3 +31,20 @@ spec:
     targetPort: 8004
   selector:
     openstack-app: heat
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: heat-cfn
+  name: heat-cfn
+  namespace: os-heat
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    openstack-app: heat-cfn

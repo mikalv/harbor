@@ -20,7 +20,7 @@ echo "${OS_DISTRO}: Bootstrapping database"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
+. /opt/harbor/heat/vars.sh
 
 
 ################################################################################
@@ -28,4 +28,4 @@ check_required_vars HEAT_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "nova-manage --config-file ${HEAT_CONFIG_FILE} --debug db sync" nova
+su -s /bin/sh -c "heat-manage --config-file ${HEAT_CONFIG_FILE} --debug db_sync" heat

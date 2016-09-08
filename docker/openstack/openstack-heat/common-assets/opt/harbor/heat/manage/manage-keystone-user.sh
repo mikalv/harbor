@@ -20,8 +20,8 @@ echo "${OS_DISTRO}: Managing keystone users"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
-. /opt/harbor/nova/manage/env-keystone-admin-auth.sh
+. /opt/harbor/heat/vars.sh
+. /opt/harbor/heat/manage/env-keystone-admin-auth.sh
 
 ################################################################################
 check_required_vars OS_DOMAIN \
@@ -47,7 +47,7 @@ AUTH_HEAT_KEYSTONE_USER_ID=$(openstack user create --or-show --enable -f value -
     --domain="${AUTH_HEAT_KEYSTONE_DOMAIN}" \
     --project-domain "${AUTH_HEAT_KEYSTONE_PROJECT_DOMAIN}" \
     --project="${AUTH_HEAT_KEYSTONE_PROJECT_ID}" \
-    --description "Service User for ${OS_DOMAIN}/${AUTH_HEAT_KEYSTONE_REGION}/nova" \
+    --description "Service User for ${OS_DOMAIN}/${AUTH_HEAT_KEYSTONE_REGION}/heat" \
     --email="support@${OS_DOMAIN}" \
     --password="${AUTH_HEAT_KEYSTONE_PASSWORD}" \
     "${AUTH_HEAT_KEYSTONE_USER}")
@@ -72,4 +72,4 @@ openstack role assignment list \
 
 
 ################################################################################
-/opt/harbor/nova/manage/env-keystone-auth.sh
+/opt/harbor/heat/manage/env-keystone-auth.sh

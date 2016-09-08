@@ -1,11 +1,8 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
-ENV OS_COMP="nova" \
+ENV OS_COMP="heat" \
     OS_REPO_URL="https://github.com/openstack/heat.git" \
-    OS_REPO_BRANCH="master" \
-    OS_COMP_1="nova-docker" \
-    OS_REPO_URL_1="https://github.com/portdirect/nova-docker.git" \
-    OS_REPO_BRANCH_1="master"
+    OS_REPO_BRANCH="master"
 
 COPY ./common-assets /opt/harbor/common-assets
 
@@ -22,6 +19,7 @@ RUN set -e && \
         libxslt \
         libcurl \
         openssl \
+        docker && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

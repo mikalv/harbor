@@ -20,7 +20,7 @@ echo "${OS_DISTRO}: Configuring API Server"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/neutron/vars.sh
+. /opt/harbor/glance/vars.sh
 
 
 ################################################################################

@@ -18,19 +18,12 @@ RUN set -e && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
-        openvswitch \
-        python-openvswitch \
         libxml2 \
         libxslt \
         openssl \
         libcurl \
-        docker-engine \
         iproute \
-        ethtool \
-        openvswitch \
-        sysfsutils \
-        iscsi-initiator-utils \
-        util-linux && \
+        libffi-devel && \
     yum install -y \
         mariadb \
         mariadb-libs && \
@@ -39,7 +32,6 @@ RUN set -e && \
         git \
         kernel-lt \
         kernel-lt-headers \
-        python-devel \
         python-devel \
         postgresql-devel \
         openssl-devel \

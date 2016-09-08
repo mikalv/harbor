@@ -223,10 +223,10 @@ spec:
           image: {{ IMAGE_MURANO_API }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           ports:
-            - containerPort: 8004
-              hostPort: 8004
+            - containerPort: 8082
+              hostPort: 8082
               protocol: TCP
-              name: h-api
+              name: v-api
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
@@ -264,3 +264,61 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: murano-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: murano-ampq
+    version: v0.1.0
+  name: murano-ampq
+  namespace: os-murano
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: murano-ampq
+        version: v0.1.0
+      name: murano-ampq
+      namespace: os-murano
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: murano-ampq
+          image: {{ IMAGE_RABBITMQ_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 5673
+              hostPort: 5673
+              protocol: TCP
+              name: rabbit
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: RABBIT_PORT
+              value: '5673'
+            - name: RABBIT_TLS
+              value: /run/harbor/auth/ssl
+            - name: AUTH_MESSAGING_USER
+              value: AUTH_MURANO_RABBITMQ_USER
+            - name: AUTH_MESSAGING_PASS
+              value: AUTH_MURANO_RABBITMQ_PASS
+          volumeMounts:
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: murano-ampq-ssl-secret

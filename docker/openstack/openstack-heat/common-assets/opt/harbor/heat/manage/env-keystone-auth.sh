@@ -20,7 +20,7 @@ echo "${OS_DISTRO}: Setting Enviroment Vars For Keystone"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
+. /opt/harbor/heat/vars.sh
 
 
 ################################################################################

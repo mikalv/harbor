@@ -15,12 +15,12 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring neutron"
+echo "${OS_DISTRO}: Configuring keystone"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
+. /opt/harbor/heat/vars.sh
 
 
 ################################################################################
@@ -50,5 +50,5 @@ crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken username "${AUTH_HEAT_KEYST
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken auth_type "password"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken auth_version "v3"
-crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/nova"
+crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/heat"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken cafile "${HEAT_DB_CA}"

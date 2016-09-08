@@ -31,3 +31,20 @@ spec:
     targetPort: 8082
   selector:
     openstack-app: murano
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: murano-ampq
+  name: murano-ampq
+  namespace: os-murano
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 5673
+    protocol: TCP
+    targetPort: 5673
+  selector:
+    openstack-app: murano-ampq

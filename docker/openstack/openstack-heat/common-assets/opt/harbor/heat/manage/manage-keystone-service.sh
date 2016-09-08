@@ -20,8 +20,8 @@ echo "${OS_DISTRO}: Managing keystone service and endpoints"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
-. /opt/harbor/nova/manage/env-keystone-admin-auth.sh
+. /opt/harbor/heat/vars.sh
+. /opt/harbor/heat/manage/env-keystone-admin-auth.sh
 
 
 ################################################################################
@@ -29,21 +29,29 @@ check_required_vars OS_DOMAIN \
                     AUTH_HEAT_KEYSTONE_REGION \
                     HEAT_API_SERVICE_HOST_SVC \
                     HEAT_API_SERVICE_HOST \
-                    HEAT_API_SVC_PORT
+                    HEAT_API_SVC_PORT \
+                    HEAT_API_CFN_SERVICE_HOST_SVC \
+                    HEAT_API_CFN_SERVICE_HOST \
+                    HEAT_API_CFN_SVC_PORT
+
 
 
 ################################################################################
-for SERVICE_TYPE in compute; do
-
-  OS_SERVICE_NAME="nova"
-  OS_SERVICE_TYPE="${SERVICE_TYPE}"
-  OS_SERVICE_DESC="${OS_DOMAIN}: ${OS_SERVICE_NAME} (${OS_SERVICE_TYPE}) service"
+for OS_SERVICE_NAME in heat heat-cfn; do
   OS_SVC_ENDPOINTS="PUBLIC ADMIN INTERNAL"
 
-  if [ "$SERVICE_TYPE" == "compute" ]; then
-    OS_SVC_ENDPOINT_INTERNAL="https://${HEAT_API_SERVICE_HOST_SVC}:${HEAT_API_SVC_PORT}/v2.1/%(tenant_id)s"
-    OS_SVC_ENDPOINT_ADMIN="https://${HEAT_API_SERVICE_HOST_SVC}:${HEAT_API_SVC_PORT}/v2.1/%(tenant_id)s"
-    OS_SVC_ENDPOINT_PUBLIC="https://${HEAT_API_SERVICE_HOST}/v2.1/%(tenant_id)s"
+  if [ "$OS_SERVICE_NAME" == "heat-cfn" ]; then
+    OS_SERVICE_TYPE="cloudformation"
+    OS_SERVICE_DESC="${OS_DOMAIN}: ${OS_SERVICE_NAME} (${OS_SERVICE_TYPE}) service"
+    OS_SVC_ENDPOINT_INTERNAL="https://${HEAT_API_CFN_SERVICE_HOST_SVC}:${HEAT_API_CFN_SVC_PORT}/v1"
+    OS_SVC_ENDPOINT_ADMIN="https://${HEAT_API_CFN_SERVICE_HOST_SVC}:${HEAT_API_CFN_SVC_PORT}/v1"
+    OS_SVC_ENDPOINT_PUBLIC="https://${HEAT_API_CFN_SERVICE_HOST}/v1"
+  else
+    OS_SERVICE_TYPE="orchestration"
+    OS_SERVICE_DESC="${OS_DOMAIN}: ${OS_SERVICE_NAME} (${OS_SERVICE_TYPE}) service"
+    OS_SVC_ENDPOINT_INTERNAL="https://${HEAT_API_SERVICE_HOST_SVC}:${HEAT_API_SVC_PORT}/v1/\$(project_id)s"
+    OS_SVC_ENDPOINT_ADMIN="https://${HEAT_API_SERVICE_HOST_SVC}:${HEAT_API_SVC_PORT}/v1/\$(project_id)s"
+    OS_SVC_ENDPOINT_PUBLIC="https://${HEAT_API_SERVICE_HOST}/v1/\$(project_id)s"
   fi
 
 
