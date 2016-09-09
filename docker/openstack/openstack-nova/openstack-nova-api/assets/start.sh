@@ -47,4 +47,4 @@ chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 
 echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-exec su -s /bin/sh -c "exec nova-api --config-file=${NOVA_CONFIG_FILE} --debug" nova
+exec su -s /bin/sh -c "exec nova-api-os-compute --config-file=${NOVA_CONFIG_FILE} --debug" nova

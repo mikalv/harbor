@@ -31,3 +31,20 @@ spec:
     targetPort: 8774
   selector:
     openstack-app: nova
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: nova-serialproxy
+  name: serial
+  namespace: os-nova
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 6083
+  selector:
+    openstack-app: nova-serialproxy
