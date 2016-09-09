@@ -23,7 +23,6 @@ echo "${OS_DISTRO}: Launching"
 . /opt/harbor/glance/vars.sh
 
 
-
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-test

@@ -5,8 +5,31 @@ ENV OS_COMP="horizon" \
     OS_REPO_BRANCH="master" \
     OS_COMP_1="neutron-lbaas-dashboard" \
     OS_REPO_URL_1="https://github.com/openstack/neutron-lbaas-dashboard.git" \
-    OS_REPO_BRANCH_1="master"
-
+    OS_REPO_BRANCH_1="master" \
+    OS_COMP_2="murano-dashboard" \
+    OS_REPO_URL_2="https://github.com/portdirect/murano-dashboard" \
+    OS_REPO_BRANCH_2="master" \
+    OS_COMP_3="app-catalog-ui" \
+    OS_REPO_URL_3="https://github.com/openstack/app-catalog-ui.git" \
+    OS_REPO_BRANCH_3="master" \
+    OS_COMP_4="patternfly-sass" \
+    OS_REPO_URL_4="https://github.com/patternfly/patternfly-sass.git" \
+    OS_REPO_BRANCH_4="master" \
+    OS_COMP_5="cloudkitty-dashboard" \
+    OS_REPO_URL_5="https://github.com/openstack/cloudkitty-dashboard.git" \
+    OS_REPO_BRANCH_5="master" \
+    OS_COMP_6="magnum-ui" \
+    OS_REPO_URL_6="https://github.com/openstack/magnum-ui.git" \
+    OS_REPO_BRANCH_6="master" \
+    OS_COMP_7="designate-dashboard" \
+    OS_REPO_URL_7="https://github.com/openstack/designate-dashboard.git" \
+    OS_REPO_BRANCH_7="master" \
+    OS_COMP_8="trove-dashboard" \
+    OS_REPO_URL_8="https://github.com/openstack/trove-dashboard.git" \
+    OS_REPO_BRANCH_8="master" \
+    OS_COMP_9="manila-ui" \
+    OS_REPO_URL_9="https://github.com/openstack/manila-ui.git" \
+    OS_REPO_BRANCH_9="master"
 
 COPY ./common-assets/opt/harbor/build/dockerfile.sh /opt/harbor/build/dockerfile.sh
 

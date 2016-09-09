@@ -50,7 +50,6 @@ crudini --set ${GLANCE_CONFIG_FILE} DEFAULT workers "${API_WORKERS}"
 crudini --set ${GLANCE_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
 
 
-
 echo "${OS_DISTRO}: Testing tls certs"
 ################################################################################
 openssl verify -CAfile ${GLANCE_REGISTRY_TLS_CA} ${GLANCE_REGISTRY_TLS_CERT}
@@ -74,3 +73,4 @@ crudini --set ${GLANCE_CONFIG_FILE} DEFAULT key_file "${GLANCE_REGISTRY_TLS_KEY}
 echo "${OS_DISTRO}: Api paste deploy"
 ################################################################################
 crudini --set ${GLANCE_CONFIG_FILE} paste_deploy config_file "/etc/glance/glance-registry-paste.ini"
+crudini --set ${GLANCE_CONFIG_FILE} paste_deploy flavor "keystone"

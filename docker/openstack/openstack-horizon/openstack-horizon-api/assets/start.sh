@@ -13,6 +13,7 @@ echo "${OS_DISTRO}: Testing environment"
 /usr/bin/mysql-test
 /opt/harbor/horizon/test-horizon-tls.sh
 
+
 echo "${OS_DISTRO}: Configuring horizon"
 ################################################################################
 /opt/harbor/horizon/config-horizon.sh
@@ -22,6 +23,7 @@ echo "${OS_DISTRO}: Configuring apache"
 ################################################################################
 /opt/harbor/horizon/config-apache.sh
 
+tail -f /dev/null
 
 echo "${OS_DISTRO}: Priming horizon"
 ################################################################################

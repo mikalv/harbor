@@ -41,8 +41,8 @@ WEBROOT = '/'
 
 # If Horizon is being served through SSL, then uncomment the following two
 # settings to better secure the cookies from security exploits
-#CSRF_COOKIE_SECURE = True
-#SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
 
 # The absolute path to the directory where message files are collected.
 # The message file must have a .json file extension. When the user logins to
@@ -221,7 +221,7 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 #OPENSTACK_SSL_NO_VERIFY = True
 
 # The CA certificate to use to verify SSL connections
-#OPENSTACK_SSL_CACERT = '/path/to/cacert.pem'
+OPENSTACK_SSL_CACERT = '{{ API_TLS_CA }}'
 
 # The OPENSTACK_KEYSTONE_BACKEND settings can be used to identify the
 # capabilities of the auth backend for Keystone.

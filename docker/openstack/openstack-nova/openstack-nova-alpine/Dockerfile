@@ -22,13 +22,7 @@ RUN set -e && \
         libxslt \
         libcurl \
         openssl \
-        docker \
-        iproute2 \
-        ethtool \
-        openvswitch \
-        sysfsutils \
-        open-iscsi \
-        util-linux && \
+        iproute2 && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

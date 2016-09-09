@@ -277,3 +277,60 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: cinder-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: cinder-scheduler
+    version: v0.1.0
+  name: cinder-scheduler-master
+  namespace: os-cinder
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder-scheduler
+        version: v0.1.0
+      name: cinder-scheduler-master
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-scheduler
+          image: {{ IMAGE_CINDER_SCHEDULER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-keystone
+          secret:
+            secretName: cinder-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: cinder-user-ssl-secret

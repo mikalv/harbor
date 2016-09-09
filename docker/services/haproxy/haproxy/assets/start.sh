@@ -76,7 +76,6 @@ global
 defaults
     log                     global
     option                  dontlognull
-    option http-server-close
     option                  redispatch
     retries                 3
     timeout http-request    10s
@@ -104,11 +103,10 @@ backend application
     mode http
     balance roundrobin
     option forwardfor
-    server app 127.0.0.1:${PORT_LOCAL} check
     http-request set-header X-Forwarded-Port %[dst_port]
     http-request add-header X-Forwarded-Proto https if { ssl_fc }
+    server app 127.0.0.1:${PORT_LOCAL} check
 EOF
-
 
 
 echo "${OS_DISTRO}: Checking config"

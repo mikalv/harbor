@@ -74,3 +74,4 @@ crudini --set ${GLANCE_CONFIG_FILE} DEFAULT key_file "${GLANCE_API_TLS_KEY}"
 echo "${OS_DISTRO}: Api paste deploy"
 ################################################################################
 crudini --set ${GLANCE_CONFIG_FILE} paste_deploy config_file "/etc/glance/glance-api-paste.ini"
+crudini --set ${GLANCE_CONFIG_FILE} paste_deploy flavor "keystone"

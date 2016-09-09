@@ -50,3 +50,8 @@ echo "${OS_DISTRO}: Starting messaging config"
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
 /opt/harbor/glance/config-keystone.sh
+
+
+echo "${OS_DISTRO}: Starting interaction config"
+################################################################################
+/opt/harbor/glance/config-interaction.sh

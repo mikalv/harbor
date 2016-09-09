@@ -41,8 +41,6 @@ echo "${OS_DISTRO}: Component specific config starting"
 
 echo "${OS_DISTRO}: Fixing permissions"
 ################################################################################
-mkdir -p /var/cache/nova
-chown -R nova:nova /var/cache/nova
 mkdir -p /usr/lib/python2.7/site-packages/keys
 chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 

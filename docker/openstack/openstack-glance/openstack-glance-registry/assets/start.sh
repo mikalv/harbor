@@ -34,6 +34,7 @@ echo "${OS_DISTRO}: Config Starting"
 /opt/harbor/config-glance.sh
 
 
+
 echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
 /opt/harbor/glance/components/config-registry.sh

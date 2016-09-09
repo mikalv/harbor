@@ -36,10 +36,13 @@ check_required_vars OS_DOMAIN \
                     AUTH_API_DB_PASSWORD \
                     AUTH_API_DB_USER \
                     AUTH_API_DB_NAME \
-                    MEMCACHE_SERVICE_HOST_SVC
+                    MEMCACHE_SERVICE_HOST_SVC \
+                    API_TLS_CA
 
 ################################################################################
 cat ${API_CONFIG_FILE_TEMPLATE} > ${API_CONFIG_FILE}
+cat ${API_TLS_CA} >> /etc/ssl/certs/ca-bundle.crt
+
 
 ################################################################################
 sed -i "s|{{ OS_DOMAIN }}|${OS_DOMAIN}|g" ${API_CONFIG_FILE}
@@ -47,6 +50,7 @@ sed -i "s|{{ OS_DOMAIN }}|${OS_DOMAIN}|g" ${API_CONFIG_FILE}
 
 ################################################################################
 sed -i "s|{{ KEYSTONE_API_SERVICE_HOST_SVC }}|${KEYSTONE_API_SERVICE_HOST_SVC}|g" ${API_CONFIG_FILE}
+sed -i "s|{{ API_TLS_CA }}|${API_TLS_CA}|g" ${API_CONFIG_FILE}
 
 
 ################################################################################

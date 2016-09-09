@@ -29,7 +29,16 @@ check_required_vars HEAT_CONFIG_FILE
 
 ################################################################################
 crudini --set ${HEAT_CONFIG_FILE} DEFAULT use_syslog "False"
-crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_exception_prefix "%(color)s%(asctime)s.%(msecs)03d TRACE %(name)s %(instance)s"
-crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_debug_format_suffix "from (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d"
-crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_default_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [-%(color)s] %(instance)s%(color)s%(message)s"
-crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [%(request_id)s %(user_name)s %(project_id)s%(color)s] %(instance)s%(color)s%(message)s"
+
+
+################################################################################
+function setup_colorized_logging {
+    local project_var=${1:-"project_name"}
+    local user_var=${2:-"user_name"}
+    # Add color to logging output
+    crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_context_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [[01;36m%(request_id)s [00;36m%("$user_var")s %("$project_var")s%(color)s] [01;35m%(instance)s%(color)s%(message)s[00m"
+    crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_default_format_string "%(asctime)s.%(msecs)03d %(color)s%(levelname)s %(name)s [[00;36m-%(color)s] [01;35m%(instance)s%(color)s%(message)s[00m"
+    crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_debug_format_suffix "[00;33mfrom (pid=%(process)d) %(funcName)s %(pathname)s:%(lineno)d[00m"
+    crudini --set ${HEAT_CONFIG_FILE} DEFAULT logging_exception_prefix "%(color)s%(asctime)s.%(msecs)03d TRACE %(name)s [01;35m%(instance)s[00m"
+}
+setup_colorized_logging tenant user

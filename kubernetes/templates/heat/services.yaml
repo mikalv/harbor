@@ -48,3 +48,20 @@ spec:
     targetPort: 8000
   selector:
     openstack-app: heat-cfn
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: heat-cloudwatch
+  name: heat-cloudwatch
+  namespace: os-heat
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    targetPort: 8003
+  selector:
+    openstack-app: heat-cloudwatch

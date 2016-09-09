@@ -264,3 +264,196 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: heat-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: heat-cfn
+    version: v0.1.0
+  name: heat-api-cfn-master
+  namespace: os-heat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: heat-cfn
+        version: v0.1.0
+      name: heat-api-cfn-master
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-api-cfn
+          image: {{ IMAGE_HEAT_API_CFN }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8000
+              hostPort: 8000
+              protocol: TCP
+              name: h-cfn
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-keystone
+          secret:
+            secretName: heat-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: heat-cfn-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: heat-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: heat-cloudwatch
+    version: v0.1.0
+  name: heat-api-cloudwatch-master
+  namespace: os-heat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: heat-cloudwatch
+        version: v0.1.0
+      name: heat-api-cloudwatch-master
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-api-cloudwatch
+          image: {{ IMAGE_HEAT_API_CLOUDWATCH }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8003
+              hostPort: 8003
+              protocol: TCP
+              name: h-cwh
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-keystone
+          secret:
+            secretName: heat-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: heat-cloudwatch-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: heat-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: heat-engine
+    version: v0.1.0
+  name: heat-engine-master
+  namespace: os-heat
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: heat-engine
+        version: v0.1.0
+      name: heat-engine-master
+      namespace: os-heat
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: heat-engine
+          image: {{ IMAGE_HEAT_ENGINE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: heat-db
+        - name: os-config-keystone
+          secret:
+            secretName: heat-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: heat-user-ssl-secret
