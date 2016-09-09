@@ -18,6 +18,7 @@ RUN set -e && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache --virtual run-deps \
+        py-mysqldb \
         libxml2 \
         libxslt \
         libcurl \

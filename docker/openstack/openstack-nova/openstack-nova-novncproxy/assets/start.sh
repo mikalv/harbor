@@ -6,53 +6,45 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -e
-echo "${OS_DISTRO}: Nova Config Starting"
+echo "${OS_DISTRO}: Launching"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/nova/vars.sh
+check_required_vars OS_DOMAIN \
+                    NOVA_CONFIG_FILE
 
 
+echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
-check_required_vars NOVA_CONFIG_FILE \
-                    OS_DOMAIN
+/usr/bin/mysql-test
 
 
+echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-mkdir -p /etc/nova
+/opt/harbor/config-nova.sh
 
 
-echo "${OS_DISTRO}: Starting logging config"
+echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/nova/config-logging.sh
+/opt/harbor/nova/components/config-novncproxy.sh
 
 
-echo "${OS_DISTRO}: Starting database config"
+echo "${OS_DISTRO}: Fixing permissions"
 ################################################################################
-/opt/harbor/nova/config-database.sh
-/opt/harbor/nova/config-api-database.sh
+mkdir -p /usr/lib/python2.7/site-packages/keys
+chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 
 
-echo "${OS_DISTRO}: Starting messaging config"
+echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-/opt/harbor/nova/config-messaging.sh
-
-
-echo "${OS_DISTRO}: Starting keystone config"
-################################################################################
-/opt/harbor/nova/config-keystone.sh
-
-
-echo "${OS_DISTRO}: Starting locks and concurrency config"
-################################################################################
-/opt/harbor/nova/config-concurrency.sh
+exec su -s /bin/sh -c "exec nova-novncproxy --config-file=${NOVA_CONFIG_FILE} --debug" nova

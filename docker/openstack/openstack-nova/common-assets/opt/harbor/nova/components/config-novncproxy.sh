@@ -15,27 +15,15 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring database connection"
+echo "${OS_DISTRO}: Configuring Nova novncproxy"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/cinder/vars.sh
+. /opt/harbor/nova/vars.sh
 
 
 ################################################################################
-check_required_vars CINDER_CONFIG_FILE \
+check_required_vars NOVA_CONFIG_FILE \
                     OS_DOMAIN \
-                    CINDER_MARIADB_SERVICE_HOST_SVC \
-                    CINDER_MARIADB_SERVICE_PORT \
-                    CINDER_DB_CA \
-                    CINDER_DB_KEY \
-                    CINDER_DB_CERT \
-                    AUTH_CINDER_DB_USER \
-                    AUTH_CINDER_DB_PASSWORD \
-                    AUTH_CINDER_DB_NAME
-
-
-################################################################################
-crudini --set ${CINDER_CONFIG_FILE} database connection \
-"mysql://${AUTH_CINDER_DB_USER}:${AUTH_CINDER_DB_PASSWORD}@${CINDER_MARIADB_SERVICE_HOST_SVC}:${CINDER_MARIADB_SERVICE_PORT}/${AUTH_CINDER_DB_NAME}?charset=utf8&ssl_ca=${CINDER_DB_CA}&ssl_key=${CINDER_DB_KEY}&ssl_cert=${CINDER_DB_CERT}&ssl_verify_cert"
+                    MY_IP
