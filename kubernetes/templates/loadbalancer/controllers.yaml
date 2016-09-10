@@ -18,8 +18,8 @@ spec:
       hostNetwork: true
       containers:
       - name: ingress-loadbalancer
-        image: docker.io/port/kubernetes-nginx-ingress-controller:latest
-        imagePullPolicy: Always
+        image: {{ IMAGE_LOADBALANCER_INGRESS }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         ports:
           - containerPort: 80
             hostPort: 80
@@ -31,7 +31,7 @@ spec:
             name: https
         env:
           - name: OS_DOMAIN
-            value: novalocal
+            value: {{ OS_DOMAIN }}
           - name: POD_NAME
             valueFrom:
               fieldRef:
@@ -84,9 +84,11 @@ spec:
       hostNetwork: true
       containers:
       - name: error-page-server
-        image: docker.io/port/kubernetes-error-server:latest
-        imagePullPolicy: Always
+        image: {{ IMAGE_LOADBALANCER_ERROR_SERVER }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
           - name: PORT
             value: '81'
         ports:
