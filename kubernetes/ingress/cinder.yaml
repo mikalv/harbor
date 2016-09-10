@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: cinder
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: cinder
+  namespace: os-cinder
+spec:
+  tls:
+    - hosts:
+        - cinder.harboros.net
+      secretName: cinder-ssl-secret
+    - hosts:
+        - cinder.os-cinder.svc.harboros.net
+      secretName: cinder-ssl-secret
+  rules:
+  - host: cinder.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: cinder
+          servicePort: 8776
+  - host: cinder.os-cinder.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: cinder
+          servicePort: 8776

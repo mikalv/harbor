@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: api
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: api
+  namespace: os-api
+spec:
+  tls:
+    - hosts:
+        - api.harboros.net
+      secretName: api-ssl-secret
+    - hosts:
+        - api.os-api.svc.harboros.net
+      secretName: api-ssl-secret
+  rules:
+  - host: api.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: api
+          servicePort: 4433
+  - host: api.os-api.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: api
+          servicePort: 4433

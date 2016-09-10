@@ -1,0 +1,53 @@
+apiVersion: "v1"
+kind: "Endpoints"
+metadata:
+  labels:
+    openstack-app: freeipa
+  name: freeipa
+  namespace: os-freeipa
+subsets:
+ - addresses:
+      - ip: "10.20.0.10"
+   ports:
+      - port: 443
+        protocol: TCP
+        name: https
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: freeipa
+  name: freeipa
+  namespace: os-freeipa
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 443
+    protocol: TCP
+    name: https
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: freeipa
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /ipa
+  name: freeipa
+  namespace: os-freeipa
+spec:
+  tls:
+    - hosts:
+        - _
+  rules:
+  - http:
+      paths:
+      - path: /ipa
+        backend:
+          serviceName: freeipa
+          servicePort: 443

@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: murano
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: murano
+  namespace: os-murano
+spec:
+  tls:
+    - hosts:
+        - murano.harboros.net
+      secretName: murano-ssl-secret
+    - hosts:
+        - murano.os-murano.svc.harboros.net
+      secretName: murano-ssl-secret
+  rules:
+  - host: murano.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: murano
+          servicePort: 8082
+  - host: murano.os-murano.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: murano
+          servicePort: 8082

@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: nova
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: nova
+  namespace: os-nova
+spec:
+  tls:
+    - hosts:
+        - nova.harboros.net
+      secretName: nova-ssl-secret
+    - hosts:
+        - nova.os-nova.svc.harboros.net
+      secretName: nova-ssl-secret
+  rules:
+  - host: nova.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nova
+          servicePort: 8774
+  - host: nova.os-nova.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: nova
+          servicePort: 8774

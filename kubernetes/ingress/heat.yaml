@@ -1,0 +1,107 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: heat
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: heat
+  namespace: os-heat
+spec:
+  tls:
+    - hosts:
+        - heat.harboros.net
+      secretName: heat-ssl-secret
+    - hosts:
+        - heat.os-heat.svc.harboros.net
+      secretName: heat-ssl-secret
+  rules:
+  - host: heat.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat
+          servicePort: 8004
+  - host: heat.os-heat.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat
+          servicePort: 8004
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: heat-cfn
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: heat-cfn
+  namespace: os-heat
+spec:
+  tls:
+    - hosts:
+        - heat-cfn.harboros.net
+      secretName: heat-cfn-ssl-secret
+    - hosts:
+        - heat-cfn.os-heat.svc.harboros.net
+      secretName: heat-cfn-ssl-secret
+  rules:
+  - host: heat-cfn.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat-cfn
+          servicePort: 8000
+  - host: heat-cfn.os-heat.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat-cfn
+          servicePort: 8000
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: heat-cloudwatch
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: heat-cloudwatch
+  namespace: os-heat
+spec:
+  tls:
+    - hosts:
+        - heat-cloudwatch.harboros.net
+      secretName: heat-cloudwatch-ssl-secret
+    - hosts:
+        - heat-cloudwatch.os-heat.svc.harboros.net
+      secretName: heat-cloudwatch-ssl-secret
+  rules:
+  - host: heat-cloudwatch.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat-cloudwatch
+          servicePort: 8003
+  - host: heat-cloudwatch.os-heat.svc.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: heat-cloudwatch
+          servicePort: 8003

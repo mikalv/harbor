@@ -13,29 +13,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -e
-echo "${OS_DISTRO}: Configuring database connection"
+echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/neutron/vars.sh
 
 
+echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN \
-                    NEUTRON_MARIADB_SERVICE_HOST_SVC \
-                    NEUTRON_MARIADB_SERVICE_PORT \
-                    NEUTRON_DB_CA \
-                    NEUTRON_DB_KEY \
-                    NEUTRON_DB_CERT \
-                    AUTH_NEUTRON_DB_USER \
-                    AUTH_NEUTRON_DB_PASSWORD \
-                    AUTH_NEUTRON_DB_NAME
 
 
+echo "${OS_DISTRO}: Config Starting"
 ################################################################################
-crudini --set ${NEUTRON_CONFIG_FILE} database connection \
-"mysql://${AUTH_NEUTRON_DB_USER}:${AUTH_NEUTRON_DB_PASSWORD}@${NEUTRON_MARIADB_SERVICE_HOST_SVC}:${NEUTRON_MARIADB_SERVICE_PORT}/${AUTH_NEUTRON_DB_NAME}?charset=utf8&ssl_ca=${NEUTRON_DB_CA}&ssl_key=${NEUTRON_DB_KEY}&ssl_cert=${NEUTRON_DB_CERT}&ssl_verify_cert"
+
+
+echo "${OS_DISTRO}: Launching container application"
+################################################################################
+tail -f /dev/null

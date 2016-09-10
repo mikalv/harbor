@@ -1,3 +1,4 @@
+### Snakeoil ssl cert - need to replace with wildcard one
 apiVersion: v1
 kind: Secret
 metadata:

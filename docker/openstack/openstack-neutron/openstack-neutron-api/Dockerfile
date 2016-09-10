@@ -27,13 +27,13 @@ RUN set -e && \
         python-openvswitch \
         mariadb \
         mariadb-libs \
-        libffi-devel && \
+        libffi-devel \
+        MySQL-python && \
     yum install -y \
         gcc \
         git \
         kernel-lt \
         kernel-lt-headers \
-        python-devel \
         python-devel \
         postgresql-devel \
         openssl-devel && \
