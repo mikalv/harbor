@@ -27,7 +27,12 @@ echo "${OS_DISTRO}: Configuring apache"
 echo "${OS_DISTRO}: Priming horizon"
 ################################################################################
 /opt/harbor/horizon/prime-horizon.sh
+
+
+echo "${OS_DISTRO}: Adding API CA to container ca-bundle"
+################################################################################
 cat /run/harbor/auth/ssl/tls.ca >> /etc/ssl/certs/ca-bundle.crt
+
 
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################

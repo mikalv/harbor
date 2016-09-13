@@ -1,0 +1,149 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Starting Harbor LDAP user update"
+################################################################################
+source /etc/os-container.env
+export OS_DOMAIN=$(hostname -d)
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/freeipa-login-helper.sh
+source /opt/harbor/marina/load-config-helper.sh
+source /opt/harbor/marina/manifest-helper.sh
+export LOAD_OS_SERVICE=$MARINA_SERVICE
+
+
+echo "$OS_DISTRO: Loading Network config"
+################################################################################
+load_network_config
+
+
+echo "$OS_DISTRO: Retreiving Container Secrets from vaults"
+################################################################################
+freeipa_get_service_env_vault () {
+  OS_SERVICE=$1
+  VAULT_PASSWORD_FILE=$2
+  AUTH_SECTION=$3
+  ENV_FILE=$4
+
+  check_required_vars OS_SERVICE \
+                      VAULT_PASSWORD_FILE \
+                      AUTH_SECTION \
+                      OS_DOMAIN
+
+
+    HARBOR_VAULT_ACTIVE=$(crudini --get $cfg_harbor_auth ${AUTH_SECTION} harbor_auth_vault || echo "False")
+    FILE=/tmp/env-var
+    if [ "$HARBOR_VAULT_ACTIVE" == "True" ]; then
+      PASSWD_FILE=/tmp/env-var-password
+      echo "$(crudini --get $cfg_harbor_auth ${AUTH_SECTION} harbor_auth_vault_password)" > ${PASSWD_FILE}
+      VAULT_USER=$(crudini --get $cfg_harbor_auth ${AUTH_SECTION} harbor_auth_vault_user)
+      VAULT_NAME=$(crudini --get $cfg_harbor_auth ${AUTH_SECTION} harbor_auth_vault_name)
+      ipa vault-retrieve ${VAULT_NAME} \
+      --user ${VAULT_USER} \
+      --password-file ${PASSWD_FILE} \
+      --out ${FILE}
+      rm -f ${PASSWD_FILE}
+      cat ${FILE} >> ${ENV_FILE}
+      rm -f ${FILE}
+    else
+        for COMPONENT in $(crudini --get $cfg_harbor_auth ${AUTH_SECTION}); do
+              VALUE="$(crudini --get $cfg_harbor_auth ${AUTH_SECTION} ${COMPONENT})"
+              NAME="$(echo AUTH_${AUTH_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+              echo "${NAME}=${VALUE}" >> ${FILE}
+        done
+        if [ "$OS_SERVICE" == "freeipa-master" ]; then
+          echo "not filering auth section as freeipa"
+          cat ${FILE} >> ${ENV_FILE}
+        elif [ "$OS_SERVICE" == "freeipa-user" ]; then
+          grep -e '^AUTH_FREEIPA_USER' ${FILE} >> ${ENV_FILE}
+        elif [ "$OS_SERVICE" == "freeipa-host" ]; then
+          grep -e '^AUTH_FREEIPA_HOST' ${FILE} >> ${ENV_FILE}
+        else
+          grep -e '^AUTH_FREEIPA' ${FILE} >> ${ENV_FILE}
+        fi
+        rm -f ${FILE}
+    fi
+}
+
+freeipa_retreve_all_env_vars () {
+  freeipa_login
+  rm -rf /tmp/env-vars
+  #freeipa_get_service_env_vault freeipa-master $OS_SERVICE_VAULT_PASSWORD_FILE freeipa /tmp/env-vars
+
+  for OS_AUTH_CFG_SECTION in ${LOAD_OS_SERVICE} freeipa-user freeipa-host; do
+    freeipa_get_service_env_vault $OS_AUTH_CFG_SECTION $OS_SERVICE_VAULT_PASSWORD_FILE $OS_AUTH_CFG_SECTION /tmp/env-vars
+  done
+  freeipa_logout
+}
+
+freeipa_retreve_all_env_vars
+
+
+source /tmp/env-vars
+
+IPA_USER=${AUTH_KEYSTONE_LDAP_USER}
+PASSWORD=${AUTH_KEYSTONE_LDAP_PASSWORD}
+IPA_USER_EMAIL="${IPA_USER}@${OS_DOMAIN}.local"
+IPA_USER_GROUP="ldap_readers"
+
+
+echo "${OS_DISTRO}: Getting user vault auth params"
+################################################################################
+SERVICE_VAULT_PASSWORD_FILE=${LOCAL_AUTH_DATA}/$(uuidgen)
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > /dev/null || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(harbor-gen-password 64 96)) >> /dev/null
+crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > $SERVICE_VAULT_PASSWORD_FILE
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user ${IPA_USER}) >> /dev/null
+IPA_VAULT_USER=$(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user)
+
+
+echo "${OS_DISTRO}: Logging into FreeIPA"
+################################################################################
+freeipa_login
+
+
+echo "${OS_DISTRO}: Managing Group: ${IPA_USER_GROUP}"
+################################################################################
+ipa group-show ${IPA_USER_GROUP} > /dev/null || ipa group-add ${IPA_USER_GROUP}
+
+
+
+echo "${OS_DISTRO}: Managing User: ${IPA_USER}"
+################################################################################
+freeipa_login
+(TMP_PASSWORD=$(harbor-gen-password 12 24)
+ipa user-show ${IPA_USER} || ( \
+echo $TMP_PASSWORD | ipa user-add --first=Keystone --last=LDAP --email ${IPA_USER_EMAIL} --password ${IPA_USER} && \
+harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD} > /dev/null )) && \
+(kdestroy -A && echo ${PASSWORD} | kinit ${IPA_USER} > /dev/null && kdestroy -A)
+freeipa_login
+if ! ipa group-show ${IPA_USER_GROUP} | grep "^  Member users:" | grep -q ${IPA_USER}; then
+  ipa group-add-member ${IPA_USER_GROUP} --users=${IPA_USER}
+fi
+
+
+
+echo "${OS_DISTRO}: Logging out of FreeIPA"
+################################################################################
+freeipa_logout
+
+
+echo "${OS_DISTRO}: Cleaning up"
+################################################################################
+rm -rf ${LOCAL_AUTH_DATA}/user

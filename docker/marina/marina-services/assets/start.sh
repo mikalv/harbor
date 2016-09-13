@@ -36,7 +36,9 @@ if [ "$MARINA_SERVICE" == "kubernetes" ]; then
 elif [ "$MARINA_SERVICE" == "keystone" ]; then
   echo "${OS_DISTRO}: Launching federation management"
   ##############################################################################
-  tail -f /dev/null
+  /usr/bin/harbor-manage-keystone-ldap
+  /usr/bin/harbor-manage-keystone-federation
+  /usr/bin/harbor-manage-kube || true
 else
   echo "${OS_DISTRO}: Launching kube management"
   ##############################################################################

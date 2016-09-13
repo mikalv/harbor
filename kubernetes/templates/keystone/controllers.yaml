@@ -247,6 +247,9 @@ spec:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
+            - name: os-config-federation-saml2-secret
+              mountPath: /run/harbor/auth/saml2
+              readOnly: true
           securityContext:
             privileged: false
       volumes:
@@ -268,3 +271,6 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: keystone-user-ssl-secret
+        - name: os-config-federation-saml2-secret
+          secret:
+            secretName: keystone-federation-saml2-secret

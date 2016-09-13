@@ -115,7 +115,7 @@ ipsilon-server-install \
 --info-ldap-user-dn-template="uid=%(username)s,cn=users,cn=accounts,${IPSILON_LDAP_BASE_DN}" \
 --info-ldap-bind-dn="uid=${AUTH_FREEIPA_USER_ADMIN_USER},cn=users,cn=accounts,${IPSILON_LDAP_BASE_DN}" \
 --info-ldap-bind-pwd="${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" \
---info-ldap-base-dn="cn=accounts,dc=${OS_DOMAIN}"\
+--info-ldap-base-dn="cn=accounts,${IPSILON_LDAP_BASE_DN}"\
 --admin-dburi="postgres://${AUTH_IPSILON_ADMIN_DB_USER}:${AUTH_IPSILON_ADMIN_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_ADMIN_DB_NAME}" \
 --users-dburi="postgres://${AUTH_IPSILON_USERS_DB_USER}:${AUTH_IPSILON_USERS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_USERS_DB_NAME}" \
 --transaction-dburi="postgres://${AUTH_IPSILON_TRANS_DB_USER}:${AUTH_IPSILON_TRANS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_TRANS_DB_NAME}" \

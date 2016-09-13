@@ -25,9 +25,23 @@ echo "${OS_DISTRO}: Configuring domains"
 
 ################################################################################
 check_required_vars KEYSTONE_CONFIG_FILE \
-                    OS_DOMAIN
+                    OS_DOMAIN \
+                    FREEIPA_SERVICE_HOST \
+                    AUTH_KEYSTONE_LDAP_USER \
+                    AUTH_KEYSTONE_LDAP_PASSWORD \
+                    KEYSTONE_LDAP_BASE_DN
 
-
+echo "${OS_DISTRO}: Enabling domain specific drivers"
 ################################################################################
 crudini --set ${KEYSTONE_CONFIG_FILE} identity domain_specific_drivers_enabled "true"
 crudini --set ${KEYSTONE_CONFIG_FILE} identity domain_configurations_from_database "true"
+
+
+echo "${OS_DISTRO}: Testing LDAP"
+################################################################################
+ldapsearch \
+    -h ${FREEIPA_SERVICE_HOST} -p 389 -x -u \
+    -D "uid=${AUTH_KEYSTONE_LDAP_USER},cn=users,cn=accounts,${KEYSTONE_LDAP_BASE_DN}" \
+    -w "${AUTH_KEYSTONE_LDAP_PASSWORD}" \
+    -b "cn=users,cn=accounts,${KEYSTONE_LDAP_BASE_DN}" \
+    "uid=${AUTH_KEYSTONE_LDAP_USER}"

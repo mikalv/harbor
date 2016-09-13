@@ -23,6 +23,10 @@ git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
 
 pip --no-cache-dir install /opt/stack/${OS_COMP}
 
+pip --no-cache-dir install python-ldap
+
+pip --no-cache-dir install ldappool
+
 mkdir -p /etc/${OS_COMP}
 
 cp -rf /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/

@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Starting IPA host update for kube service"
+echo "${OS_DISTRO}: Starting Keystone <-> Ipsilon management"
 ################################################################################
 source /etc/os-container.env
 export OS_DOMAIN=$(hostname -d)
@@ -58,100 +58,37 @@ echo "${OS_DISTRO}: Logging into FreeIPA"
 freeipa_login
 
 
-echo "${OS_DISTRO}: Logging into Ipsilon"
-################################################################################
-echo -n "${AUTH_FREEIPA_USER_ADMIN_USER}" > ${LOCAL_AUTH_DATA}/idp_username.txt
-echo -n "${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" > ${LOCAL_AUTH_DATA}/idp_password.txt
-curl --data-urlencode login_name@${LOCAL_AUTH_DATA}/idp_username.txt \
-     --data-urlencode login_password@${LOCAL_AUTH_DATA}/idp_password.txt \
-     -b ${LOCAL_AUTH_DATA}/cookies -c ${LOCAL_AUTH_DATA}/cookies \
-     --fail \
-     https://${IPSILON_SERVICE_HOST_SVC}/idp/login/ldap
-rm -f ${LOCAL_AUTH_DATA}/idp_password.txt
-rm -f ${LOCAL_AUTH_DATA}/idp_username.txt
-
-
-
-curl -b /etc/httpd/mellon/cookies \
-    -c /etc/httpd/mellon/cookies \
-    --fail \
-    https://${IPSILON_SERVICE_HOST_SVC}/idp/admin/providers/saml2/admin/sp/${KEYSTONE_API_SERVICE_HOST}/delete
-
-
-
-echo "${OS_DISTRO}: Defining cert management functions"
 ################################################################################
 generate_user_cert () {
+  echo "${OS_DISTRO}: Logging into ipsilon"
+  ##############################################################################
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_USER}" > ${LOCAL_AUTH_DATA}/idp_username.txt
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" > ${LOCAL_AUTH_DATA}/idp_password.txt
+  curl --data-urlencode login_name@${LOCAL_AUTH_DATA}/idp_username.txt \
+       --data-urlencode login_password@${LOCAL_AUTH_DATA}/idp_password.txt \
+       -b ${LOCAL_AUTH_DATA}/cookies -c ${LOCAL_AUTH_DATA}/cookies \
+       --fail \
+       https://${IPSILON_SERVICE_HOST_SVC}/idp/login/ldap
+  rm -f ${LOCAL_AUTH_DATA}/idp_password.txt
+  rm -f ${LOCAL_AUTH_DATA}/idp_username.txt
 
+  echo "${OS_DISTRO}: Deleteing any existing sp"
+  ##############################################################################
+  curl -b ${LOCAL_AUTH_DATA}/cookies \
+      -c ${LOCAL_AUTH_DATA}/cookies \
+      --fail \
+      https://${IPSILON_SERVICE_HOST_SVC}/idp/admin/providers/saml2/admin/sp/keystone/delete > /dev/null || true
 
-
-  mkdir -p /usr/opt/harbor/keystone/manage/saml2
-  curl -L https://raw.githubusercontent.com/UNINETT/mod_auth_mellon/master/mellon_create_metadata.sh > /usr/opt/harbor/keystone/manage/saml2/mellon_create_metadata.sh
-  chmod +x /usr/opt/harbor/keystone/manage/saml2/mellon_create_metadata.sh
-  cd /usr/opt/harbor/keystone/manage/saml2/
-  ./mellon_create_metadata.sh https://${KEYSTONE_API_SERVICE_HOST} \
-    https://${KEYSTONE_API_SERVICE_HOST}/v3/OS-FEDERATION/identity_providers/ipsilon/protocols/saml2/auth/mellon
-
-
-curl -b ~/.cookies \
--c ~/.cookies \
---referer https://ipsilon.harboros.net/idp/rest/providers/saml2/SPS/keystone \
---data-urlencode name="keytone" \
---data-urlencode submit="Submit" \
---data-urlencode metadata@/usr/opt/harbor/keystone/manage/saml2/https_keystone.harboros.net.xml \
---data-urlencode description="keystone" \
---data-urlencode splink="https://keystone.harboros.net" \
---data-urlencode portalvisible=on \
---data-urlencode description="keystone test" \
-https://ipsilon.harboros.net/idp/rest/providers/saml2/SPS/keystone
-
-{u'name': u'ewfwe', \
-u'metafile': <cherrypy._cpreqbody.Part object at 0x7f93358681d0>, \
-u'metaurl': u'', \
-u'submit': u'Submit', \
-u'imagefile': <cherrypy._cpreqbody.Part object at 0x7f933502a750>, \
-u'metatext': u'', \
-u'splink': u'fewfwef', \
-u'portalvisible': u'on', \
-u'description': u'fewfw'}
-
-
-{u'name': u'keystone', u'metafile': <cherrypy._cpreqbody.Part object at 0x7f93368bfd10>, u'metaurl': u'', u'submit': u'Submit', u'imagefile': <cherrypy._cpreqbody.Part object at 0x7f93368bfa50>, \
-u'metatext': ' u'splink': u'https://keystone.harboros.net', u'portalvisible': u'on', u'description': u'keystone test'}
-
-
-
-
-         Input: NAME="name" (TEXT)
-         Input: NAME="description" (TEXT)
-         Input: NAME="portalvisible" (CHECKBOX)
-         Input: NAME="imagefile" (FILE)
-         Input: NAME="splink" (TEXT)
-         Input: NAME="metafile" (FILE)
-         Input: NAME="metaurl" (TEXT)
-         Textarea: NAME="metatext"
-
-
-         datum = {
-                     'id': spid,
-                     'name': name,
-                     'type': 'SP',
-                     'metadata': metabuf,
-                     'description': description,
-                     'visible': visible,
-                     'imagefile': imagefile,
-                     'splink': splink,
-                 }
-
-
-
-mkdir -p  /etc/httpd/mellon
+  echo "${OS_DISTRO}: Creating our SP"
+  ##############################################################################
+  mkdir -p  /etc/httpd/mellon
   cd /etc/httpd/mellon
   ipsilon-client-install --uninstall || true
   echo ${AUTH_FREEIPA_USER_ADMIN_PASSWORD} | ipsilon-client-install --debug \
   --hostname ${KEYSTONE_API_SERVICE_HOST} \
   --admin-user ${AUTH_FREEIPA_USER_ADMIN_USER} \
   --admin-password - \
+  --saml \
   --saml-no-httpd \
   --saml-idp-url https://${IPSILON_SERVICE_HOST_SVC}/idp \
   --saml-auth "/federation" \
@@ -160,65 +97,27 @@ mkdir -p  /etc/httpd/mellon
   --saml-sp-name "keystone" \
   --saml-sp-description "${OS_DOMAIN}: ${KEYSTONE_API_SERVICE_HOST}" \
   --debug
-  mkdir -p /run/harbor/auth/mellon
-  cat /etc/httpd/mellon/certificate.pem > ${KEYSTONE_MELLON_SP_TLS_CERT}
-  cat /etc/httpd/mellon/certificate.key > ${KEYSTONE_MELLON_SP_TLS_KEY}
-  cat /etc/httpd/mellon/metadata.xml > ${KEYSTONE_MELLON_SP_METADATA}
-  curl -L https://${IPSILON_SERVICE_HOST_SVC}/idp/saml2/metadata > ${KEYSTONE_MELLON_IDP_METADATA}
+  curl -L https://${IPSILON_SERVICE_HOST_SVC}/idp/saml2/metadata > /etc/httpd/mellon/idp_metadata.xml
 
-
-  cat > ${LOCAL_AUTH_DIR}/keystone-federation-saml2-secret.yaml <<EOF
-  apiVersion: v1
-  kind: Secret
-  metadata:
-    name: keystone-federation-saml2-secret
-    namespace: os-keystone
-  type: Opaque
-  data:
-    sp-metadata.xml: $( cat ${KEYSTONE_MELLON_SP_METADATA} | base64 --wrap=0 )
-    tls.crt: $( cat ${KEYSTONE_MELLON_SP_TLS_CERT} | base64 --wrap=0 )
-    tls.key: $( cat ${KEYSTONE_MELLON_SP_TLS_CERT} | base64 --wrap=0 )
-    idp-metadata.xml: $( cat ${KEYSTONE_MELLON_IDP_METADATA} | base64 --wrap=0 )
-  EOF
-
-
-
-  rm -rf ${LOCAL_AUTH_DATA}/user
-  mkdir -p ${LOCAL_AUTH_DATA}/user
-
-  openssl genrsa -out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key 2048
-
-  cat > ${LOCAL_AUTH_DATA}/user/${IPA_USER}.conf <<EOF
-[ req ]
-prompt = no
-encrypt_key = no
-
-distinguished_name = dn
-req_extensions = exts
-
-[ dn ]
-commonName = "${IPA_USER}"
-
-[ exts ]
-subjectAltName=email:${USER_EMAIL}
+  echo "${OS_DISTRO}: Creating Kube Secret"
+  ##############################################################################
+  cat > ${LOCAL_AUTH_DATA}/keystone-federation-saml2-secret.yaml <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: keystone-federation-saml2-secret
+  namespace: os-keystone
+type: Opaque
+data:
+  sp-metadata.xml: $( cat /etc/httpd/mellon/metadata.xml | base64 --wrap=0 )
+  tls.crt: $( cat /etc/httpd/mellon/certificate.pem | base64 --wrap=0 )
+  tls.key: $( cat /etc/httpd/mellon/certificate.key | base64 --wrap=0 )
+  idp-metadata.xml: $( cat /etc/httpd/mellon/idp_metadata.xml | base64 --wrap=0 )
 EOF
 
-  openssl req -new \
-    -key ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key \
-    -out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr \
-    -config ${LOCAL_AUTH_DATA}/user/${IPA_USER}.conf
-
-  #openssl req -text -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr
-
-  IPA_USER_CERT_SN=$(ipa cert-request ${LOCAL_AUTH_DATA}/user/${IPA_USER}.csr --principal ${IPA_USER} --profile-id ${IPA_CERT_PROFILE} | grep "^  Serial number:" | awk '{ print $NF }')
-  ipa cert-show ${IPA_USER_CERT_SN} --out ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
-
-  #openssl x509 -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt -noout -text
-
-  cat /etc/ipa/ca.crt > ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt
-  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt
-
-  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+  echo "${OS_DISTRO}: Archiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in keystone-federation-saml2-secret
   do
     ipa vault-show --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || \
     ipa vault-add ${VAULT_NAME} --user ${IPA_VAULT_USER} --type symmetric --password-file ${SERVICE_VAULT_PASSWORD_FILE}
@@ -226,92 +125,58 @@ EOF
     ipa vault-archive --user ${IPA_VAULT_USER} \
     ${VAULT_NAME} \
     --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
-    --in ${LOCAL_AUTH_DATA}/user/${VAULT_NAME}
-  done
+    --in ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
 
-  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
-  do
-    rm -f ${LOCAL_AUTH_DATA}/user/${VAULT_NAME}
+    rm -f ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
   done
 
 }
 
 
+check_sp_exists () {
+  echo "${OS_DISTRO}: Cheking if SP exists"
+  ##############################################################################
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_USER}" > ${LOCAL_AUTH_DATA}/idp_username.txt
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" > ${LOCAL_AUTH_DATA}/idp_password.txt
+  curl --data-urlencode login_name@${LOCAL_AUTH_DATA}/idp_username.txt \
+       --data-urlencode login_password@${LOCAL_AUTH_DATA}/idp_password.txt \
+       -b ${LOCAL_AUTH_DATA}/cookies -c ${LOCAL_AUTH_DATA}/cookies \
+       --fail \
+       https://${IPSILON_SERVICE_HOST_SVC}/idp/login/ldap
+  rm -f ${LOCAL_AUTH_DATA}/idp_password.txt
+  rm -f ${LOCAL_AUTH_DATA}/idp_username.txt
+
+  curl -b ${LOCAL_AUTH_DATA}/cookies \
+      -c ${LOCAL_AUTH_DATA}/cookies \
+      --fail \
+      https://${IPSILON_SERVICE_HOST_SVC}/idp/admin/providers/saml2/admin/sp/keystone > /dev/null
+}
+
 retreive_user_cert () {
-  rm -rf ${LOCAL_AUTH_DATA}/user
-  mkdir -p ${LOCAL_AUTH_DATA}/user
-  for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
+  echo "${OS_DISTRO}: Retreiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in keystone-federation-saml2-secret
   do
     ipa vault-retrieve --user ${IPA_VAULT_USER} ${VAULT_NAME} \
     --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
-    --out ${LOCAL_AUTH_DATA}/user/${VAULT_NAME} || (
-      for VAULT_NAME in ${IPA_USER}-ca.crt ${IPA_USER}.crt ${IPA_USER}.key
-      do
-        ipa vault-del --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || true
-      done
-    )
+    --out ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
   done
-  #openssl x509 -in ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt -noout -text
-  openssl verify -CAfile ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt && \
-  CERT_MOD="$(openssl x509 -noout -modulus -in  ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt)" && \
-  KEY_MOD="$(openssl rsa -noout -modulus -in  ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key)" && \
-  if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then ! echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."; fi
-
 }
 
 
-echo "${OS_DISTRO}: Managing user certs"
-################################################################################
-retreive_user_cert || ( \
-    echo "${OS_DISTRO}: The scary looking output above is normal on the first run of this script" && \
-    generate_user_cert && \
-    retreive_user_cert )
+upload_cert () {
+  echo "${OS_DISTRO}: Uploading Kube Secret"
+  ##############################################################################
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/keystone-federation-saml2-secret.yaml || true
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/keystone-federation-saml2-secret.yaml
+}
 
 
-echo "${OS_DISTRO}: Logging out of FreeIPA"
-################################################################################
-freeipa_logout
-
-
-echo "${OS_DISTRO}: Determining Service namespace"
-################################################################################
-HARBOR_SERVICE_PREFIX=$(echo ${MARINA_SERVICE}  | tr '[:lower:]' '[:upper:]')
-if [ "$MARINA_SERVICE" = "memcached" ]; then
-  HARBOR_SERVICE_PREFIX="MEMCACHE"
-elif [ "$MARINA_SERVICE" = "messaging" ]; then
-  HARBOR_SERVICE_PREFIX="RABBITMQ"
-elif [ "$MARINA_SERVICE" = "api" ]; then
-  HARBOR_SERVICE_PREFIX="HORIZON"
-fi;
-SERVICE_NAMESPACE_VAR="${HARBOR_SERVICE_PREFIX}_SERVICE_NAMESPACE"
-SERVICE_NAMESPACE=${!SERVICE_NAMESPACE_VAR}
-
-
-echo "${OS_DISTRO}: Managing Kube Secret"
-################################################################################
-if [ "$MARINA_SERVICE" = "kubernetes" ]; then
-  cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt > ${KUBE_AUTH_ROOT}/${IPA_USER}.crt
-  cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key > ${KUBE_AUTH_ROOT}/${IPA_USER}.key
-  openssl verify -CAfile ${KUBE_AUTH_ROOT}/ca.crt ${KUBE_AUTH_ROOT}/${IPA_USER}.crt
-else
-  cat > ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml <<EOF
-apiVersion: v1
-kind: Secret
-metadata:
-  name: ${IPA_USER}-user-ssl-secret
-  namespace: ${SERVICE_NAMESPACE}
-type: Opaque
-data:
-  user: $( echo "${IPA_USER}" | base64 --wrap=0 )
-  tls.ca: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}-ca.crt | base64 --wrap=0 )
-  tls.crt: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.crt | base64 --wrap=0 )
-  tls.key: $( cat ${LOCAL_AUTH_DATA}/user/${IPA_USER}.key | base64 --wrap=0 )
-EOF
-  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml || true
-  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/user/${IPA_USER}-user-ssl-secret.yaml
-fi;
+##############################################################################
+(check_sp_exists && retreive_user_cert ) || (generate_user_cert && check_sp_exists && retreive_user_cert )
+upload_cert
 
 
 echo "${OS_DISTRO}: Cleaning up"
 ################################################################################
-rm -rf ${LOCAL_AUTH_DATA}/user
+rm -rf ${LOCAL_AUTH_DATA}

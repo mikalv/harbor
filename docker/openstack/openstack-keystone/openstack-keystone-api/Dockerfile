@@ -33,6 +33,7 @@ RUN set -e && \
         openssl-devel \
         python-devel \
         libffi-devel \
+        openldap-devel \
         redhat-rpm-config && \
     /opt/harbor/build/dockerfile.sh && \
     dnf clean all && \

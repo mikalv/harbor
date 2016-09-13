@@ -5,8 +5,10 @@ ADD ./assets /opt/harbor/assets
 RUN set -e && \
     set -x && \
     sed -i '/\[fedora\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora.repo && \
+    sed -i '/\[updates-testing\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora-updates-testing.repo && \
     dnf install -y \
-        ipsilon-client && \
+        ipsilon-client \
+        expect && \
     dnf clean all  && \
     sed -i "s|/login/form|/login/ldap|g" /usr/bin/ipsilon-client-install && \
     /bin/cp -rf /opt/harbor/assets/* / && \

@@ -70,7 +70,7 @@ OPENSTACK_API_VERSIONS = {
 # Set this to True if running on a multi-domain model. When this is enabled, it
 # will require the user to enter the Domain name in addition to the username
 # for login.
-#OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = False
+OPENSTACK_KEYSTONE_MULTIDOMAIN_SUPPORT = True
 
 # Overrides the default domain used when running on single-domain model
 # with Keystone V3. All entities will be created in the default domain.
@@ -84,7 +84,7 @@ OPENSTACK_API_VERSIONS = {
 # manage Identity Providers (IdPs) and establish a set of rules to map
 # federation protocol attributes to Identity API attributes.
 # This extension requires v3.0+ of the Identity API.
-#OPENSTACK_KEYSTONE_FEDERATION_MANAGEMENT = False
+OPENSTACK_KEYSTONE_FEDERATION_MANAGEMENT = True
 
 # Set Console type:
 # valid options are "AUTO"(default), "VNC", "SPICE", "RDP", "SERIAL" or None
@@ -184,10 +184,10 @@ OPENSTACK_KEYSTONE_URL = "https://%s:5000/v3" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 
 # Enables keystone web single-sign-on if set to True.
-#WEBSSO_ENABLED = False
+WEBSSO_ENABLED = True
 
 # Determines which authentication choice to show as default.
-#WEBSSO_INITIAL_CHOICE = "credentials"
+WEBSSO_INITIAL_CHOICE = "saml2"
 
 # The list of authentication mechanisms which include keystone
 # federation protocols and identity provider/federation protocol
@@ -197,13 +197,10 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 # Do not remove the mandatory credentials mechanism.
 # Note: The last two tuples are sample mapping keys to a identity provider
 # and federation protocol combination (WEBSSO_IDP_MAPPING).
-#WEBSSO_CHOICES = (
-#    ("credentials", _("Keystone Credentials")),
-#    ("oidc", _("OpenID Connect")),
-#    ("saml2", _("Security Assertion Markup Language")),
-#    ("acme_oidc", "ACME - OpenID Connect"),
-#    ("acme_saml2", "ACME - SAML2"),
-#)
+WEBSSO_CHOICES = (
+  ("ipsilon_saml2", _("{{ OS_DOMAIN }}: Port Authority (SAML2)")),
+  ("credentials", _("{{ OS_DOMAIN }}: Keystone Credentials"))
+)
 
 # A dictionary of specific identity provider and federation protocol
 # combinations. From the selected authentication mechanism, the value
@@ -212,10 +209,9 @@ OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 # specific WebSSO endpoint in keystone, otherwise it will use the value
 # as the protocol_id when redirecting to the WebSSO by protocol endpoint.
 # NOTE: The value is expected to be a tuple formatted as: (<idp_id>, <protocol_id>).
-#WEBSSO_IDP_MAPPING = {
-#    "acme_oidc": ("acme", "oidc"),
-#    "acme_saml2": ("acme", "saml2"),
-#}
+WEBSSO_IDP_MAPPING = {
+    "ipsilon_saml2": ("ipsilon", "saml2"),
+}
 
 # Disable SSL certificate checks (useful for self-signed certificates):
 #OPENSTACK_SSL_NO_VERIFY = True
@@ -285,7 +281,7 @@ OPENSTACK_CINDER_FEATURES = {
 # balancer service, security groups, quotas, VPN service.
 OPENSTACK_NEUTRON_NETWORK = {
     'enable_router': True,
-    'enable_quotas': True,
+    'enable_quotas': False,
     'enable_ipv6': True,
     'enable_distributed_router': False,
     'enable_ha_router': False,

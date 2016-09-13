@@ -24,3 +24,8 @@
 : ${KEYSTONE_MELLON_SP_TLS_KEY:="/run/harbor/auth/mellon/tls.key"}
 : ${KEYSTONE_MELLON_SP_TLS_CERT:="/run/harbor/auth/mellon/tls.crt"}
 : ${KEYSTONE_MELLON_IDP_METADATA:="/run/harbor/auth/mellon/idp-metadata.xml"}
+
+
+: ${KEYSTONE_LDAP_BASE_DN:="dc=$(echo ${OS_DOMAIN} | sed 's/\./,dc=/g')"}
+
+: ${AUTH_KEYSTONE_REGION:="RegionOne"}
