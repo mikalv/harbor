@@ -26,17 +26,17 @@ check_required_vars OS_DOMAIN \
 
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
-/usr/bin/mysql-test
+docker -H unix://var/run/docker.sock version
 
 
 echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-/opt/harbor/config-nova.sh
+/opt/harbor/config-nova-compute.sh
 
 
 echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/nova/components/config-conductor.sh
+/opt/harbor/nova/components/config-compute-docker.sh
 
 
 echo "${OS_DISTRO}: Fixing permissions"
@@ -49,4 +49,4 @@ chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 
 echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-exec su -s /bin/sh -c "exec nova-conductor --config-file=${NOVA_CONFIG_FILE} --debug" nova
+exec nova-compute --config-file=${NOVA_CONFIG_FILE} --debug

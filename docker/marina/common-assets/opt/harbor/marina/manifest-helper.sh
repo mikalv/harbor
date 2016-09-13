@@ -18,9 +18,8 @@ LOCAL_ENV=/tmp/$(uuidgen).env
 rm -f ${LOCAL_ENV}
 touch ${LOCAL_ENV}
 
-KUBE_MANIFESTS_DIR=/etc/kubernetes/manifests
 TEMPLATE_DIR=/opt/harbor/kubernetes/templates
-MANIFESTS_WORK_DIR=/tmp/harbor/working
+MANIFESTS_WORK_DIR=/etc/harbor/marina
 
 
 HARBOR_KUBE_OPENSTACK_CONFIG=/run/harbor/kube_openstack/config
@@ -34,7 +33,6 @@ prep_manifest () {
   manifest_group=$1
   manifest=$2
   MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
-  MANIFEST_FILE="$KUBE_MANIFESTS_DIR/$manifest_group-$manifest"
   mkdir -p $MANIFESTS_WORK_DIR/$manifest_group
   cat $TEMPLATE_DIR/$manifest_group/$manifest > $MANIFEST_WORK_FILE
   for LOCAL_ENV in $LOCAL_ENV_LIST; do

@@ -147,6 +147,65 @@ spec:
           secret:
             secretName: keystone-admin-user
 ---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: glance-image-manager
+    version: v0.1.0
+  name: glance-image-manager
+  namespace: os-glance
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: glance-image-manager
+        version: v0.1.0
+      name: glance-image-manager
+      namespace: os-glance
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: glance-image-manager
+          image: {{ IMAGE_GLANCE_IMAGE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: IMAGE_MANAGER_ROLE
+              value: uploader
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: host-docker-socket
+              mountPath: /var/run/docker.sock
+              readOnly: false
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: host-docker-socket
+          hostPath:
+            path: /var/run/docker.sock
+        - name: os-config-kubecfg
+          secret:
+            secretName: glance-kubecfg
+        - name: os-config-keystone
+          secret:
+            secretName: glance-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: glance-user-ssl-secret
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:

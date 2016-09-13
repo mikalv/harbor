@@ -38,4 +38,4 @@ check_required_vars NOVA_CONFIG_FILE \
 
 ################################################################################
 crudini --set ${NOVA_CONFIG_FILE} database connection \
-"mysql+pymysql://${AUTH_NOVA_DB_USER}:${AUTH_NOVA_DB_PASSWORD}@${NOVA_MARIADB_SERVICE_HOST_SVC}:${NOVA_MARIADB_SERVICE_PORT}/${AUTH_NOVA_DB_NAME}?charset=utf8&ssl_ca=${NOVA_DB_CA}&ssl_key=${NOVA_DB_KEY}&ssl_cert=${NOVA_DB_CERT}&ssl_verify_cert"
+"mysql://${AUTH_NOVA_DB_USER}:${AUTH_NOVA_DB_PASSWORD}@${NOVA_MARIADB_SERVICE_HOST_SVC}:${NOVA_MARIADB_SERVICE_PORT}/${AUTH_NOVA_DB_NAME}?charset=utf8&ssl_ca=${NOVA_DB_CA}&ssl_key=${NOVA_DB_KEY}&ssl_cert=${NOVA_DB_CERT}&ssl_verify_cert"

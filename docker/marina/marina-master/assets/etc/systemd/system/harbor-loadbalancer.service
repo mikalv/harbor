@@ -1,0 +1,16 @@
+[Unit]
+Description=Harbor Loadbalancer
+After=harbor-kubernetes.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start loadbalancer
+ExecStart=/usr/bin/harbor-service check loadbalancer
+ExecStop=/usr/bin/harbor-service stop loadbalancer
+RemainAfterExit=true
+
+[Install]
+WantedBy=container-up.target

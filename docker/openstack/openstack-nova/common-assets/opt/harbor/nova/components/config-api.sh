@@ -59,10 +59,11 @@ KEY_MOD="$(openssl rsa -noout -modulus -in ${NOVA_API_TLS_KEY})"
 if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then
   echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."
   exit 1
+else
+  CERT_MOD=""
+  KEY_MOD=""
+  echo "${OS_DISTRO}: TLS certs: OK"
 fi
-CERT_MOD=""
-KEY_MOD=""
-echo "${OS_DISTRO}: TLS certs: OK"
 
 
 echo "${OS_DISTRO}: Configuring TLS params"

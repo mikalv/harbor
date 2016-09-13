@@ -15,39 +15,51 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring domains"
+echo "${OS_DISTRO}: Configuring nova"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/nova/vars.sh
+. /opt/harbor/neutron/vars.sh
 
 
 ################################################################################
 check_required_vars NEUTRON_CONFIG_FILE \
                     OS_DOMAIN \
-                    AUTH_NOVA_KEYSTONE_REGION \
-                    AUTH_NOVA_KEYSTONE_DOMAIN \
-                    AUTH_NOVA_KEYSTONE_USER \
-                    AUTH_NOVA_KEYSTONE_PASSWORD \
-                    AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN \
-                    AUTH_NOVA_KEYSTONE_PROJECT \
+                    AUTH_NEUTRON_KEYSTONE_REGION \
+                    AUTH_NEUTRON_KEYSTONE_DOMAIN \
+                    AUTH_NEUTRON_KEYSTONE_USER \
+                    AUTH_NEUTRON_KEYSTONE_PASSWORD \
+                    AUTH_NEUTRON_KEYSTONE_PROJECT_DOMAIN \
+                    AUTH_NEUTRON_KEYSTONE_PROJECT \
                     NEUTRON_DB_CA \
                     KEYSTONE_API_SERVICE_HOST_SVC \
                     MEMCACHE_SERVICE_HOST_SVC
 
 
+echo "${OS_DISTRO}: Configuring nova endpoint"
+################################################################################
+crudini --set ${NEUTRON_CONFIG_FILE} nova endpoint_type "internal"
+
+
+echo "${OS_DISTRO}: Configuring nova service auth"
 ################################################################################
 crudini --set ${NEUTRON_CONFIG_FILE} nova memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
 crudini --set ${NEUTRON_CONFIG_FILE} nova auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
-crudini --set ${NEUTRON_CONFIG_FILE} nova project_domain_name "${AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN}"
-crudini --set ${NEUTRON_CONFIG_FILE} nova project_name "${AUTH_NOVA_KEYSTONE_PROJECT}"
-crudini --set ${NEUTRON_CONFIG_FILE} nova user_domain_name "${AUTH_NOVA_KEYSTONE_DOMAIN}"
-crudini --set ${NEUTRON_CONFIG_FILE} nova region_name "${AUTH_NOVA_KEYSTONE_REGION}"
-crudini --set ${NEUTRON_CONFIG_FILE} nova password "${AUTH_NOVA_KEYSTONE_PASSWORD}"
-crudini --set ${NEUTRON_CONFIG_FILE} nova username "${AUTH_NOVA_KEYSTONE_USER}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova project_domain_name "${AUTH_NEUTRON_KEYSTONE_PROJECT_DOMAIN}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova project_name "${AUTH_NEUTRON_KEYSTONE_PROJECT}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova user_domain_name "${AUTH_NEUTRON_KEYSTONE_DOMAIN}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova region_name "${AUTH_NEUTRON_KEYSTONE_REGION}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova password "${AUTH_NEUTRON_KEYSTONE_PASSWORD}"
+crudini --set ${NEUTRON_CONFIG_FILE} nova username "${AUTH_NEUTRON_KEYSTONE_USER}"
 crudini --set ${NEUTRON_CONFIG_FILE} nova auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
 crudini --set ${NEUTRON_CONFIG_FILE} nova auth_type "password"
 crudini --set ${NEUTRON_CONFIG_FILE} nova auth_version "v3"
 crudini --set ${NEUTRON_CONFIG_FILE} nova signing_dir "/var/cache/neutron"
 crudini --set ${NEUTRON_CONFIG_FILE} nova cafile "${NEUTRON_DB_CA}"
+
+
+echo "${OS_DISTRO}: Configuring nova notifications"
+################################################################################
+crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT notify_nova_on_port_data_changes "True"
+crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT notify_nova_on_port_status_changes "True"

@@ -49,6 +49,13 @@ KUBE_STATUS="$(cat ${KUBE_STATUS_FILE})"
 if [ -z "$KUBE_STATUS" ]; then
     echo "${OS_DISTRO}: No status found, launching as bootrapper"
     export KUBE_STATUS="BOOTSTRAPPING"
+    echo "${OS_DISTRO}: Kubelet Bootstrap Starting"
+    ################################################################################
+    if [ "$NODE_ROLE" = "master" ]; then
+      echo "${OS_DISTRO}: Running Passwd Gen Script to convert templated values"
+      ##############################################################################
+      /usr/bin/harbor-passwd-gen
+    fi
     echo "$KUBE_STATUS" > ${KUBE_STATUS_FILE}
 elif [ "$KUBE_STATUS" = "BOOTSTRAPPING" ]; then
     echo "${OS_DISTRO}: This node is currently bootstrapping"
@@ -57,15 +64,6 @@ elif [ "$KUBE_STATUS" = "BOOTSTRAPPED" ]; then
     echo "${OS_DISTRO}: This node has been boostrapped, just prepping manifests"
     export KUBE_STATUS="INITALIZING"
 fi;
-
-
-echo "${OS_DISTRO}: Kubelet Bootstrap Starting"
-################################################################################
-if [ "$NODE_ROLE" = "master" ]; then
-  echo "${OS_DISTRO}: Running Passwd Gen Script to convert templated values"
-  ##############################################################################
-  /usr/bin/harbor-passwd-gen
-fi
 
 
 echo "${OS_DISTRO}: Generating Node Config Files"
@@ -93,16 +91,24 @@ check_required_vars NODE_HOSTNAME \
                     NODE_NETWORK_DEFAULT_IP
 
 
+
 echo "${OS_DISTRO}: Dropping shell and launching Kubelet"
 ################################################################################
 exec kubelet  --hostname-override=${NODE_HOSTNAME} \
               --allow-privileged=true \
+              --sync-frequency=30s \
               --api-servers=${KUBERNETES_API_SERVER} \
               --v=1 \
+              --docker-only \
+              --event-burst=100 \
+              --event-qps=20 \
+              --kube-api-qps=50 \
+              --kube-api-burst=100 \
+              --node-status-update-frequency=5s \
               --node-ip=${NODE_NETWORK_DEFAULT_IP} \
               --address=${NODE_NETWORK_DEFAULT_IP} \
               --enable-server \
-              --containerized \
+              --containerized=true \
               --cluster-dns=${NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA} \
               --cluster-domain=${OS_DOMAIN} \
               --network-plugin=cni \

@@ -1,15 +1,19 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%marina-base:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+
+ADD ./common-assets /opt/harbor/common-assets
 
 ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    apk add --no-cache --virtual run-deps \
+        docker \
+        pwgen \
+        util-linux && \
+    /bin/cp -rf /opt/harbor/common-assets/* / && \
+    /bin/rm -rf /opt/harbor/common-assets && \
     /bin/cp -rf /opt/harbor/assets/* / && \
-    /bin/rm -rf /opt/harbor/assets && \
-    container-base-systemd-reset.sh && \
-    rm -f /init-ipa
-
-ENTRYPOINT ["/init"]
+    /bin/rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

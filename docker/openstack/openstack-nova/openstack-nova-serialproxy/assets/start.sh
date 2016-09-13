@@ -31,7 +31,7 @@ echo "${OS_DISTRO}: Testing service dependancies"
 
 echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-/opt/harbor/config-nova.sh
+/opt/harbor/config-nova-controller.sh
 
 
 echo "${OS_DISTRO}: Component specific config starting"

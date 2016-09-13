@@ -9,9 +9,12 @@ subsets:
  - addresses:
       - ip: "10.20.0.10"
    ports:
-      - port: 443
-        protocol: TCP
-        name: https
+    - port: 443
+      protocol: TCP
+      name: https
+    - port: 80
+      protocol: TCP
+      name: http
 ---
 apiVersion: v1
 kind: Service
@@ -27,6 +30,9 @@ spec:
   - port: 443
     protocol: TCP
     name: https
+  - port: 80
+    protocol: TCP
+    name: http
 ---
 apiVersion: extensions/v1beta1
 kind: Ingress
@@ -51,3 +57,47 @@ spec:
         backend:
           serviceName: freeipa
           servicePort: 443
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: freeipa
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "false"
+    ingress.kubernetes.io/rewrite-target: /ipa/crl/MasterCRL.bin
+  name: freeipa-crl
+  namespace: os-freeipa
+spec:
+  rules:
+  - host: ipa-crl.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /ipa/crl/MasterCRL.bin
+        backend:
+          serviceName: freeipa
+          servicePort: 80
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: freeipa
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "false"
+    ingress.kubernetes.io/rewrite-target: /ca/oscp
+  name: freeipa-oscp
+  namespace: os-freeipa
+spec:
+  rules:
+  - host: ipa-ca.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /ca/oscp
+        backend:
+          serviceName: freeipa
+          servicePort: 80

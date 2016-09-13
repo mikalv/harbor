@@ -38,22 +38,35 @@ check_required_vars NEUTRON_LBAAS_CONFIG_FILE \
                     LBAAS_PROVIDER
 
 
+echo "${OS_DISTRO}: Configuring lbaas service auth"
+# https://github.com/openstack/neutron-lbaas/blob/master/neutron_lbaas/common/keystone.py
+################################################################################
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth service_name "lbaas"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth insecure "False"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth auth_version "2"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_password "${AUTH_NEUTRON_KEYSTONE_PASSWORD}"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_user "${AUTH_NEUTRON_KEYSTONE_USER}"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_tenant_name "${AUTH_NEUTRON_KEYSTONE_PROJECT}"
+crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000/v2.0"
+
+
+echo "${OS_DISTRO}: Configuring lbaas provider"
 ################################################################################
 if [ "$LBAAS_PROVIDER" = "octavia" ]; then
   LBAAS_SERVICE_PROVIDER="LOADBALANCERV2:Octavia:neutron_lbaas.drivers.octavia.driver.OctaviaDriver:default"
 else
   LBAAS_SERVICE_PROVIDER="LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default"
 fi;
-crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth auth_version "2"
-crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_password "${AUTH_NEUTRON_KEYSTONE_PASSWORD}"
-crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_user "${AUTH_NEUTRON_KEYSTONE_USER}"
-crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth admin_tenant_name "${AUTH_NEUTRON_KEYSTONE_PROJECT}"
-crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_auth auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000/v2.0"
 crudini --set ${NEUTRON_LBAAS_CONFIG_FILE} service_providers service_provider "${LBAAS_SERVICE_PROVIDER}"
 
 
 ################################################################################
-crudini --set $cfg_lbaas_haproxy DEFAULT interface_driver "openvswitch"
-crudini --set $cfg_lbaas_haproxy DEFAULT ovs_use_veth "False"
-crudini --set $cfg_lbaas_haproxy haproxy loadbalancer_state_path "/var/lib/neutron/state/lbaas"
-crudini --set $cfg_lbaas_haproxy haproxy user_group "haproxy"
+if [ "$LBAAS_PROVIDER" = "octavia" ]; then
+  echo "${OS_DISTRO}: Configuring lbaas provider: octavia"
+else
+  echo "${OS_DISTRO}: Configuring lbaas provide: haproxy agent"
+  crudini --set ${NEUTRON_LBAAS_AGENT_CONFIG_FILE} DEFAULT interface_driver "openvswitch"
+  crudini --set ${NEUTRON_LBAAS_AGENT_CONFIG_FILE} DEFAULT ovs_use_veth "False"
+  crudini --set ${NEUTRON_LBAAS_AGENT_CONFIG_FILE} haproxy loadbalancer_state_path "/var/lib/neutron/state/lbaas"
+  crudini --set ${NEUTRON_LBAAS_AGENT_CONFIG_FILE} haproxy user_group "haproxy"
+fi;

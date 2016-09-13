@@ -1,0 +1,47 @@
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: kubernetes-raven
+    version: v0.1.0
+  name: openstack-raven
+  namespace: os-raven
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: kubernetes-raven
+        version: v0.1.0
+      name: openstack-raven
+      namespace: os-raven
+    spec:
+      hostNetwork: true
+      containers:
+      - name: openstack-raven
+        image: {{ IMAGE_LOADBALANCER_INGRESS }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        volumeMounts:
+          - name: os-config-kubecfg
+            mountPath: /var/run/harbor/secrets/config-kubecfg
+            readOnly: true
+          - name: os-config-keystone
+            mountPath: /var/run/harbor/secrets/config-keystone
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: false
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: raven-kubecfg
+        - name: os-config-raven-keystone
+          secret:
+            secretName: raven-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: raven-user-ssl-secret

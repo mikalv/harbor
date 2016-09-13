@@ -28,9 +28,9 @@ echo "${OS_DISTRO}: Testing service dependancies"
 /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Config Starting"
+echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-/opt/harbor/config-nova.sh
+/opt/harbor/config-nova-controller.sh
 
 
 echo "${OS_DISTRO}: Managing database"

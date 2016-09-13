@@ -9,7 +9,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 4143
     targetPort: 4143
     protocol: TCP
     name: https

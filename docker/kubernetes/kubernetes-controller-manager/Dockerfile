@@ -1,7 +1,8 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="kubernetes" \
-    KUBE_COMPONENT="controller-manager"
+    KUBE_COMPONENT="controller-manager" \
+    HARBOR_KUBE_RELEASE_VERSION="v1.3.5"
 
 RUN set -e && \
     set -x && \

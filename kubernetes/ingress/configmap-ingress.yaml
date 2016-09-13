@@ -1,0 +1,7 @@
+# The dafault body size is increased
+apiVersion: v1
+data:
+  body-size: 10m
+kind: ConfigMap
+metadata:
+  name: nginx-load-balancer-conf

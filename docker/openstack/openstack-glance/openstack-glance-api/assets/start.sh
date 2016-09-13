@@ -38,6 +38,11 @@ echo "${OS_DISTRO}: Component specific config starting"
 /opt/harbor/glance/components/config-api.sh
 
 
+echo "${OS_DISTRO}: Ensuring that glance owns /var/lib/glance/images"
+################################################################################
+chown glance:glance /var/lib/glance/images
+
+
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
 exec su -s /bin/sh -c "exec glance-api --config-file=${GLANCE_CONFIG_FILE} --debug" glance

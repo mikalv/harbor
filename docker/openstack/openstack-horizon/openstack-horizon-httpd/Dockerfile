@@ -34,6 +34,7 @@ ENV OS_COMP="horizon" \
 RUN set -e && \
     set -x && \
     yum install -y \
+        mariadb \
         MySQL-python \
         mod_auth_mellon \
         web-assets-filesystem \
@@ -68,6 +69,7 @@ RUN set -e && \
     HORIZON_CFG_FILE="/opt/stack/horizon/openstack_dashboard/local/local_settings.py" && \
     cp -f ${HORIZON_CFG_FILE}.build ${HORIZON_CFG_FILE} && \
     /opt/stack/horizon/manage.py collectstatic --noinput && \
+    (cd /usr/lib/python2.7/site-packages/magnum_ui && DJANGO_SETTINGS_MODULE=openstack_dashboard.settings /opt/stack/horizon/manage.py compilemessages ) && \
     /opt/stack/horizon/manage.py compress && \
     /opt/stack/horizon/manage.py make_web_conf --wsgi && \
     rm -rf ${HORIZON_CFG_FILE} && \

@@ -1,0 +1,25 @@
+[Unit]
+Description=Harbor Neutron
+After=harbor-kubernetes.service
+After=harbor-loadbalancer.service
+After=harbor-ovn.service
+After=harbor-memcached.service
+After=harbor-messaging.service
+After=harbor-ipsilon.service
+After=harbor-keystone.service
+After=harbor-api.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start neutron
+ExecStart=/usr/bin/harbor-service check neutron
+ExecStop=/usr/bin/harbor-service stop neutron
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target

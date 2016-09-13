@@ -26,7 +26,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 8082
     protocol: TCP
     targetPort: 8082
   selector:

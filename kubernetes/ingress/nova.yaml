@@ -13,23 +13,59 @@ metadata:
 spec:
   tls:
     - hosts:
-        - nova.harboros.net
+        - nova.{{ OS_DOMAIN }}
       secretName: nova-ssl-secret
     - hosts:
-        - nova.os-nova.svc.harboros.net
+        - nova.os-nova.svc.{{ OS_DOMAIN }}
       secretName: nova-ssl-secret
   rules:
-  - host: nova.harboros.net
+  - host: nova.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: nova
           servicePort: 8774
-  - host: nova.os-nova.svc.harboros.net
+  - host: nova.os-nova.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: nova
           servicePort: 8774
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: nova
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: metadata
+  namespace: os-nova
+spec:
+  tls:
+    - hosts:
+        - metadata.{{ OS_DOMAIN }}
+      secretName: nova-ssl-secret
+    - hosts:
+        - metadata.os-nova.svc.{{ OS_DOMAIN }}
+      secretName: nova-ssl-secret
+  rules:
+  - host: metadata.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: metadata
+          servicePort: 8775
+  - host: metadata.os-nova.svc.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: metadata
+          servicePort: 8775

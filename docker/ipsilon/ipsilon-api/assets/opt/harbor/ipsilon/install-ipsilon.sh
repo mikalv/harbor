@@ -27,6 +27,7 @@ echo "${OS_DISTRO}: Installing Ipsilon"
 check_required_vars OS_DOMAIN \
                     IPSILON_DATA_DIR \
                     FREEIPA_SERVICE_HOST \
+                    AUTH_FREEIPA_USER_ADMIN_USER \
                     IPSILON_SERVICE_HOST \
                     IPSILON_HOSTNAME \
                     IPSILON_SERVICE_NAMESPACE \
@@ -100,6 +101,7 @@ echo "${OS_DISTRO}: Running ipsilon-server-install"
 ################################################################################
 ipsilon-server-install \
 --hostname="${IPSILON_SERVICE_HOST}" \
+--admin-user="${AUTH_FREEIPA_USER_ADMIN_USER}" \
 --testauth=no \
 --secure=yes \
 --ldap=yes \
@@ -119,8 +121,8 @@ ipsilon-server-install \
 --transaction-dburi="postgres://${AUTH_IPSILON_TRANS_DB_USER}:${AUTH_IPSILON_TRANS_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_TRANS_DB_NAME}" \
 --samlsessions-dburi="postgres://${AUTH_IPSILON_SAMLSESSION_DB_USER}:${AUTH_IPSILON_SAMLSESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAMLSESSION_DB_NAME}" \
 --saml2-session-dburl="postgres://${AUTH_IPSILON_SAML2SESSION_DB_USER}:${AUTH_IPSILON_SAML2SESSION_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_SAML2SESSION_DB_NAME}" \
---openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}"
-#--openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
+--openid-dburi="postgres://${AUTH_IPSILON_OPENID_DB_USER}:${AUTH_IPSILON_OPENID_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENID_DB_NAME}" \
+--openidc-dburi="postgres://${AUTH_IPSILON_OPENIDC_DB_USER}:${AUTH_IPSILON_OPENIDC_DB_PASSWORD}@${IPSILON_DB_SERVICE_HOST_SVC}/${AUTH_IPSILON_OPENIDC_DB_NAME}"
 
 
 if [ -f ${IPSILON_DATA_DIR}/installed ]; then

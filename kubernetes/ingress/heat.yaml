@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - heat.harboros.net
+        - heat.{{ OS_DOMAIN }}
       secretName: heat-ssl-secret
     - hosts:
-        - heat.os-heat.svc.harboros.net
+        - heat.os-heat.svc.{{ OS_DOMAIN }}
       secretName: heat-ssl-secret
   rules:
-  - host: heat.harboros.net
+  - host: heat.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: heat
           servicePort: 8004
-  - host: heat.os-heat.svc.harboros.net
+  - host: heat.os-heat.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
@@ -49,20 +49,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - heat-cfn.harboros.net
+        - heat-cfn.{{ OS_DOMAIN }}
       secretName: heat-cfn-ssl-secret
     - hosts:
-        - heat-cfn.os-heat.svc.harboros.net
+        - heat-cfn.os-heat.svc.{{ OS_DOMAIN }}
       secretName: heat-cfn-ssl-secret
   rules:
-  - host: heat-cfn.harboros.net
+  - host: heat-cfn.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: heat-cfn
           servicePort: 8000
-  - host: heat-cfn.os-heat.svc.harboros.net
+  - host: heat-cfn.os-heat.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
@@ -85,20 +85,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - heat-cloudwatch.harboros.net
+        - heat-cloudwatch.{{ OS_DOMAIN }}
       secretName: heat-cloudwatch-ssl-secret
     - hosts:
-        - heat-cloudwatch.os-heat.svc.harboros.net
+        - heat-cloudwatch.os-heat.svc.{{ OS_DOMAIN }}
       secretName: heat-cloudwatch-ssl-secret
   rules:
-  - host: heat-cloudwatch.harboros.net
+  - host: heat-cloudwatch.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: heat-cloudwatch
           servicePort: 8003
-  - host: heat-cloudwatch.os-heat.svc.harboros.net
+  - host: heat-cloudwatch.os-heat.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

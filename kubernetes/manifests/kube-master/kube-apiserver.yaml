@@ -21,6 +21,7 @@ spec:
       - --insecure-bind-address=127.0.0.1
       - --insecure-port=8080
       - --etcd-servers=http://{{ KUBE_ETCD_SERVICE_HOST }}:1401
+      - --storage-backend=etcd3
       - --admission-control=NamespaceLifecycle,LimitRanger,ServiceAccount,ResourceQuota
       - --client-ca-file=/srv/kubernetes/ca.crt
       - --basic-auth-file=/srv/kubernetes/basic_auth.csv

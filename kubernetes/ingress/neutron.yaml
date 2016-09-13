@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - neutron.harboros.net
+        - neutron.{{ OS_DOMAIN }}
       secretName: neutron-ssl-secret
     - hosts:
-        - neutron.os-neutron.svc.harboros.net
+        - neutron.os-neutron.svc.{{ OS_DOMAIN }}
       secretName: neutron-ssl-secret
   rules:
-  - host: neutron.harboros.net
+  - host: neutron.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: neutron
           servicePort: 9696
-  - host: neutron.os-neutron.svc.harboros.net
+  - host: neutron.os-neutron.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

@@ -29,3 +29,8 @@ check_required_vars GLANCE_CONFIG_FILE
 
 ################################################################################
 su -s /bin/sh -c "glance-manage --config-file ${GLANCE_CONFIG_FILE} db sync" glance
+
+
+echo "${OS_DISTRO}: Loading metadata defs schema"
+################################################################################
+su -s /bin/sh -c "glance-manage --config-file ${GLANCE_CONFIG_FILE} db_load_metadefs" glance

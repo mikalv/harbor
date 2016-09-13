@@ -34,44 +34,9 @@ check_required_vars NEUTRON_CONFIG_FILE \
                     OS_DOMAIN
 
 
-echo "${OS_DISTRO}: Starting logging config"
+echo "${OS_DISTRO}: Starting neutron config"
 ################################################################################
-/opt/harbor/neutron/config-logging.sh
-
-
-echo "${OS_DISTRO}: Starting database config"
-################################################################################
-/opt/harbor/neutron/config-database.sh
-
-
-echo "${OS_DISTRO}: Starting messaging config"
-################################################################################
-/opt/harbor/neutron/config-messaging.sh
-
-
-echo "${OS_DISTRO}: Starting keystone config"
-################################################################################
-/opt/harbor/neutron/config-keystone.sh
-
-
-echo "${OS_DISTRO}: Starting plugins config"
-################################################################################
-/opt/harbor/neutron/config-plugins.sh
-
-
-echo "${OS_DISTRO}: Starting ml2/ovn config"
-################################################################################
-/opt/harbor/neutron/config-ovn.sh
-
-
-echo "${OS_DISTRO}: Starting nova config (allowed to fail)"
-################################################################################
-/opt/harbor/neutron/config-nova.sh || true
-
-
-echo "${OS_DISTRO}: Starting lbaas config"
-################################################################################
-/opt/harbor/neutron/config-lbaas.sh
+/opt/harbor/config-neutron.sh
 
 
 echo "${OS_DISTRO}: Starting api-server config"

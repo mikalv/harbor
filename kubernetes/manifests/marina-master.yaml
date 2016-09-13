@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    harbor-app: marina-master
+    version: v0.1.0
+  name: marina-master
+  namespace: marina
+spec:
+  hostNetwork: true
+  containers:
+  - name: marina-master
+    image: {{ IMAGE_MARINA_MASTER }}
+    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+    env:
+      - name: OS_DOMAIN
+        value: {{ OS_DOMAIN }}
+    volumeMounts:
+      - mountPath: /etc/harbor
+        name: harbor-config
+      - mountPath: /var/run/docker.sock
+        name: docker-socket
+  volumes:
+    - name: harbor-config
+      hostPath:
+        path: /etc/harbor
+    - name: docker-socket
+      hostPath:
+        path: /var/run/docker.sock

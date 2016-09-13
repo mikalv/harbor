@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - glance.harboros.net
+        - glance.{{ OS_DOMAIN }}
       secretName: glance-ssl-secret
     - hosts:
-        - glance.os-glance.svc.harboros.net
+        - glance.os-glance.svc.{{ OS_DOMAIN }}
       secretName: glance-ssl-secret
   rules:
-  - host: glance.harboros.net
+  - host: glance.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: glance
           servicePort: 9292
-  - host: glance.os-glance.svc.harboros.net
+  - host: glance.os-glance.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
@@ -49,20 +49,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - glance-registry.harboros.net
+        - glance-registry.{{ OS_DOMAIN }}
       secretName: glance-registry-ssl-secret
     - hosts:
-        - glance-registry.os-glance.svc.harboros.net
+        - glance-registry.os-glance.svc.{{ OS_DOMAIN }}
       secretName: glance-registry-ssl-secret
   rules:
-  - host: glance-registry.harboros.net
+  - host: glance-registry.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: glance-registry
           servicePort: 9191
-  - host: glance-registry.os-glance.svc.harboros.net
+  - host: glance-registry.os-glance.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

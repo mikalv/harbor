@@ -20,7 +20,7 @@
 
 : ${KEYSTONE_MELLON_ACTIVE:="False"}
 
-: ${KEYSTONE_MELLON_SP_METADATA:="/run/harbor/auth/mellon/sp-metadata"}
+: ${KEYSTONE_MELLON_SP_METADATA:="/run/harbor/auth/mellon/sp-metadata.xml"}
 : ${KEYSTONE_MELLON_SP_TLS_KEY:="/run/harbor/auth/mellon/tls.key"}
 : ${KEYSTONE_MELLON_SP_TLS_CERT:="/run/harbor/auth/mellon/tls.crt"}
-: ${KEYSTONE_MELLON_IDP_METADATA:="/run/harbor/auth/mellon/idp-metadata"}
+: ${KEYSTONE_MELLON_IDP_METADATA:="/run/harbor/auth/mellon/idp-metadata.xml"}

@@ -3,11 +3,11 @@ FROM fedora:latest
 ENV HARBOR_COMPONENT="ipsilon" \
     OS_COMP="ipsilon" \
     OS_REPO_URL="https://github.com/portdirect/ipsilon.git" \
-    OS_REPO_BRANCH="release-1.2"
+    OS_REPO_BRANCH="master"
 
 RUN set -e && \
     set -x && \
-    curl -L https://copr.fedorainfracloud.org/coprs/puiterwijk/Ipsilon-master-dependencies/repo/fedora-rawhide/puiterwijk-Ipsilon-master-dependencies-fedora-rawhide.repo > /etc/yum.repos.d/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo && \
+    curl -L https://copr.fedorainfracloud.org/coprs/puiterwijk/Ipsilon-master-dependencies/repo/fedora-24/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo > /etc/yum.repos.d/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo && \
     dnf install -y \
         @development-tools \
         fedora-packager \
@@ -82,6 +82,11 @@ USER build
 WORKDIR /home/build
 
 
+ENV HARBOR_COMPONENT="ipsilon" \
+    OS_COMP="ipsilon" \
+    OS_REPO_URL="https://pagure.io/ipsilon.git" \
+    OS_REPO_BRANCH="master"
+    
 RUN set -e && \
     set -x && \
     git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}

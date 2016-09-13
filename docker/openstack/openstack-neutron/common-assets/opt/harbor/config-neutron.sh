@@ -37,6 +37,16 @@ echo "${OS_DISTRO}: Starting logging config"
 /opt/harbor/neutron/config-logging.sh
 
 
+echo "${OS_DISTRO}: Starting paths config"
+################################################################################
+/opt/harbor/neutron/config-paths.sh
+
+
+echo "${OS_DISTRO}: Starting paths config"
+################################################################################
+/opt/harbor/neutron/config-rootwrap.sh
+
+
 echo "${OS_DISTRO}: Starting database config"
 ################################################################################
 /opt/harbor/neutron/config-database.sh
@@ -62,9 +72,14 @@ echo "${OS_DISTRO}: Starting ml2/ovn config"
 /opt/harbor/neutron/config-ovn.sh
 
 
-echo "${OS_DISTRO}: Starting nova config (allowed to fail)"
+echo "${OS_DISTRO}: Starting nova config"
 ################################################################################
-/opt/harbor/neutron/config-nova.sh || true
+/opt/harbor/neutron/config-nova.sh
+
+
+echo "${OS_DISTRO}: Starting quota config"
+################################################################################
+/opt/harbor/neutron/config-quota.sh
 
 
 echo "${OS_DISTRO}: Starting lbaas config"

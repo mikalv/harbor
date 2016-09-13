@@ -37,9 +37,9 @@ check_required_vars NEUTRON_CONFIG_FILE \
                     MEMCACHE_SERVICE_HOST_SVC
 
 
+echo "${OS_DISTRO}: Configuring keystone authtoken"
 ################################################################################
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
-crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken memcached_servers "memcached.os-memcached.svc.${OS_DOMAIN}:11211"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken project_domain_name "${AUTH_NEUTRON_KEYSTONE_PROJECT_DOMAIN}"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken project_name "${AUTH_NEUTRON_KEYSTONE_PROJECT}"
@@ -52,3 +52,8 @@ crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken auth_type "password"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken auth_version "v3"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/neutron"
 crudini --set ${NEUTRON_CONFIG_FILE} keystone_authtoken cafile "${NEUTRON_DB_CA}"
+
+
+echo "${OS_DISTRO}: Configuring policy"
+################################################################################
+crudini --set ${NEUTRON_CONFIG_FILE} oslo_policy policy_file "/etc/neutron/policy.json"

@@ -1,0 +1,21 @@
+[Unit]
+Description=Harbor Messaging
+After=harbor-kubernetes.service
+After=harbor-loadbalancer.service
+After=harbor-ovn.service
+After=harbor-memcached.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start messaging
+ExecStart=/usr/bin/harbor-service check messaging
+ExecStop=/usr/bin/harbor-service stop messaging
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target

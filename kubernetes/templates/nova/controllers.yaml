@@ -482,6 +482,86 @@ apiVersion: v1
 kind: ReplicationController
 metadata:
   labels:
+    openstack-app: nova-api-metadata
+    version: v0.1.0
+  name: nova-api-metadata-master
+  namespace: os-nova
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: nova-api-metadata
+        version: v0.1.0
+      name: nova-api-metadata-master
+      namespace: os-nova
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: nova-api-metadata
+          image: {{ IMAGE_NOVA_API_METADATA }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8775
+              hostPort: 8775
+              protocol: TCP
+              name: n-meta
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-api-db
+              mountPath: /var/run/harbor/secrets/config-api-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-neutron-shared-secret
+              mountPath: /var/run/harbor/secrets/config-neutron-shared-secret
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: nova-db
+        - name: os-config-api-db
+          secret:
+            secretName: nova-api-db
+        - name: os-config-keystone
+          secret:
+            secretName: nova-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: metadata-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: nova-user-ssl-secret
+        - name: os-config-neutron-shared-secret
+          secret:
+            secretName: neutron-shared-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
     openstack-app: nova-serialproxy
     version: v0.1.0
   name: nova-serialproxy-master
@@ -524,6 +604,9 @@ spec:
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
@@ -536,6 +619,100 @@ spec:
         - name: os-config-api-db
           secret:
             secretName: nova-api-db
+        - name: os-config-keystone
+          secret:
+            secretName: nova-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: serial-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: nova-user-ssl-secret
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: nova-compute-node
+    version: v0.1.0
+  name: nova-compute-node-docker
+  namespace: os-nova
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: nova-compute-node
+        version: v0.1.0
+      name: nova-compute-node-docker
+      namespace: os-nova
+    spec:
+      hostNetwork: true
+      hostPID: true
+      containers:
+      - name: nova-compute-node-docker
+        image: {{ IMAGE_NOVA_COMPUTE_DOCKER }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        volumeMounts:
+          - name: host-var-run-openvswitch
+            mountPath: /var/run/openvswitch
+            readOnly: false
+          - name: host-var-run-netns
+            mountPath: /var/run/netns
+            readOnly: false
+          - name: host-dev
+            mountPath: /dev
+            readOnly: false
+          - name: host-var-run
+            mountPath: /var/run
+            readOnly: false
+          - name: host-lib-modules
+            mountPath: /lib/modules
+            readOnly: true
+          - name: host-sys
+            mountPath: /sys
+            readOnly: false
+          - name: host-docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: false
+          - name: os-config-keystone
+            mountPath: /var/run/harbor/secrets/config-keystone
+            readOnly: true
+          - name: os-config-messaging-auth
+            mountPath: /var/run/harbor/secrets/config-messaging-auth
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: true
+      volumes:
+        - name: host-var-run-openvswitch
+          hostPath:
+            path: /var/run/openvswitch
+        - name: host-var-run-netns
+          hostPath:
+            path: /var/run/netns
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: host-var-run
+          hostPath:
+            path: /var/run
+        - name: host-lib-modules
+          hostPath:
+            path: /lib/modules
+        - name: host-sys
+          hostPath:
+            path: /sys
+        - name: host-docker-socket
+          hostPath:
+            path: /var/run/docker.sock
         - name: os-config-keystone
           secret:
             secretName: nova-keystone

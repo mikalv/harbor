@@ -40,14 +40,21 @@ echo "${OS_DISTRO}: Sutting up source files ${OS_COMP}"
 mkdir -p /opt/stack/${OS_COMP}/openstack_dashboard/themes/harbor/static
 ln -s /opt/patternfly-sass/assets /opt/stack/${OS_COMP}/openstack_dashboard/themes/harbor/static/
 
-cp -f /opt/stack/${OS_COMP_1}/neutron_lbaas_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py \
-  /opt/stack/horizon/openstack_dashboard/enabled/
+ENABLED_DIR=/opt/stack/horizon/openstack_dashboard/enabled
+cp -f /opt/stack/${OS_COMP_1}/neutron_lbaas_dashboard/enabled/_1481_project_ng_loadbalancersv2_panel.py ${ENABLED_DIR}/
 
-cp /opt/stack/${OS_COMP_2}/muranodashboard/local/enabled/_50_murano.py \
-  /opt/stack/${OS_COMP}/openstack_dashboard/enabled/
+cp /opt/stack/${OS_COMP_2}/muranodashboard/local/enabled/_50_murano.py ${ENABLED_DIR}/
 
-cp -a /opt/stack/${OS_COMP_3}/app_catalog/enabled/* \
-  /opt/stack/${OS_COMP}/openstack_dashboard/enabled/
+cp -a /opt/stack/${OS_COMP_3}/app_catalog/enabled/* ${ENABLED_DIR}/
+
+rm -f /opt/stack/${OS_COMP_6}/magnum_ui/enabled/__init__.py
+cp -a /opt/stack/${OS_COMP_6}/magnum_ui/enabled/*.py ${ENABLED_DIR}/
+
+rm -f /opt/stack/${OS_COMP_7}/designatedashboard/enabled/__init__.py
+cp -a /opt/stack/${OS_COMP_7}/designatedashboard/enabled/*.py ${ENABLED_DIR}/
+
+rm -f /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/__init__.py
+cp -a /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/*.py ${ENABLED_DIR}/
 
 
 echo "${OS_DISTRO}: Installing ${OS_COMP}"

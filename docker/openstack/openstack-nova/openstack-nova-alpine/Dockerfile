@@ -22,7 +22,8 @@ RUN set -e && \
         libxslt \
         libcurl \
         openssl \
-        iproute2 && \
+        iproute2 \
+        py-mysqldb && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

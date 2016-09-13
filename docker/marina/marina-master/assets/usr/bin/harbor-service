@@ -1,0 +1,191 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+MANAGE_ACTION=$1
+MANAGED_SERVICE=$2
+echo "${OS_DISTRO}: ${MANAGED_SERVICE} service: ${MANAGE_ACTION}"
+################################################################################
+# Update config file git repo
+/usr/bin/harbor-vcs harbor-service:${MANAGED_SERVICE}:${MANAGE_ACTION}
+export OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
+source /etc/os-container.env
+source /opt/harbor/marina/load-config-helper.sh
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+export MANAGE_ACTION
+export MANAGED_SERVICE
+
+check_required_vars MANAGE_ACTION \
+                    MANAGED_SERVICE \
+                    OS_DOMAIN \
+                    MY_DEVICE \
+                    MY_IP
+
+echo "${OS_DISTRO}: Loading FreIPA, node and network config"
+################################################################################
+load_node_config
+load_network_config
+load_auth_config freeipa
+export NODE_NETWORK_DEFAULT_DEVICE=$MY_DEVICE
+export NODE_NETWORK_DEFAULT_IP=$MY_IP
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST NODE_NETWORK_DEFAULT_DEVICE NODE_NETWORK_DEFAULT_IP"
+export KUBE_ENDPOINT="http://127.0.0.1:8080"
+export LOCAL_ENV_LIST="$LOCAL_ENV_LIST KUBE_ENDPOINT OS_DOMAIN"
+
+
+echo "${OS_DISTRO}: Loading the manifest helper"
+################################################################################
+source /opt/harbor/marina/manifest-helper.sh
+
+
+echo "${OS_DISTRO}: Loading cert manager functions"
+################################################################################
+cert_service_manager_container_start () {
+  CERT_MARINA_SERVICE=$1
+
+  CONTAINER_NAME="manager-${CERT_MARINA_SERVICE}"
+
+  CONTAINER_CONFIG_DIR="/var/run/harbor/containers/${CONTAINER_NAME}"
+
+
+  load_image_config marina
+
+  check_required_vars AUTH_FREEIPA_HOST_ADMIN_USER \
+                      AUTH_FREEIPA_HOST_ADMIN_PASSWORD \
+                      HARBOR_HOSTS_FILE \
+                      HARBOR_RESOLV_FILE \
+                      IMAGE_MARINA_SERVICES \
+                      CONTAINER_NAME \
+                      CERT_MARINA_SERVICE \
+                      OS_DOMAIN \
+                      NETWORK_FREEIPA_FREEIPA_MASTER_IP
+
+  rm -rf ${CONTAINER_CONFIG_DIR}
+  mkdir -p ${CONTAINER_CONFIG_DIR}/secrets
+
+  touch ${HARBOR_HOSTS_FILE}
+  touch ${HARBOR_RESOLV_FILE}
+
+  echo "AUTH_FREEIPA_HOST_ADMIN_USER=${AUTH_FREEIPA_HOST_ADMIN_USER}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_USER | tr '[:upper:]' '[:lower:]' )
+  echo "AUTH_FREEIPA_HOST_ADMIN_PASSWORD=${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" > $CONTAINER_CONFIG_DIR/secrets/$(echo AUTH_FREEIPA_HOST_ADMIN_PASSWORD | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_HOSTS_FILE=${HARBOR_HOSTS_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_HOSTS_FILE | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_RESOLV_FILE=${HARBOR_RESOLV_FILE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_RESOLV_FILE | tr '[:upper:]' '[:lower:]' )
+  echo "MARINA_SERVICE=${CERT_MARINA_SERVICE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo MARINA_SERVICE | tr '[:upper:]' '[:lower:]' )
+  echo "HARBOR_SERVICE_DEFAULT_IP=${NODE_NETWORK_DEFAULT_IP}" > $CONTAINER_CONFIG_DIR/secrets/$(echo HARBOR_SERVICE_DEFAULT_IP | tr '[:upper:]' '[:lower:]' )
+  echo "NODE_NETWORK_DEFAULT_DEVICE=${NODE_NETWORK_DEFAULT_DEVICE}" > $CONTAINER_CONFIG_DIR/secrets/$(echo NODE_NETWORK_DEFAULT_DEVICE | tr '[:upper:]' '[:lower:]' )
+
+  if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+    echo "$OS_DISTRO: Pulling Managament Image: ${IMAGE_MARINA_SERVICES}"
+    docker pull ${IMAGE_MARINA_SERVICES} || true
+  fi
+
+  echo "$OS_DISTRO: Removing any existing container called: ${CONTAINER_NAME}.${OS_DOMAIN}"
+  docker rm -v -f ${CONTAINER_NAME}.${OS_DOMAIN} || true
+
+  echo "$OS_DISTRO: Creating Managment Container"
+  if [ "$CERT_MARINA_SERVICE" == "kubernetes" ]; then
+    FREEIPA_CLIENT_CONTAINER=$(docker create \
+        --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+        --net=freeipa \
+        -t \
+        -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+        -v="/tmp/${CONTAINER_NAME}/tmp:/tmp:rw" \
+        -v="/tmp/${CONTAINER_NAME}/run:/run:rw" \
+        -v="/tmp/${CONTAINER_NAME}/run/lock:/run/lock:rw" \
+        -v="/tmp/${CONTAINER_NAME}/var/run/harbor/secrets:/var/run/harbor/secrets:rw" \
+        -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
+        -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
+        -v="/etc/harbor:/etc/harbor:rw" \
+        -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
+        -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
+        --security-opt="seccomp=unconfined" \
+        ${IMAGE_MARINA_SERVICES})
+  else
+    FREEIPA_CLIENT_CONTAINER=$(docker create \
+        --name="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --hostname="${CONTAINER_NAME}.${OS_DOMAIN}" \
+        --dns="${NETWORK_FREEIPA_FREEIPA_MASTER_IP}" \
+        --net=freeipa \
+        -t \
+        -v="/sys/fs/cgroup:/sys/fs/cgroup:ro" \
+        -v="/tmp/${CONTAINER_NAME}/tmp:/tmp:rw" \
+        -v="/tmp/${CONTAINER_NAME}/run:/run:rw" \
+        -v="/tmp/${CONTAINER_NAME}/run/lock:/run/lock:rw" \
+        -v="/tmp/${CONTAINER_NAME}/var/run/harbor/secrets:/var/run/harbor/secrets:rw" \
+        -v="${HARBOR_HOSTS_FILE}:${HARBOR_HOSTS_FILE}:ro" \
+        -v="${HARBOR_RESOLV_FILE}:${HARBOR_RESOLV_FILE}:ro" \
+        -v="/etc/harbor:/etc/harbor:rw" \
+        -v="/etc/harbor/marina:/etc/harbor/marina:rw" \
+        -v="/var/lib/harbor/kube:/var/lib/harbor/kube:rw" \
+        --security-opt="seccomp=unconfined" \
+        ${IMAGE_MARINA_SERVICES})
+  fi
+  export FREEIPA_CLIENT_CONTAINER
+
+  echo "$OS_DISTRO: Loading Config into Managment Container"
+  for ENV_VAR in ${CONTAINER_CONFIG_DIR}/secrets/*; do
+    docker cp $ENV_VAR ${FREEIPA_CLIENT_CONTAINER}:/var/run/harbor/secrets/$(basename $ENV_VAR)
+    rm -f $ENV_VAR
+    #echo "moved $ENV_VAR -> $(basename $ENV_VAR)"
+  done
+
+  echo "$OS_DISTRO: Starting Managment Container"
+  docker start ${FREEIPA_CLIENT_CONTAINER}
+}
+
+cert_service_manager_container_logs () {
+  check_required_vars FREEIPA_CLIENT_CONTAINER
+  docker logs -f ${FREEIPA_CLIENT_CONTAINER}
+}
+
+cert_service_manager_container_clean () {
+  check_required_vars FREEIPA_CLIENT_CONTAINER
+  docker rm -f -v ${FREEIPA_CLIENT_CONTAINER}
+}
+
+cert_service_manager () {
+  CERT_MARINA_SERVICE=$1
+
+  echo "$OS_DISTRO: Starting Service management container"
+  cert_service_manager_container_start ${CERT_MARINA_SERVICE}
+
+  echo "$OS_DISTRO: Monitoring Service management container"
+  check_required_vars FREEIPA_CLIENT_CONTAINER
+  cert_service_manager_container_logs
+
+  echo "$OS_DISTRO: Cleaning Up Service management container"
+  cert_service_manager_container_clean
+}
+
+
+if [ "$MANAGE_ACTION" = "start" ]; then
+  echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
+  cert_service_manager $MANAGED_SERVICE
+  # if [ "$MANAGED_SERVICE" = "kubernetes" ]; then
+  #   echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
+  #   docker rm -v -f $(docker ps | awk '{ if ($NF ~ "^k8s_kube-") print $1}') || true
+  # else
+  #   echo "$OS_DISTRO: No post management hooks"
+  # fi;
+elif [ "$MANAGE_ACTION" = "stop" ]; then
+  echo "$OS_DISTRO: No management hooks"
+fi;
+
+# Update config file git repo
+/usr/bin/harbor-vcs harbor-service:${MANAGED_SERVICE}:${MANAGE_ACTION}

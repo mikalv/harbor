@@ -4,26 +4,78 @@ metadata:
   labels:
     harbor-app: marina-master
     version: v0.1.0
-  name: marina-master
+  name:  marina-master
   namespace: marina
 spec:
   hostNetwork: true
   containers:
-  - name: marina-master
-    image: {{ IMAGE_MARINA_MASTER }}
-    imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+  - name:  marina-master
+    image: docker.io/port/marina-master:latest
+    imagePullPolicy: Always
+    tty: true
     env:
       - name: OS_DOMAIN
-        value: {{ OS_DOMAIN }}
+        value: harboros.net
+    ports:
+      - containerPort: 9090
+        hostPort: 9090
+        name: https
     volumeMounts:
-      - mountPath: /etc/harbor
-        name: harbor-config
-      - mountPath: /var/run/docker.sock
-        name: docker-socket
+      - name: host-sys-fs-cgroup
+        mountPath: /sys/fs/cgroup
+        readOnly: true
+      - name: pod-run
+        mountPath: /run
+        readOnly: false
+      - name: pod-run-lock
+        mountPath: /run/lock
+        readOnly: false
+      - name: pod-tmp
+        mountPath: /tmp
+        readOnly: false
+      - name: host-docker-socket
+        mountPath: /var/run/docker.sock
+        readOnly: false
+      - name: cockpit-home
+        mountPath: /home
+        readOnly: false
+      - name: cockpit-data
+        mountPath: /var/lib/harbor/marina/data
+        readOnly: false
+      - name: host-etc-harbor
+        mountPath: /etc/harbor
+        readOnly: false
+      - name: host-etc-os-release
+        mountPath: /etc/os-release
+        readOnly: true
+      - name: host-etc-shadow
+        mountPath: /etc/host-shadow
+        readOnly: true
   volumes:
-    - name: harbor-config
+    - name: host-sys-fs-cgroup
       hostPath:
-        path: /etc/harbor
-    - name: docker-socket
+        path: /sys/fs/cgroup
+    - name: pod-run
+      emptyDir: {}
+    - name: pod-run-lock
+      emptyDir: {}
+    - name: pod-tmp
+      emptyDir: {}
+    - name: host-docker-socket
       hostPath:
         path: /var/run/docker.sock
+    - name: cockpit-home
+      hostPath:
+        path: /var/lib/harbor/marina/home
+    - name: cockpit-data
+      hostPath:
+        path: /var/lib/harbor/marina/data
+    - name: host-etc-harbor
+      hostPath:
+        path: /etc/harbor
+    - name: host-etc-os-release
+      hostPath:
+        path: /etc/os-release
+    - name: host-etc-shadow
+      hostPath:
+        path: /etc/shadow

@@ -33,6 +33,10 @@ echo "${OS_DISTRO}: Launching user certificate management"
 if [ "$MARINA_SERVICE" == "kubernetes" ]; then
   echo "${OS_DISTRO}: Not launching kube service management (we are kube!)"
   ##############################################################################
+elif [ "$MARINA_SERVICE" == "keystone" ]; then
+  echo "${OS_DISTRO}: Launching federation management"
+  ##############################################################################
+  tail -f /dev/null
 else
   echo "${OS_DISTRO}: Launching kube management"
   ##############################################################################

@@ -1,5 +1,8 @@
 #!/bin/bash
 : ${GLANCE_CONFIG_FILE:="/etc/glance/glance.conf"}
+: ${GLANCE_METADATA_DEFS_ROOT:="/etc/glance/metadefs"}
+
+
 
 : ${GLANCE_MARIADB_SERVICE_PORT:="3310"}
 : ${GLANCE_MARIADB_SERVICE_HOST_SVC:="${GLANCE_API_SERVICE_HOSTNAME}-db.${GLANCE_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}

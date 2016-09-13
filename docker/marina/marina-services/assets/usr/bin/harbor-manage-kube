@@ -145,7 +145,6 @@ load_manifest () {
   manifest_group=$1
   manifest=$2.yaml
   MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
-  cat $MANIFEST_WORK_FILE
   kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f $MANIFEST_WORK_FILE
 }
 
@@ -157,7 +156,6 @@ delete_manifest () {
   manifest_group=$1
   manifest=$2.yaml
   MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
-  cat $MANIFEST_WORK_FILE
   kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f $MANIFEST_WORK_FILE
 }
 

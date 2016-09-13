@@ -1,0 +1,22 @@
+[Unit]
+Description=Harbor Ipslon
+After=harbor-kubernetes.service
+After=harbor-loadbalancer.service
+After=harbor-ovn.service
+After=harbor-memcached.service
+After=harbor-messaging.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start ipsilon
+ExecStart=/usr/bin/harbor-service check ipsilon
+ExecStop=/usr/bin/harbor-service stop ipsilon
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target

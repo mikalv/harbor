@@ -4,6 +4,11 @@ ADD ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    sed -i '/\[fedora\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora.repo && \
+    dnf install -y \
+        ipsilon-client && \
+    dnf clean all  && \
+    sed -i "s|/login/form|/login/ldap|g" /usr/bin/ipsilon-client-install && \
     /bin/cp -rf /opt/harbor/assets/* / && \
     /bin/rm -rf /opt/harbor/assets && \
     container-base-systemd-reset.sh

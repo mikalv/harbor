@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - cinder.harboros.net
+        - cinder.{{ OS_DOMAIN }}
       secretName: cinder-ssl-secret
     - hosts:
-        - cinder.os-cinder.svc.harboros.net
+        - cinder.os-cinder.svc.{{ OS_DOMAIN }}
       secretName: cinder-ssl-secret
   rules:
-  - host: cinder.harboros.net
+  - host: cinder.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: cinder
           servicePort: 8776
-  - host: cinder.os-cinder.svc.harboros.net
+  - host: cinder.os-cinder.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

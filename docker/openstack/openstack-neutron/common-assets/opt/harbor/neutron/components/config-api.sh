@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring api database connection"
+echo "${OS_DISTRO}: Configuring Neutron API"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh

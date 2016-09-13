@@ -36,11 +36,11 @@ if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
 fi
 
 docker rm -v -f ${CONTAINER_NAME} || true
-docker rm -v -f $(docker ps -a | awk '{ if ($NF ~ "^k8s_") print $1 }') || true
-rm -fr /etc/kubernetes/manifests || true
+#docker rm -v -f $(docker ps -a | awk '{ if ($NF ~ "^k8s_") print $1 }') || true
+#rm -fr /etc/kubernetes/manifests || true
 
-umount /var/lib/kublet || true
-rm -rf /var/lib/kublet
+#umount /var/lib/kublet || true
+#rm -rf /var/lib/kublet
 mkdir -p /var/lib/kublet
 mount --bind /var/lib/kublet /var/lib/kublet
 mount --make-shared /var/lib/kublet
@@ -49,11 +49,13 @@ exec docker run \
       --name ${CONTAINER_NAME} \
       -d \
       --restart=always \
+      --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro \
       --volume=/:/rootfs:ro \
       --volume=/dev/net:/dev/net:rw \
       --volume=/var/run/netns:/var/run/netns:rw \
       --volume=/var/run/openvswitch:/var/run/openvswitch:rw \
       --volume=/sys:/sys:ro \
+      --volume=/etc/machine-id:/etc/machine-id:ro \
       --volume=/var/lib/docker/:/var/lib/docker:rw \
       --volume=/var/lib/kubelet/:/var/lib/kubelet:rshared \
       --volume=/var/run:/var/run:rw \
@@ -65,5 +67,4 @@ exec docker run \
       --privileged=true \
       --pid=host \
       --ipc=host \
-      --uts=host \
       ${IMAGE}

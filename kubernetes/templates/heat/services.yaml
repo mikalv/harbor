@@ -26,7 +26,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 8004
     protocol: TCP
     targetPort: 8004
   selector:
@@ -43,7 +43,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 8000
     protocol: TCP
     targetPort: 8000
   selector:
@@ -60,7 +60,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 8003
     protocol: TCP
     targetPort: 8003
   selector:

@@ -13,6 +13,11 @@
 : ${NOVA_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
 : ${NOVA_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
 
+: ${NOVA_METADATA_SVC_PORT:="8775"}
+: ${NOVA_METADATA_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
+: ${NOVA_METADATA_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
+: ${NOVA_METADATA_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
+
 : ${AUTH_NOVA_KEYSTONE_PROJECT:="service"}
 : ${AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN:="default"}
 : ${AUTH_NOVA_KEYSTONE_PROJECT_USER_ROLE:="admin"}
@@ -23,3 +28,6 @@
 : ${AUTH_NEUTRON_KEYSTONE_PROJECT_DOMAIN:="default"}
 : ${AUTH_NEUTRON_KEYSTONE_DOMAIN:="default"}
 : ${AUTH_NEUTRON_KEYSTONE_REGION:="RegionOne"}
+
+: ${NEUTRON_API_SVC_PORT:="9696"}
+: ${GLANCE_API_SVC_PORT:="9292"}

@@ -26,10 +26,10 @@ RUN set -e && \
     pip --no-cache-dir install pbr && \
     pip --no-cache-dir install python-${OS_COMP} && \
     apk del build-deps && \
-    mkdir -p /var/log/${OS_COMP} && \
-    addgroup ${OS_COMP} -g 1000 && \
-    adduser -u 1000 -D -s /bin/false -G ${OS_COMP} ${OS_COMP} && \
-    chown -R ${OS_COMP}:${OS_COMP} /var/log/${OS_COMP} && \
+    mkdir -p /var/log/${OS_CLIENT} && \
+    addgroup ${OS_CLIENT} -g 1000 && \
+    adduser -u 1000 -D -s /bin/false -G ${OS_CLIENT} ${OS_CLIENT} && \
+    chown -R ${OS_CLIENT}:${OS_CLIENT} /var/log/${OS_CLIENT} && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

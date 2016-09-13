@@ -1,0 +1,17 @@
+[Unit]
+Description=Harbor Kubernetes
+Requires=harbor-auth.service
+After=harbor-auth.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service check kubernetes
+ExecStartPre=/usr/bin/harbor-service start kubernetes
+ExecStart=/usr/bin/harbor-service check kubernetes
+RemainAfterExit=true
+
+[Install]
+WantedBy=container-up.target

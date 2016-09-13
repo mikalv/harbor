@@ -29,4 +29,4 @@ check_required_vars NOVA_CONFIG_FILE \
 
 
 ################################################################################
-crudini --set ${NOVA_CONFIG_FILE} DEFAULT lock_path "/var/lib/nova/lock"
+crudini --set ${NOVA_CONFIG_FILE} oslo_concurrency lock_path "/var/lib/nova/lock"

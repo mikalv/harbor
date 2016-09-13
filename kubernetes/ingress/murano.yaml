@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - murano.harboros.net
+        - murano.{{ OS_DOMAIN }}
       secretName: murano-ssl-secret
     - hosts:
-        - murano.os-murano.svc.harboros.net
+        - murano.os-murano.svc.{{ OS_DOMAIN }}
       secretName: murano-ssl-secret
   rules:
-  - host: murano.harboros.net
+  - host: murano.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: murano
           servicePort: 8082
-  - host: murano.os-murano.svc.harboros.net
+  - host: murano.os-murano.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

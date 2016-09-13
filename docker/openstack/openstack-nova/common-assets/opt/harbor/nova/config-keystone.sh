@@ -36,6 +36,9 @@ check_required_vars NOVA_CONFIG_FILE \
                     KEYSTONE_API_SERVICE_HOST_SVC \
                     MEMCACHE_SERVICE_HOST_SVC
 
+################################################################################
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT ca_file "${NOVA_DB_CA}"
+
 
 ################################################################################
 crudini --set ${NOVA_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"

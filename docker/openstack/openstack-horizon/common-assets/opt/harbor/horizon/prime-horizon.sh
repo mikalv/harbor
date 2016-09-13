@@ -32,6 +32,12 @@ echo "${OS_DISTRO}: Collecting static files"
 /opt/stack/horizon/manage.py collectstatic --noinput
 
 
+echo "${OS_DISTRO}: Compilong Magnum Messages"
+################################################################################
+cd /usr/lib/python2.7/site-packages/magnum_ui && \
+  DJANGO_SETTINGS_MODULE=openstack_dashboard.settings /opt/stack/horizon/manage.py compilemessages
+
+
 echo "${OS_DISTRO}: Collecting compressing assets"
 ################################################################################
 /opt/stack/horizon/manage.py compress

@@ -1,0 +1,19 @@
+[Unit]
+Description=Harbor OVN
+After=harbor-kubernetes.service
+After=harbor-loadbalancer.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start ovn
+ExecStart=/usr/bin/harbor-service check ovn
+ExecStop=/usr/bin/harbor-service stop ovn
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target

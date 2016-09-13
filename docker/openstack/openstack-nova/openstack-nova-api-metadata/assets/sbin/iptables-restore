@@ -1,0 +1,4 @@
+#!/bin/sh
+# nova-api-metadata trys to run some iptables commands
+# This enables the container to run without NET_ADMIN privileges
+true

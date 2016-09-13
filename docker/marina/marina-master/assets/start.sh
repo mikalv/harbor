@@ -22,92 +22,84 @@ echo ""
 cat /splash.txt || true
 echo ""
 echo ""
+export OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
 
-echo "${OS_DISTRO}: Creating All namespaces"
+HARBOR_SERVICE_LIST="harbor-auth.service \
+                    harbor-kubernetes.service \
+                    harbor-loadbalancer.service \
+                    harbor-ovn.service \
+                    harbor-memcached.service \
+                    harbor-messaging.service \
+                    harbor-ipsilon.service \
+                    harbor-keystone.service \
+                    harbor-api.service \
+                    harbor-neutron.service \
+                    harbor-glance.service \
+                    harbor-cinder.service \
+                    harbor-nova.service \
+                    harbor-heat.service \
+                    harbor-murano.service"
+
+
+HOST_USER=harbor
+echo "${OS_DISTRO}: Setting up user ${HOST_USER}"
+################################################################################
+groupadd ${HOST_USER} -g 1000 &> /dev/null || true
+adduser -u 1000 -g ${HOST_USER} --create-home ${HOST_USER} &> /dev/null || true
+usermod -a -G wheel harbor &> /dev/null || true
+chmod 0600 /etc/shadow &> /dev/null || true
+sed -i "s|^harbor:.*|$(grep "^${HOST_USER}" /etc/host-shadow)|" /etc/shadow &> /dev/null || true
+chmod 0400 /etc/shadow &> /dev/null || true
+
+
+echo "${OS_DISTRO}: Starting cockpit"
+################################################################################
+systemctl unmask systemd-logind.service
+systemctl restart systemd-logind.service
+rm -f /run/nologin
+systemctl restart cockpit.service
+
+
+echo "${OS_DISTRO}: Testing kube connection"
 ################################################################################
 until kubectl cluster-info
 do
   echo "${OS_DISTRO}: Waiting for kube"
   sleep 60s
 done
-kubectl create -R -f /opt/harbor/kubernetes/namespaces || true
 
 
-echo "${OS_DISTRO}: Managing Service Auth Params"
+echo "${OS_DISTRO}: Creating all namespaces"
 ################################################################################
-/usr/bin/harbor-service-manage-auth
+kubectl create -R -f /opt/harbor/kubernetes/namespaces &> /dev/null || true
+kubectl get -R -f /opt/harbor/kubernetes/namespaces || true
+
+
+echo "${OS_DISTRO}: Creating all ingress rules"
+################################################################################
+find /opt/harbor/kubernetes/ingress -type f -exec sed -i.bak "s/{{ OS_DOMAIN }}/${OS_DOMAIN}/g" {} \;
+kubectl create -R -f /opt/harbor/kubernetes/ingress &> /dev/null || true
+kubectl get -R -f /opt/harbor/kubernetes/ingress
 
 
 echo "${OS_DISTRO}: Managing Kubernetes service"
 ################################################################################
-harbor-service-update kubernetes
+start_systemd_harbor_service () {
+  SYSTEMD_SERVICE=$1
+  echo "${OS_DISTRO}: Starting service ${SYSTEMD_SERVICE}"
+  ##############################################################################
+  systemctl enable ${SYSTEMD_SERVICE}
+  systemctl start ${SYSTEMD_SERVICE}
+}
 
+for HARBOR_SERVICE in ${HARBOR_SERVICE_LIST}; do
+  systemctl enable ${HARBOR_SERVICE}
+done
 
-echo "${OS_DISTRO}: Managing memcached service"
-################################################################################
-harbor-service-update memcached
-
-
-echo "${OS_DISTRO}: Managing messaging service"
-################################################################################
-harbor-service-update messaging
-
-
-echo "${OS_DISTRO}: Managing ovn service"
-################################################################################
-harbor-service-update ovn
-
-
-echo "${OS_DISTRO}: Managing ipsilon service"
-################################################################################
-harbor-service-update ipsilon
-
-
-echo "${OS_DISTRO}: Managing keystone service"
-################################################################################
-harbor-service-update keystone
-
-
-echo "${OS_DISTRO}: Managing neutron service"
-################################################################################
-harbor-service-update neutron
-
-
-echo "${OS_DISTRO}: Managing (horizon) api service"
-################################################################################
-harbor-service-update api
-
-
-echo "${OS_DISTRO}: Managing loadbalancer service"
-################################################################################
-harbor-service-update loadbalancer
-
-
-echo "${OS_DISTRO}: Managing cinder service"
-################################################################################
-harbor-service-update cinder
-
-
-echo "${OS_DISTRO}: Managing glance service"
-################################################################################
-harbor-service-update glance
-
-
-echo "${OS_DISTRO}: Managing nova service"
-################################################################################
-harbor-service-update nova
-
-
-echo "${OS_DISTRO}: Managing heat service"
-################################################################################
-harbor-service-update heat
-
-
-echo "${OS_DISTRO}: Managing murano service"
-################################################################################
-harbor-service-update murano
+for HARBOR_SERVICE in ${HARBOR_SERVICE_LIST}; do
+  start_systemd_harbor_service ${HARBOR_SERVICE}
+done
 
 
 echo "${OS_DISTRO}: Finished management bootstrapping"
 ################################################################################
-tail -f /dev/null

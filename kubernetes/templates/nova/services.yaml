@@ -26,7 +26,7 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 8774
     protocol: TCP
     targetPort: 8774
   selector:
@@ -43,8 +43,25 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 443
+  - port: 6083
     protocol: TCP
     targetPort: 6083
   selector:
     openstack-app: nova-serialproxy
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: nova-api-metadata
+  name: metadata
+  namespace: os-nova
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 8775
+    protocol: TCP
+    targetPort: 8775
+  selector:
+    openstack-app: nova-api-metadata

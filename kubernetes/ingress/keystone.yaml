@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - keystone.harboros.net
+        - keystone.{{ OS_DOMAIN }}
       secretName: keystone-ssl-secret
     - hosts:
-        - keystone.os-keystone.svc.harboros.net
+        - keystone.os-keystone.svc.{{ OS_DOMAIN }}
       secretName: keystone-ssl-secret
   rules:
-  - host: keystone.harboros.net
+  - host: keystone.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: keystone
           servicePort: 5000
-  - host: keystone.os-keystone.svc.harboros.net
+  - host: keystone.os-keystone.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

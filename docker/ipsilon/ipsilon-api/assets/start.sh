@@ -18,7 +18,7 @@ set -e
 echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
 
-
+tail -f /dev/null
 echo "${OS_DISTRO}: Launching ipsilon installer"
 ################################################################################
 /opt/harbor/ipsilon/install-ipsilon.sh

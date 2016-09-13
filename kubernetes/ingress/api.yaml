@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - api.harboros.net
+        - api.{{ OS_DOMAIN }}
       secretName: api-ssl-secret
     - hosts:
-        - api.os-api.svc.harboros.net
+        - api.os-api.svc.{{ OS_DOMAIN }}
       secretName: api-ssl-secret
   rules:
-  - host: api.harboros.net
+  - host: api.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: api
           servicePort: 4433
-  - host: api.os-api.svc.harboros.net
+  - host: api.os-api.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /

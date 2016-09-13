@@ -13,20 +13,20 @@ metadata:
 spec:
   tls:
     - hosts:
-        - ipsilon.harboros.net
+        - ipsilon.{{ OS_DOMAIN }}
       secretName: ipsilon-ssl-secret
     - hosts:
-        - ipsilon.os-ipsilon.svc.harboros.net
+        - ipsilon.os-ipsilon.svc.{{ OS_DOMAIN }}
       secretName: ipsilon-ssl-secret
   rules:
-  - host: ipsilon.harboros.net
+  - host: ipsilon.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /idp
         backend:
           serviceName: ipsilon
           servicePort: 4143
-  - host: ipsilon.os-ipsilon.svc.harboros.net
+  - host: ipsilon.os-ipsilon.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /idp
