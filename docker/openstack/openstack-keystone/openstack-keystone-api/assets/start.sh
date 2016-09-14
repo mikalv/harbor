@@ -24,7 +24,7 @@ echo "${OS_DISTRO}: Configuring Container"
 ################################################################################
 /opt/harbor/config-keystone.sh
 
-
+tail -f /dev/null
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################
 exec httpd -D FOREGROUND

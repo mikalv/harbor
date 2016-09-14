@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-keystone-api:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-keystone-fedora:%%DOCKER_TAG%%
 
 ENV OPENSTACK_COMPONENT="keystone-manager"
 

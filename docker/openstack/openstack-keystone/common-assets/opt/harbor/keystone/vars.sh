@@ -25,7 +25,13 @@
 : ${KEYSTONE_MELLON_SP_TLS_CERT:="/run/harbor/auth/mellon/tls.crt"}
 : ${KEYSTONE_MELLON_IDP_METADATA:="/run/harbor/auth/mellon/idp-metadata.xml"}
 
-
+: ${KEYSTONE_IPA_REALM:="$(echo ${OS_DOMAIN} | tr '[:lower:]' '[:upper:]')"}
 : ${KEYSTONE_LDAP_BASE_DN:="dc=$(echo ${OS_DOMAIN} | sed 's/\./,dc=/g')"}
 
 : ${AUTH_KEYSTONE_REGION:="RegionOne"}
+: ${AUTH_SERVICE_KEYSTONE_ROLE:="service"}
+: ${AUTH_SERVICE_KEYSTONE_PROJECT:="service"}
+: ${AUTH_SERVICE_KEYSTONE_PROJECT_DOMAIN:="default"}
+: ${AUTH_SERVICE_KEYSTONE_PROJECT_USER_ROLE:="admin"}
+: ${AUTH_SERVICE_KEYSTONE_DOMAIN:="default"}
+: ${AUTH_SERVICE_KEYSTONE_REGION:="${AUTH_KEYSTONE_REGION}"}

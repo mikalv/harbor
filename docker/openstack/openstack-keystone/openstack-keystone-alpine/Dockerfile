@@ -1,8 +1,9 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
 ENV OPENSTACK_COMPONENT="keystone-api" \
     OS_COMP="keystone" \
-    OS_REPO_URL="https://github.com/openstack/keystone.git"
+    OS_REPO_URL="https://github.com/openstack/keystone.git" \
+    OS_REPO_BRANCH="master"
 
 COPY ./common-assets /opt/harbor/common-assets
 

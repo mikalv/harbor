@@ -113,6 +113,95 @@ spec:
           secret:
             secretName: keystone-user-ssl-secret
 ---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: keystone-bootstraper
+    version: v0.1.0
+  name: keystone-bootstraper
+  namespace: os-keystone
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: keystone-bootstraper
+        version: v0.1.0
+      name: keystone-bootstraper
+      namespace: os-keystone
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: keystone-bootstraper
+          image: {{ IMAGE_KEYSTONE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: OS_MANAGEMENT_ACTION
+              value: bootstrap
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-ldap
+              mountPath: /var/run/harbor/secrets/config-ldap
+              readOnly: true
+            - name: os-config-user
+              mountPath: /var/run/harbor/secrets/config-user
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: keystone-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: keystone-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: keystone-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: keystone-db-root
+        - name: os-config-db
+          secret:
+            secretName: keystone-db
+        - name: os-config-ldap
+          secret:
+            secretName: keystone-ldap
+        - name: os-config-user
+          secret:
+            secretName: keystone-user
+        - name: os-config-ssl-secret
+          secret:
+            secretName: keystone-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: keystone-user-ssl-secret
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:
