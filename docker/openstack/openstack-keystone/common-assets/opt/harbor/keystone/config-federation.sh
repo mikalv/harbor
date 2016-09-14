@@ -25,10 +25,11 @@ echo "${OS_DISTRO}: Configuring federation"
 
 ################################################################################
 check_required_vars KEYSTONE_CONFIG_FILE \
-                    OS_DOMAIN
+                    OS_DOMAIN \
+                    HORIZON_API_SERVICE_HOST
 
 
 ################################################################################
 crudini --set ${KEYSTONE_CONFIG_FILE} auth methods "external,password,token,saml2"
 crudini --set ${KEYSTONE_CONFIG_FILE} federation remote_id_attribute "MELLON_IDP"
-crudini --set ${KEYSTONE_CONFIG_FILE} federation trusted_dashboard "https://api.${OS_DOMAIN}/auth/websso/"
+crudini --set ${KEYSTONE_CONFIG_FILE} federation trusted_dashboard "https://${HORIZON_API_SERVICE_HOST}/auth/websso/"

@@ -1,0 +1,6 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ovn-southbound-db
+data:
+  6643: "ovn/ovn-southbound-db:6642"

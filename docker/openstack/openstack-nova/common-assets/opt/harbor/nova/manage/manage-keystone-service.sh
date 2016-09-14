@@ -41,7 +41,7 @@ for SERVICE_TYPE in compute; do
   OS_SVC_ENDPOINTS="PUBLIC ADMIN INTERNAL"
 
   if [ "$SERVICE_TYPE" == "compute" ]; then
-    OS_SVC_ENDPOINT_INTERNAL="https://${NOVA_API_SERVICE_HOST_SVC}:${NOVA_API_SVC_PORT}/v2.1/%(tenant_id)s"
+    OS_SVC_ENDPOINT_INTERNAL="https://${NOVA_API_SERVICE_HOST_SVC}/v2.1/%(tenant_id)s"
     OS_SVC_ENDPOINT_ADMIN="https://${NOVA_API_SERVICE_HOST_SVC}:${NOVA_API_SVC_PORT}/v2.1/%(tenant_id)s"
     OS_SVC_ENDPOINT_PUBLIC="https://${NOVA_API_SERVICE_HOST}/v2.1/%(tenant_id)s"
   fi

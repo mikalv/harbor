@@ -29,6 +29,10 @@ spec:
             hostPort: 443
             protocol: TCP
             name: https
+          - containerPort: 6643
+            hostPort: 6643
+            protocol: TCP
+            name: ovs-db
         env:
           - name: OS_DOMAIN
             value: {{ OS_DOMAIN }}

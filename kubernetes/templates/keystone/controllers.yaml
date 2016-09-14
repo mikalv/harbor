@@ -337,7 +337,7 @@ spec:
               mountPath: /run/harbor/auth/user
               readOnly: true
             - name: os-config-federation-saml2-secret
-              mountPath: /run/harbor/auth/saml2
+              mountPath: /run/harbor/auth/mellon
               readOnly: true
           securityContext:
             privileged: false

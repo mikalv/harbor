@@ -57,9 +57,9 @@ echo "${OS_DISTRO}: Starting domains config"
 /opt/harbor/keystone/config-domains.sh
 
 
-echo "${OS_DISTRO}: Starting domains config"
+echo "${OS_DISTRO}: Starting federation config"
 ################################################################################
-# /opt/harbor/keystone/config-federation.sh
+/opt/harbor/keystone/config-federation.sh
 
 
 echo "${OS_DISTRO}: Starting apache config"

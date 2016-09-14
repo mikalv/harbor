@@ -94,7 +94,7 @@ OPENSTACK_KEYSTONE_FEDERATION_MANAGEMENT = True
 # If provided, a "Report Bug" link will be displayed in the site header
 # which links to the value of this setting (ideally a URL containing
 # information on how to report issues).
-#HORIZON_CONFIG["bug_url"] = "http://bug-report.example.com"
+HORIZON_CONFIG["bug_url"] = "https://githube.com/portdirect/harbor"
 
 # Show backdrop element outside the modal, do not close the modal
 # after clicking on backdrop.
@@ -179,8 +179,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 #    ('http://cluster2.example.com:5000/v2.0', 'cluster2'),
 #]
 
-OPENSTACK_HOST = "{{ KEYSTONE_API_SERVICE_HOST_SVC }}"
-OPENSTACK_KEYSTONE_URL = "https://%s:5000/v3" % OPENSTACK_HOST
+OPENSTACK_HOST = "{{ KEYSTONE_API_SERVICE_HOST }}"
+OPENSTACK_KEYSTONE_URL = "https://%s/v3" % OPENSTACK_HOST
 OPENSTACK_KEYSTONE_DEFAULT_ROLE = "_member_"
 
 # Enables keystone web single-sign-on if set to True.

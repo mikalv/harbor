@@ -24,7 +24,18 @@ echo "${OS_DISTRO}: Configuring Container"
 ################################################################################
 /opt/harbor/config-keystone.sh
 
-tail -f /dev/null
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/keystone/vars.sh
+
+
+################################################################################
+check_required_vars KEYSTONE_CONFIG_FILE
+
+################################################################################
+crudini --set ${KEYSTONE_CONFIG_FILE} DEFAULT debug "True"
+
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################
 exec httpd -D FOREGROUND

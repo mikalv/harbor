@@ -18,7 +18,7 @@
 : ${KEYSTONE_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
 : ${KEYSTONE_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}
 
-: ${KEYSTONE_MELLON_ACTIVE:="False"}
+: ${KEYSTONE_MELLON_ACTIVE:="True"}
 
 : ${KEYSTONE_MELLON_SP_METADATA:="/run/harbor/auth/mellon/sp-metadata.xml"}
 : ${KEYSTONE_MELLON_SP_TLS_KEY:="/run/harbor/auth/mellon/tls.key"}

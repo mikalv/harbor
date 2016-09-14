@@ -62,7 +62,7 @@ prep_manifest () {
     fi;
     sed -i "s&{{ $SERVICE_HOST }}&${LOCAL_ENV_VALUE}&g" $MANIFEST_WORK_FILE
   done
-  cat $MANIFEST_WORK_FILE
+  #cat $MANIFEST_WORK_FILE
 }
 
 
@@ -84,7 +84,7 @@ load_manifest () {
   manifest_group=$1
   manifest=$2.yaml
   MANIFEST_WORK_FILE="$MANIFESTS_WORK_DIR/$manifest_group/$manifest"
-  cat $MANIFEST_WORK_FILE
+  #cat $MANIFEST_WORK_FILE
   kubectl create -f $MANIFEST_WORK_FILE
 }
 

@@ -40,6 +40,7 @@ echo "${OS_DISTRO}: Component specific config starting"
 
 echo "${OS_DISTRO}: Ensuring that glance owns /var/lib/glance/images"
 ################################################################################
+mkdir -p /var/lib/glance/images
 chown glance:glance /var/lib/glance/images
 
 

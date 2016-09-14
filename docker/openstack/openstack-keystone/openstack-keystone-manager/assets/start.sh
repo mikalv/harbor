@@ -15,23 +15,27 @@
 # limitations under the License.
 
 set -e
+echo "${OS_DISTRO}: Launching"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/keystone/vars.sh
+
+
+echo "${OS_DISTRO}: Testing environment"
+################################################################################
+/usr/bin/mysql-test
+
+
+echo "${OS_DISTRO}: Configuring database"
+################################################################################
+/opt/harbor/keystone/config-database.sh
+
+
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
-  echo "${OS_DISTRO}: Launching"
-  ################################################################################
-  . /etc/os-container.env
-  . /opt/harbor/service-hosts.sh
-  . /opt/harbor/harbor-common.sh
-  . /opt/harbor/keystone/vars.sh
-
-
-  echo "${OS_DISTRO}: Testing environment"
-  ################################################################################
-  /usr/bin/mysql-test
-
-
   echo "${OS_DISTRO}: Managing database"
   ################################################################################
-  /opt/harbor/keystone/config-database.sh
   /opt/harbor/keystone/manage/bootstrap-database.sh
 
 
@@ -43,5 +47,27 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Finished management"
   ################################################################################
 else
-  exec /start-bootstrap.sh
+  echo "${OS_DISTRO}: Testing environment"
+  ################################################################################
+  /opt/harbor/keystone/manage/env-keystone-admin-auth.sh
+
+
+  echo "${OS_DISTRO}: Managing users"
+  ################################################################################
+  /opt/harbor/keystone/bootstrap/bootstrap-keystone-users.sh
+
+
+  echo "${OS_DISTRO}: Managing domains"
+  ################################################################################
+  /opt/harbor/keystone/bootstrap/bootstrap-keystone-domains.sh
+
+
+  echo "${OS_DISTRO}: Managing federation"
+  ################################################################################
+  /opt/harbor/keystone/bootstrap/bootstrap-keystone-fed.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ################################################################################
+  tail -f /dev/null
 fi

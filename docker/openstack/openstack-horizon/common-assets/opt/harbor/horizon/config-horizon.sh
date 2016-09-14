@@ -27,6 +27,7 @@ echo "${OS_DISTRO}: Configuring horizon"
 check_required_vars OS_DOMAIN \
                     API_CONFIG_FILE \
                     API_CONFIG_FILE_TEMPLATE \
+                    KEYSTONE_API_SERVICE_HOST \
                     KEYSTONE_API_SERVICE_HOST_SVC \
                     API_DB_KEY \
                     API_DB_CERT \
@@ -50,6 +51,7 @@ sed -i "s|{{ OS_DOMAIN }}|${OS_DOMAIN}|g" ${API_CONFIG_FILE}
 
 ################################################################################
 sed -i "s|{{ KEYSTONE_API_SERVICE_HOST_SVC }}|${KEYSTONE_API_SERVICE_HOST_SVC}|g" ${API_CONFIG_FILE}
+sed -i "s|{{ KEYSTONE_API_SERVICE_HOST }}|${KEYSTONE_API_SERVICE_HOST}|g" ${API_CONFIG_FILE}
 sed -i "s|{{ API_TLS_CA }}|${API_TLS_CA}|g" ${API_CONFIG_FILE}
 
 

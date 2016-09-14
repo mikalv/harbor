@@ -41,15 +41,15 @@ for SERVICE_TYPE in volume volumev2 volumev3; do
   OS_SVC_ENDPOINTS="PUBLIC ADMIN INTERNAL"
 
   if [ "$SERVICE_TYPE" == "volume" ]; then
-    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v1/%(tenant_id)s"
+    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}/v1/%(tenant_id)s"
     OS_SVC_ENDPOINT_ADMIN="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v1/%(tenant_id)s"
     OS_SVC_ENDPOINT_PUBLIC="https://${CINDER_API_SERVICE_HOST}/v1/%(tenant_id)s"
   elif [ "$SERVICE_TYPE" == "volumev2" ]; then
-    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v2/%(tenant_id)s"
+    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}/v2/%(tenant_id)s"
     OS_SVC_ENDPOINT_ADMIN="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v2/%(tenant_id)s"
     OS_SVC_ENDPOINT_PUBLIC="https://${CINDER_API_SERVICE_HOST}/v2/%(tenant_id)s"
   elif [ "$SERVICE_TYPE" == "volumev3" ]; then
-    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v3/%(tenant_id)s"
+    OS_SVC_ENDPOINT_INTERNAL="https://${CINDER_API_SERVICE_HOST_SVC}/v3/%(tenant_id)s"
     OS_SVC_ENDPOINT_ADMIN="https://${CINDER_API_SERVICE_HOST_SVC}:${CINDER_API_SVC_PORT}/v3/%(tenant_id)s"
     OS_SVC_ENDPOINT_PUBLIC="https://${CINDER_API_SERVICE_HOST}/v3/%(tenant_id)s"
   fi
