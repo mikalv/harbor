@@ -7,6 +7,7 @@ ENV OS_COMP="neutron" \
     OS_COMP_1="networking-ovn" \
     OS_REPO_URL_1="https://github.com/openstack/networking-ovn.git" \
     OS_REPO_BRANCH_1="master" \
+    OS_REPO_PATCH_SET_1="refs/changes/05/315305/30" \
     OS_COMP_2="neutron-lbass" \
     OS_REPO_URL_2="https://github.com/openstack/neutron-lbaas.git" \
     OS_REPO_BRANCH_2="master"

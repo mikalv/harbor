@@ -57,12 +57,6 @@ spec:
             - name: os-config-kubecfg
               mountPath: /var/run/harbor/secrets/config-kubecfg
               readOnly: true
-            - name: os-config-user-ipa
-              mountPath: /var/run/harbor/secrets/config-user-ipa
-              readOnly: true
-            - name: os-config-host-ipa
-              mountPath: /var/run/harbor/secrets/config-host-ipa
-              readOnly: true
             - name: os-config-db-root
               mountPath: /var/run/harbor/secrets/config-db-root
               readOnly: true
@@ -91,12 +85,6 @@ spec:
         - name: os-config-kubecfg
           secret:
             secretName: cinder-kubecfg
-        - name: os-config-user-ipa
-          secret:
-            secretName: cinder-user-ipa
-        - name: os-config-host-ipa
-          secret:
-            secretName: cinder-host-ipa
         - name: os-config-db-root
           secret:
             secretName: cinder-db-root
@@ -112,6 +100,65 @@ spec:
         - name: os-config-ssl-secret
           secret:
             secretName: cinder-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: cinder-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: cinder-bootstrapper
+    version: v0.1.0
+  name: cinder-bootstrapper
+  namespace: os-cinder
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder-bootstrapper
+        version: v0.1.0
+      name: cinder-bootstrapper
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-bootstrapper
+          image: {{ IMAGE_CINDER_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: OS_MANAGEMENT_ACTION
+              value: bootstrap
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-keystone
+          secret:
+            secretName: cinder-keystone
         - name: os-config-ssl-user-secret
           secret:
             secretName: cinder-user-ssl-secret
@@ -334,3 +381,65 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: cinder-user-ssl-secret
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: cinder-volume-iscsi
+    version: v0.1.0
+  name: cinder-volume-iscsi
+  namespace: os-cinder
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: cinder-volume-iscsi
+        version: v0.1.0
+      name: cinder-volume-iscsi
+      namespace: os-cinder
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: cinder-volume-iscsi
+          image: docker.io/port/openstack-cinder-volume-iscsi:latest
+          imagePullPolicy: Always
+          env:
+            - name: OS_DOMAIN
+              value: harboros.net
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: host-dev
+              mountPath: /dev
+              readOnly: false
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: cinder-db
+        - name: os-config-keystone
+          secret:
+            secretName: cinder-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: cinder-user-ssl-secret
+        - name: host-dev
+          hostPath:
+            path: /dev

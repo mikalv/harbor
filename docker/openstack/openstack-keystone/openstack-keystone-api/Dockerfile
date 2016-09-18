@@ -7,7 +7,8 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
+    rm -rf /opt/harbor/assets && \
+    chown keystone:keystone /etc/keystone/sso_callback_template.html
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

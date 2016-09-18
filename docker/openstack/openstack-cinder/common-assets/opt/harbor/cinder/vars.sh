@@ -22,3 +22,9 @@
 : ${AUTH_NOVA_KEYSTONE_PROJECT_DOMAIN:="default"}
 : ${AUTH_NOVA_KEYSTONE_DOMAIN:="default"}
 : ${AUTH_NOVA_KEYSTONE_REGION:="RegionOne"}
+
+
+
+
+: ${CINDER_VOLUME_GROUP:="cinder-lvmdriver"}
+: ${CINDER_BACKEND_ISCSI_NAME:="lvm-scsi-1"}

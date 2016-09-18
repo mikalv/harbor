@@ -23,32 +23,46 @@ echo "${OS_DISTRO}: Launching"
 . /opt/harbor/cinder/vars.sh
 
 
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-cinder.sh
+if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
+  echo "${OS_DISTRO}: Testing service dependancies"
+  ################################################################################
+  /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Managing database"
-################################################################################
-/opt/harbor/cinder/manage/bootstrap-database.sh
+  echo "${OS_DISTRO}: Config Starting"
+  ################################################################################
+  /opt/harbor/config-cinder.sh
 
 
-echo "${OS_DISTRO}: Managing User"
-################################################################################
-/opt/harbor/cinder/manage/manage-keystone-user.sh
+  echo "${OS_DISTRO}: Managing database"
+  ################################################################################
+  /opt/harbor/cinder/manage/bootstrap-database.sh
 
 
-echo "${OS_DISTRO}: Managing Service"
-################################################################################
-/opt/harbor/cinder/manage/manage-keystone-service.sh
+  echo "${OS_DISTRO}: Managing User"
+  ################################################################################
+  /opt/harbor/cinder/manage/manage-keystone-user.sh
 
 
-echo "${OS_DISTRO}: Finished management"
-################################################################################
-tail -f /dev/null
+  echo "${OS_DISTRO}: Managing Service"
+  ################################################################################
+  /opt/harbor/cinder/manage/manage-keystone-service.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ################################################################################
+else
+  echo "${OS_DISTRO}: Managing Volume types"
+  ################################################################################
+  /opt/harbor/cinder/bootstrap/bootstrap-volume-types.sh
+
+
+  echo "${OS_DISTRO}: Managing Volume quotas"
+  ################################################################################
+  /opt/harbor/cinder/bootstrap/bootstrap-volume-quota.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ################################################################################
+  tail -f /dev/null
+fi

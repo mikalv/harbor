@@ -1,12 +1,13 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
+# https://review.openstack.org/#/c/346646/
 ENV OS_COMP="neutron" \
     OS_REPO_URL="https://github.com/openstack/neutron.git" \
     OS_REPO_BRANCH="master" \
-    OS_REPO_COMMIT="f7ec19ad0138a44d5e9d0e539aa7f8066d3d09b0" \
     OS_COMP_1="networking-ovn" \
     OS_REPO_URL_1="https://github.com/openstack/networking-ovn.git" \
     OS_REPO_BRANCH_1="master" \
+    OS_REPO_PATCH_SET_1="refs/changes/46/346646/14" \
     OS_COMP_2="neutron-lbass" \
     OS_REPO_URL_2="https://github.com/openstack/neutron-lbaas.git" \
     OS_REPO_BRANCH_2="master"

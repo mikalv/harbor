@@ -20,9 +20,11 @@ echo "${OS_DISTRO}: Starting Harbor service update"
 source /etc/os-container.env
 
 
-echo "${OS_DISTRO}: Launching service certificate management"
-################################################################################
-/usr/bin/harbor-manage-service-certs
+if ! [ "$MARINA_SERVICE" == "raven" ]; then
+  echo "${OS_DISTRO}: Launching service certificate management"
+  ##############################################################################
+  /usr/bin/harbor-manage-service-certs
+fi
 
 
 echo "${OS_DISTRO}: Launching user certificate management"

@@ -72,6 +72,12 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-keystone-domain
+              mountPath: /var/run/harbor/secrets/config-keystone-domain
+              readOnly: true
+            - name: os-config-keystone-trust
+              mountPath: /var/run/harbor/secrets/config-keystone-trust
+              readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
@@ -106,6 +112,12 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: heat-keystone
+        - name: os-config-keystone-domain
+          secret:
+            secretName: heat-keystone-domain
+        - name: os-config-keystone-trust
+          secret:
+            secretName: heat-keystone-trust
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -237,6 +249,12 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-keystone-domain
+              mountPath: /var/run/harbor/secrets/config-keystone-domain
+              readOnly: true
+            - name: os-config-keystone-trust
+              mountPath: /var/run/harbor/secrets/config-keystone-trust
+              readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
@@ -255,6 +273,12 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: heat-keystone
+        - name: os-config-keystone-domain
+          secret:
+            secretName: heat-keystone-domain
+        - name: os-config-keystone-trust
+          secret:
+            secretName: heat-keystone-trust
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -305,6 +329,12 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-keystone-domain
+              mountPath: /var/run/harbor/secrets/config-keystone-domain
+              readOnly: true
+            - name: os-config-keystone-trust
+              mountPath: /var/run/harbor/secrets/config-keystone-trust
+              readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
@@ -323,6 +353,12 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: heat-keystone
+        - name: os-config-keystone-domain
+          secret:
+            secretName: heat-keystone-domain
+        - name: os-config-keystone-trust
+          secret:
+            secretName: heat-keystone-trust
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -373,6 +409,12 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-keystone-domain
+              mountPath: /var/run/harbor/secrets/config-keystone-domain
+              readOnly: true
+            - name: os-config-keystone-trust
+              mountPath: /var/run/harbor/secrets/config-keystone-trust
+              readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
@@ -391,6 +433,12 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: heat-keystone
+        - name: os-config-keystone-domain
+          secret:
+            secretName: heat-keystone-domain
+        - name: os-config-keystone-trust
+          secret:
+            secretName: heat-keystone-trust
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -436,6 +484,12 @@ spec:
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
+            - name: os-config-keystone-domain
+              mountPath: /var/run/harbor/secrets/config-keystone-domain
+              readOnly: true
+            - name: os-config-keystone-trust
+              mountPath: /var/run/harbor/secrets/config-keystone-trust
+              readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
@@ -451,6 +505,12 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: heat-keystone
+        - name: os-config-keystone-domain
+          secret:
+            secretName: heat-keystone-domain
+        - name: os-config-keystone-trust
+          secret:
+            secretName: heat-keystone-trust
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth

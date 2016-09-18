@@ -39,5 +39,6 @@ if [ "$OVN_L3_MODE" = "True" ]; then
 else
   L3_ROUTER_PLUGIN="neutron.services.l3_router.l3_router_plugin.L3RouterPlugin"
 fi;
+check_required_vars L3_ROUTER_PLUGIN
 crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT service_plugins \
     "${L3_ROUTER_PLUGIN},neutron.services.qos.qos_plugin.QoSPlugin,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2"

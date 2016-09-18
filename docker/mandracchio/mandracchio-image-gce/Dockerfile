@@ -40,13 +40,7 @@ RUN set -e && \
 
 RUN set -e && \
     set -x && \
-    ( docker rm -f mandracchio-build-rpms || true ) && \
-      docker run \
-        -d \
-        -p 172.17.0.1:81:80/tcp \
-        --name mandracchio-build-rpms \
-        %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%mandracchio-rpms:%%DOCKER_TAG%% && \
-      ( docker rm -f mandracchio-build-repo || true ) && \
+    ( docker rm -f mandracchio-build-repo || true ) && \
       docker run \
         -d \
         -p 172.17.0.1:8012:80/tcp \

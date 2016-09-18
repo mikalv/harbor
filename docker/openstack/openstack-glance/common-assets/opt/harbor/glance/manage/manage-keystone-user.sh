@@ -71,5 +71,22 @@ openstack role assignment list \
           --user="${AUTH_GLANCE_KEYSTONE_USER_ID}"
 
 
+
+################################################################################
+openstack role add \
+          --user="${AUTH_GLANCE_KEYSTONE_USER_ID}" \
+          --user-domain="${AUTH_GLANCE_KEYSTONE_DOMAIN}" \
+          --project-domain="${AUTH_GLANCE_KEYSTONE_PROJECT_DOMAIN}" \
+          --project="${AUTH_GLANCE_KEYSTONE_PROJECT_ID}" \
+          "Member"
+
+openstack role assignment list \
+          --project-domain="${AUTH_GLANCE_KEYSTONE_PROJECT_DOMAIN}" \
+          --project="${AUTH_GLANCE_KEYSTONE_PROJECT_ID}" \
+          --role="Member" \
+          --user-domain="${AUTH_GLANCE_KEYSTONE_DOMAIN}" \
+          --user="${AUTH_GLANCE_KEYSTONE_USER_ID}"
+
+
 ################################################################################
 /opt/harbor/glance/manage/env-keystone-auth.sh

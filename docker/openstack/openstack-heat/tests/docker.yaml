@@ -1,0 +1,9 @@
+heat_template_version: '2013-05-23'
+description: An example of using the Docker plugin for Heat.
+resources:
+  docker_dbserver:
+    type: DockerInc::Docker::Container
+    properties:
+      cmd: [/usr/bin/tail, -f, /dev/null]
+      docker_endpoint: tcp://10.0.1.67:2375
+      image: alpine

@@ -1,7 +1,6 @@
 #!/bin/bash
 
-# Copyright 2015 The Kubernetes Authors.
-# Copyright 2016 Pete Birley.
+# Copyright 2016 Port Direct
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -15,6 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 # Notes:
 #  - Please install "jq" package before using this driver.
 #  - Docker must be running with support for shared mounts,
@@ -23,7 +23,41 @@
 #    /etc/harbor/auth-cinder.env, with keystone credentials
 #    for accessing cinder
 
+################################################################################
+cfg_network=/etc/harbor/network.conf
+export OS_DOMAIN=$(crudini --get $cfg_network DEFAULT os_domain)
+source /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/kube/vars.sh
+CINDER_MOUNT_IMAGE=docker.io/port/openstack-cinder-mounter
 
+: ${AUTH_KUBE_KEYSTONE_PROJECT:="service"}
+: ${AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN:="default"}
+: ${AUTH_KUBE_KEYSTONE_PROJECT_USER_ROLE:="admin"}
+: ${AUTH_KUBE_KEYSTONE_DOMAIN:="default"}
+: ${AUTH_KUBE_KEYSTONE_REGION:="RegionOne"}
+: ${AUTH_KUBE_KEYSTONE_PASSWORD:="yiegh5shenahPh6fai0Aek7yi5tuwaegh1ingea1Faehee2eelaifawivai5ahph"}
+: ${AUTH_KUBE_KEYSTONE_USER:="heat"}
+
+################################################################################
+check_required_vars OS_DOMAIN \
+                    CINDER_MOUNT_IMAGE \
+                    AUTH_KUBE_KEYSTONE_REGION \
+                    AUTH_KUBE_KEYSTONE_PROJECT \
+                    AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN \
+                    AUTH_KUBE_KEYSTONE_DOMAIN \
+                    AUTH_KUBE_KEYSTONE_USER \
+                    AUTH_KUBE_KEYSTONE_PASSWORD \
+                    KEYSTONE_API_SERVICE_HOST_SVC
+
+
+# VOLUMENAME=testing2e5
+# SIZE=1
+# MNTPATH=/var/lib/kubelet/pods/fdd9379a-7dc9-11e6-883e-10feed08255a/volumes/cinder/${VOLUMENAME}
+# FSTYPE=xfs
+
+################################################################################
 usage() {
   err "Invalid usage. Usage: "
   err "\t$0 init"
@@ -43,119 +77,98 @@ log() {
 }
 
 client_container () {
-CONTROLLER_IP=$(ip -f inet -o addr show eth0|cut -d\  -f 7 | cut -d/ -f 1)
-
-docker run -t --rm \
-  --net=host \
-  --privileged \
-  -e EXPOSED_IP=${CONTROLLER_IP} \
-  -e OS_REGION_NAME="RegionOne" \
-  -e OS_PROJECT_NAME="admin" \
-  -e OS_PROJECT_DOMAIN_NAME="Default" \
-  -e OS_USER_DOMAIN_NAME="Default" \
-  -e OS_IDENTITY_API_VERSION="3" \
-  -e OS_PASSWORD="password" \
-  -e OS_AUTH_URL="http://${CONTROLLER_IP}:35357/v3" \
-  -e OS_USERNAME="admin" \
-  -v /:/rootfs:shared \
-  -v /dev:/dev:rw \
-  docker.io/port/undercloud-cinderclient "$@"
+  docker run -i --rm \
+    --net=host \
+    --privileged \
+    -e OS_AUTH_URL="https://${KEYSTONE_API_SERVICE_HOST_SVC}/v3" \
+    -e OS_CACERT="/rootfs/var/lib/harbor/kube/ca.crt" \
+    -e OS_IDENTITY_API_VERSION="3" \
+    -e OS_REGION_NAME="${AUTH_KUBE_KEYSTONE_REGION}" \
+    -e OS_PROJECT_NAME="${AUTH_KUBE_KEYSTONE_PROJECT}" \
+    -e OS_PROJECT_DOMAIN_NAME="${AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN}" \
+    -e OS_USER_DOMAIN_NAME="${AUTH_KUBE_KEYSTONE_DOMAIN}" \
+    -e OS_USERNAME="${AUTH_KUBE_KEYSTONE_USER}" \
+    -e OS_PASSWORD="${AUTH_KUBE_KEYSTONE_PASSWORD}" \
+    -v /:/rootfs:rshared \
+    -v /dev:/dev:rshared \
+    ${CINDER_MOUNT_IMAGE} "${@}" 2> /dev/null
 }
 
-ismounted() {
-  MOUNT=$(client_container findmnt -n ${MNTPATH} 2>/dev/null | cut -d' ' -f1)
-  if [ "${MOUNT}" == "${MNTPATH}" ]; then
-    echo "1"
-  else
-    echo "0"
-  fi
-}
+
 
 attach() {
   VOLUMENAME=$(echo $1 | jq -r '.volumeName')
   SIZE=$(echo $1 | jq -r '.size')
 
-  (client_container cinder show $VOLUMENAME || client_container cinder create --name $VOLUMENAME $SIZE) &> /dev/null
-  VOL_ID=$(client_container cinder show $VOLUMENAME | grep ' id ' | awk '{ print $4}')
+  CINDER_ATTACH="$( client_container kube-cinder-attach ${VOLUMENAME} ${SIZE} | sed 's/\r$//')"
+  ATTACH_STATUS="$(echo $CINDER_ATTACH | awk '{ print $1}')"
+  ATTACHED_DEV="$(echo $CINDER_ATTACH | awk '{ print $2}' )"
 
-  (client_container mkdir -p /var/mnt/${VOL_ID} )&> /dev/null
-  (client_container cinder --debug local-detach ${VOL_ID} || true )&> /dev/null
-  ATTACHED_DEV=$(client_container cinder --debug local-attach --mountpoint /var/mnt/${VOL_ID} ${VOL_ID} | grep ' path ' | awk '{ print $4}')
-
-  ATTACH_STATUS=$(client_container /bin/bash -c "if [ ! -b \"${ATTACHED_DEV}\" ]; then echo 'FAILED'; else echo 'ACTIVE'; fi")
-  if [ "${ATTACH_STATUS}" == "FAILED" ]; then
+  if [ "${ATTACH_STATUS}" == "ACTIVE" ]; then
+    log "{\"status\": \"Success\", \"device\":\"${ATTACHED_DEV}\"}"
+    exit 0
+  else
     err "{\"status\": \"Failure\", \"message\": \"Volume ${VOLUMENAME} could not be attached to the node\"}"
     exit 1
   fi
-  log "{\"status\": \"Success\", \"device\":\"${ATTACHED_DEV}\"}"
-  exit 0
+
 }
+
 
 detach() {
   ATTACHED_DEV=$1
-  VOL_ID=$(echo $ATTACHED_DEV | awk -F '/dev/disk/by-path/' '{ print $2}' | awk -F ':volume-' '{ print $2}' | awk -F '-lun' '{ print $1}')
-  (client_container cinder --debug local-detach ${VOL_ID} || true )&> /dev/null
-  log "{\"status\": \"Success\"}"
-  exit 0
+  CINDER_DETACH=$(client_container kube-cinder-detach ${ATTACHED_DEV})
+  DETACH_STATUS="$(echo $CINDER_DETACH | awk '{ print $1}')"
+  DETACH_MESSAGE="$(echo $CINDER_DETACH | cut -f 1 -d ' ' --complement)"
+
+  if [ "${DETACH_STATUS}" == "SUCCESS" ]; then
+    log "{\"status\": \"Success\", \"message\":\"Volume detach ${DETACH_MESSAGE}\"}"
+    exit 0
+  else
+    err "{\"status\": \"Failure\", \"message\": \"Volume detach ${DETACH_MESSAGEe\"}"
+    exit 1
+  fi
 }
+
 
 domount() {
   MNTPATH=$1
   ATTACHED_DEV=$2
   FSTYPE=$(echo $3|jq -r '.["kubernetes.io/fsType"]')
 
-  ATTACH_STATUS=$(client_container /bin/bash -c "if [ ! -b \"${ATTACHED_DEV}\" ]; then echo 'FAILED'; else echo 'ACTIVE'; fi")
-  if [ "${ATTACH_STATUS}" == "FAILED" ]; then
-    err "{\"status\": \"Failure\", \"message\": \"Volume ${VOLUMENAME} could not be attached to the node\"}"
-    exit 1
-  fi
+  CINDER_MOUNT="$( client_container kube-cinder-mount $MNTPATH $ATTACHED_DEV $FSTYPE)"
+  MOUNT_STATUS="$(echo $CINDER_MOUNT | awk '{ print $1}')"
+  MOUNT_MESSAGE="$(echo $CINDER_MOUNT | cut -f 1 -d ' ' --complement)"
 
-  if [ $(ismounted) -eq 1 ] ; then
+  if [ "${MOUNT_STATUS}" == "ACTIVE" ]; then
     log "{\"status\": \"Success\"}"
     exit 0
-  fi
-
-  VOLFSTYPE=$(client_container blkid -o udev ${ATTACHED_DEV} 2>/dev/null|grep "ID_FS_TYPE"|cut -d"=" -f2)
-  if [ "${VOLFSTYPE}" == "" ]; then
-    client_container mkfs -t ${FSTYPE} ${ATTACHED_DEV} >/dev/null 2>&1
-    if [ $? -ne 0 ]; then
-      err "{ \"status\": \"Failure\", \"message\": \"Failed to create fs ${FSTYPE} on device ${ATTACHED_DEV}\"}"
-      exit 1
-    fi
-  fi
-
-  client_container mkdir -p /rootfs${MNTPATH} &> /dev/null
-
-  client_container mount ${ATTACHED_DEV} /rootfs${MNTPATH} &> /dev/null
-  if [ $? -ne 0 ]; then
-    err "{ \"status\": \"Failure\", \"message\": \"Failed to mount device ${ATTACHED_DEV} at ${MNTPATH}\"}"
+  else
+    err "{\"status\": \"Failure\", \"message\": \"Mounting failed, ${MOUNT_MESSAGE}\"}"
     exit 1
   fi
-  log "{\"status\": \"Success\"}"
-  exit 0
 }
+
 
 unmount() {
   MNTPATH=$1
-  if [ $(ismounted) -eq 0 ] ; then
+
+  CINDER_UMOUNT="$( client_container kube-cinder-umount ${MNTPATH})"
+
+  if [ "${CINDER_UMOUNT}" == "SUCCESS" ]; then
     log "{\"status\": \"Success\"}"
     exit 0
-  fi
-
-  client_container umount /rootfs${MNTPATH} &> /dev/null
-  if [ $? -ne 0 ]; then
-    err "{ \"status\": \"Failed\", \"message\": \"Failed to unmount volume at ${MNTPATH}\"}"
+  else
+    log "{\"status\": \"Failure\", \"message\": \"Unounting failed ${MNTPATH}\"}"
     exit 1
   fi
-  client_container rmdir /rootfs${MNTPATH} &> /dev/null
-
-  log "{\"status\": \"Success\"}"
-  exit 0
 }
+
 
 op=$1
 
 if [ "$op" = "init" ]; then
+  docker pull ${CINDER_MOUNT_IMAGE} &> /dev/null
   log "{\"status\": \"Success\"}"
   exit 0
 fi
@@ -182,5 +195,6 @@ case "$op" in
   *)
     usage
 esac
+
 
 exit 1

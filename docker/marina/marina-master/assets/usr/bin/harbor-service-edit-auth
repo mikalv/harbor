@@ -14,6 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script allows you to edit the info held in a vault for a service.
+
 set -e
 HARBOR_AUTH_SECTION=$1
 echo "${OS_DISTRO}: Starting service auth edit for: $HARBOR_AUTH_SECTION"

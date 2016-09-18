@@ -50,3 +50,33 @@ echo "${OS_DISTRO}: Starting messaging config"
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
 /opt/harbor/heat/config-keystone.sh
+
+
+echo "${OS_DISTRO}: Starting cache config"
+################################################################################
+/opt/harbor/heat/config-cache.sh
+
+
+echo "${OS_DISTRO}: Starting endpoints config"
+################################################################################
+/opt/harbor/heat/config-endpoints.sh
+
+
+echo "${OS_DISTRO}: Starting options config"
+################################################################################
+/opt/harbor/heat/config-options.sh
+
+
+echo "${OS_DISTRO}: Starting domain config"
+################################################################################
+/opt/harbor/heat/config-domain.sh
+
+
+echo "${OS_DISTRO}: Starting trusts config"
+################################################################################
+/opt/harbor/heat/config-trusts.sh
+
+
+echo "${OS_DISTRO}: Starting clients config"
+################################################################################
+/opt/harbor/heat/config-clients.sh

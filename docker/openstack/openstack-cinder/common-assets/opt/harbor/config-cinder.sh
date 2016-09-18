@@ -50,3 +50,8 @@ echo "${OS_DISTRO}: Starting messaging config"
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
 /opt/harbor/cinder/config-keystone.sh
+
+
+echo "${OS_DISTRO}: Starting quota config"
+################################################################################
+/opt/harbor/cinder/config-quotas.sh

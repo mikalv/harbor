@@ -20,21 +20,15 @@ echo "${OS_DISTRO}: Launching Container Startup Scripts"
 /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Configuring Container"
+echo "${OS_DISTRO}: Configuring Keystone"
 ################################################################################
 /opt/harbor/config-keystone.sh
 
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
-. /opt/harbor/keystone/vars.sh
 
-
+echo "${OS_DISTRO}: Configuring branding"
 ################################################################################
-check_required_vars KEYSTONE_CONFIG_FILE
+/opt/harbor/config-keystone-branding.sh
 
-################################################################################
-crudini --set ${KEYSTONE_CONFIG_FILE} DEFAULT debug "True"
 
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################

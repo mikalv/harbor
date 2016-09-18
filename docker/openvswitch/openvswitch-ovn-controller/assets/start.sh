@@ -24,6 +24,7 @@ echo "${OS_DISTRO}: Launching OVS DB Container"
 
 ################################################################################
 INTERGRATION_BRIDGE=${INTERGRATION_BRIDGE:-"br-int"}
+EXTERNAL_BRIDGE=${EXTERNAL_BRIDGE:-"br-ex"}
 SYSTEM_ID="$(hostname -s).${OS_DOMAIN}"
 
 
@@ -62,11 +63,19 @@ ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-type="geneve"
 ovs-vsctl --no-wait set open_vswitch . external-ids:ovn-encap-ip="${MY_IP}"
 
 
-echo "${OS_DISTRO}: Configuring intergration bridge  ${INTERGRATION_BRIDGE}"
+echo "${OS_DISTRO}: Configuring intergration bridge (${INTERGRATION_BRIDGE})"
 ################################################################################
-ovs-vsctl --no-wait -- --may-exist add-br ${INTERGRATION_BRIDGE}
+ovs-vsctl --no-wait --may-exist add-br ${INTERGRATION_BRIDGE}
 ovs-vsctl --no-wait br-set-external-id ${INTERGRATION_BRIDGE} bridge-id ${INTERGRATION_BRIDGE}
 ovs-vsctl --no-wait set bridge br-int fail-mode=secure other-config:disable-in-band=true
+
+
+if ! [ -z "${EXTERNAL_BRIDGE}" ]; then
+  echo "${OS_DISTRO}: Configuring external bridge (${EXTERNAL_BRIDGE})"
+  ################################################################################
+  ovs-vsctl --no-wait --may-exist add-br ${EXTERNAL_BRIDGE} -- set bridge ${EXTERNAL_BRIDGE} protocols=OpenFlow13
+  ovs-vsctl --no-wait set open . external-ids:ovn-bridge-mappings=public:${EXTERNAL_BRIDGE}
+fi
 
 
 echo "${OS_DISTRO}: Launching Container Application"

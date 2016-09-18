@@ -21,7 +21,7 @@ echo "${OS_DISTRO}: Launching Container Startup Scripts"
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/neutron/vars.sh
-
+tail -f /dev/null
 
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################

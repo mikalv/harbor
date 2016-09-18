@@ -1,0 +1,5 @@
+[harbor-assets]
+name=Harbor Assets
+baseurl=http://172.17.0.1:81/noarch/
+enabled=1
+gpgcheck=0

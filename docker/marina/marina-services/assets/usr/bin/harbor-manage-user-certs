@@ -187,6 +187,9 @@ elif [ "$MARINA_SERVICE" = "api" ]; then
 fi;
 SERVICE_NAMESPACE_VAR="${HARBOR_SERVICE_PREFIX}_SERVICE_NAMESPACE"
 SERVICE_NAMESPACE=${!SERVICE_NAMESPACE_VAR}
+if [ "$MARINA_SERVICE" = "raven" ]; then
+  SERVICE_NAMESPACE="kube-system"
+fi;
 
 
 echo "${OS_DISTRO}: Managing Kube Secret"

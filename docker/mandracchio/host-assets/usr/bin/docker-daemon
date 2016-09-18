@@ -53,6 +53,8 @@ DOCKER_CMD="-H tcp://${MY_IP}:${DOCKER_PORT} \
 --cluster-store etcd://127.0.0.1:4001 \
 --swarm-default-advertise-addr=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT}"
 
+systemctl enable iscsid.socket iscsiuio.socket
+systemctl start iscsid.socket iscsiuio.socket
 
 mkdir -p /var/lib/docker
 exec dockerd \

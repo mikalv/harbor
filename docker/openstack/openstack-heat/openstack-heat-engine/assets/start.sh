@@ -33,10 +33,9 @@ echo "${OS_DISTRO}: Config Starting"
 /opt/harbor/config-heat.sh
 
 
-#tail -f /dev/null
-#echo "${OS_DISTRO}: Component specific config starting"
+echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-#/opt/harbor/heat/components/config-engine.sh
+/opt/harbor/heat/components/config-engine.sh
 
 
 echo "${OS_DISTRO}: Starting container application"

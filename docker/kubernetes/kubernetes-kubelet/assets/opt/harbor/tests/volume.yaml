@@ -1,21 +1,30 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  name: nginx
+  labels:
+    harbor-app: cinder-kube-testing
+    version: v0.1.0
+  name: cinder-kube-testing
 spec:
+  hostNetwork: true
   containers:
-  - name: nginx
-    image: nginx
+  - name: cinder-kube-testing
+    image: docker.io/port/alpine:latest
+    env:
+      - name: OS_DOMAIN
+        value: localdomain
+    command:
+      - tail
+      - -f
+      - /dev/null
     volumeMounts:
-    - name: test
-      mountPath: /data
-    ports:
-    - containerPort: 80
+      - name: cinder-testing
+        mountPath: /data
   volumes:
-  - name: test
-    flexVolume:
-      driver: "cinder"
-      fsType: "xfs"
-      options:
-        volumeName: "test2"
-        size: "1"
+    - name: cinder-testing
+      flexVolume:
+        driver: "cinder"
+        fsType: "xfs"
+        options:
+          volumeName: "cinder-kube-testing"
+          size: "1"

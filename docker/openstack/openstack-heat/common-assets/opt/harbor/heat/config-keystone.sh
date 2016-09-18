@@ -39,7 +39,6 @@ check_required_vars HEAT_CONFIG_FILE \
 
 ################################################################################
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
-crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken memcached_servers "memcached.os-memcached.svc.${OS_DOMAIN}:11211"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken project_domain_name "${AUTH_HEAT_KEYSTONE_PROJECT_DOMAIN}"
 crudini --set ${HEAT_CONFIG_FILE} keystone_authtoken project_name "${AUTH_HEAT_KEYSTONE_PROJECT}"

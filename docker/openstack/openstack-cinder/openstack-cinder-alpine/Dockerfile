@@ -22,15 +22,7 @@ RUN set -e && \
         libxml2 \
         libxslt \
         libcurl \
-        openssl \
-        iproute2 \
-        sysfsutils \
-        open-iscsi \
-        util-linux \
-        lvm2 \
-        parted && \
-    sed -i "s|udev_rules = 1|udev_rules = 0|g" /etc/lvm/lvm.conf && \
-    sed -i "s|udev_sync = 1|udev_sync = 0|g" /etc/lvm/lvm.conf && \
+        openssl && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

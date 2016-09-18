@@ -76,7 +76,18 @@ RUN set -e && \
     rm -rf /srv/repo/atomic-host/7/$PACKAGE_ARCH/repodata && \
     cd /srv/repo/atomic-host/7/$PACKAGE_ARCH && \
       createrepo . && \
-    mv /srv/repo/atomic-host/7/$PACKAGE_ARCH/* /usr/share/nginx/html/
+    mkdir -p /usr/share/nginx/html/$PACKAGE_ARCH/ && \
+    mv /srv/repo/atomic-host/7/$PACKAGE_ARCH/* /usr/share/nginx/html/$PACKAGE_ARCH/
+
+RUN set -e && \
+    set -x && \
+    PACKAGE_ARCH=noarch && \
+    rpmbuild -bb /root/rpmbuild/SPECS/centos-logos.spec && \
+    cp /root/rpmbuild/RPMS/${PACKAGE_ARCH}/*.rpm /srv/repo/atomic-host/7/${PACKAGE_ARCH}/ && \
+    cd /srv/repo/atomic-host/7/${PACKAGE_ARCH} && \
+    createrepo . && \
+    mkdir -p /usr/share/nginx/html/${PACKAGE_ARCH}/ && \
+    mv /srv/repo/atomic-host/7/${PACKAGE_ARCH}/* /usr/share/nginx/html/${PACKAGE_ARCH}/
 
 ENTRYPOINT []
 

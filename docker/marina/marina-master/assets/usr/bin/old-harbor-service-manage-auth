@@ -68,7 +68,7 @@ do
 done
 
 
-echo "${OS_DISTRO}: Starting service manager conontainer for auth"
+echo "${OS_DISTRO}: Starting service manager container for auth"
 ################################################################################
 service_manager_container_start () {
   OS_SERVICE=$1

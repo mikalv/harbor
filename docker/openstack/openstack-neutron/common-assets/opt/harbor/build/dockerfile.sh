@@ -24,12 +24,10 @@ mkdir -p /opt/stack
 echo "${OS_DISTRO}: Getting Sources for ${OS_COMP}"
 ################################################################################
 git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
-  # cd /opt/stack/${OS_COMP}
-  # git checkout ${OS_REPO_COMMIT}
-  # cd /
+
 git clone ${OS_REPO_URL_1} -b ${OS_REPO_BRANCH_1} --depth 1 /opt/stack/${OS_COMP_1}
 cd /opt/stack/${OS_COMP_1}
-  git fetch git://git.openstack.org/openstack/networking-ovn refs/changes/05/315305/30
+  git fetch git://git.openstack.org/openstack/networking-ovn ${OS_REPO_PATCH_SET_1}
   git checkout FETCH_HEAD
   cd /
 git clone ${OS_REPO_URL_2} -b ${OS_REPO_BRANCH_2} --depth 1 /opt/stack/${OS_COMP_2}

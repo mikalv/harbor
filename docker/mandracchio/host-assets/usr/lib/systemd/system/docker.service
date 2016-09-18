@@ -5,15 +5,13 @@ After=network.target
 
 [Service]
 Type=notify
+# set mountflags to shared to that containers can be used to mount filesystems on the host
+MountFlags=shared
+LimitNOFILE=1048576
+LimitNPROC=1048576
+LimitCORE=infinity
 
-ExecStartPre=-/sbin/rmmod vport_geneve
-ExecStartPre=-/sbin/rmmod vport_vxlan
-ExecStartPre=-/sbin/rmmod openvswitch
-ExecStartPre=-/sbin/rmmod gre
-ExecStartPre=-/sbin/rmmod vxlan
-ExecStartPre=-/sbin/rmmod nf_nat_ipv6
-ExecStartPre=-/sbin/rmmod nf_conntrack_ipv6
-
+# Load all kernel modules required
 ExecStartPre=-/sbin/modprobe libcrc32c
 ExecStartPre=-/sbin/modprobe nf_conntrack_ipv6
 ExecStartPre=-/sbin/modprobe nf_nat_ipv6
@@ -24,16 +22,12 @@ ExecStartPre=-/sbin/modprobe vport_geneve
 ExecStartPre=-/sbin/modprobe vport_vxlan
 
 ExecStartPre=-/sbin/modprobe overlay
+ExecStartPre=-/sbin/modprobe dm_thin_pool
 ExecStartPre=-/sbin/modprobe dm_multipath
+ExecStartPre=-/sbin/modprobe dm_snapshot
 
+# Run the docker daemon prep script
 ExecStart=/usr/bin/docker-daemon
-
-# set mountflags to shared to that containers can be used to mount filesystems on the host
-MountFlags=shared
-LimitNOFILE=1048576
-LimitNPROC=1048576
-LimitCORE=infinity
-
 TimeoutStartSec=0
 Restart=always
 

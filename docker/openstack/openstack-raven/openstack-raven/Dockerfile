@@ -20,9 +20,8 @@ RUN set -e && \
         python3-dev && \
     python3 -m ensurepip && \
     pip3 --no-cache-dir install --upgrade pip setuptools && \
-    pip3 --no-cache-dir install crudini && \
     git clone -b ${OS_REPO_BRANCH} --depth 1 ${OS_REPO_URL} /opt/${OS_COMP} && \
-    pip --no-cache-dir install /opt/${OS_COMP} && \
+    pip3 --no-cache-dir install /opt/${OS_COMP} && \
     mkdir -p /etc/${OS_COMP} && \
     cp /opt/${OS_COMP}/etc/raven.conf.sample /etc/${OS_COMP}/raven.conf && \
     mkdir -p /var/log/raven && \

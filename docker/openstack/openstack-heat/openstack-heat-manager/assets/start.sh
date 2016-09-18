@@ -48,6 +48,16 @@ echo "${OS_DISTRO}: Managing Service"
 /opt/harbor/heat/manage/manage-keystone-service.sh
 
 
+echo "${OS_DISTRO}: Managing Domain"
+################################################################################
+/opt/harbor/heat/manage/manage-keystone-domain-user.sh
+
+
+echo "${OS_DISTRO}: Managing Trust"
+################################################################################
+/opt/harbor/heat/manage/manage-keystone-trust-user.sh
+
+
 echo "${OS_DISTRO}: Finished management"
 ################################################################################
 tail -f /dev/null

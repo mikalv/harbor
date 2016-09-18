@@ -13,12 +13,6 @@ LABEL build-uuid="%%BUILD_UUID%%"
 
 RUN set -e && \
     set -x && \
-    ( docker rm -f mandracchio-build-rpms || true ) && \
-    docker run \
-      -d \
-      -p 172.17.0.1:81:80/tcp \
-      --name mandracchio-build-rpms \
-      port/mandracchio-rpms:latest && \
     ( docker rm -f mandracchio-build-repo || true ) && \
     docker run \
       -t \

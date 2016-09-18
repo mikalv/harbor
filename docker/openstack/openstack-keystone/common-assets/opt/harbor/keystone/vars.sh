@@ -1,9 +1,9 @@
 #!/bin/bash
 : ${KEYSTONE_CONFIG_FILE:="/etc/keystone/keystone.conf"}
 : ${KEYSTONE_API_PASTE_CONFIG_FILE:="/etc/keystone/keystone-paste.ini"}
+: ${KEYSTONE_SSO_CALLBACK_TEMPLATE:="/etc/keystone/sso_callback_template.html"}
 : ${KEYSTONE_APACHE_CONFIG_FILE:="/etc/httpd/conf.d/wsgi-keystone.conf"}
 : ${KEYSTONE_APACHE_MELLON_CONFIG_FILE:="/etc/httpd/conf.d/keystone-ipsilon.conf"}
-
 
 : ${KEYSTONE_MARIADB_SERVICE_PORT:="3307"}
 : ${KEYSTONE_DB_CA:="/run/harbor/auth/user/tls.ca"}

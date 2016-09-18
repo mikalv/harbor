@@ -69,6 +69,7 @@ echo "${OS_DISTRO}: Uploading images"
 DOCKER_IMAGE=docker.io/nginx:latest
 
 DOCKER_IMAGE=docker.io/ewindisch/cirros:latest
+DOCKER_IMAGE=docker.io/port/intermodal-centos:latest
 
 
 docker pull ${DOCKER_IMAGE}

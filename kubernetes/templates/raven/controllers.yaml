@@ -1,0 +1,170 @@
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: raven-manager
+    version: v0.1.0
+  name: raven-manager
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: raven-manager
+        version: v0.1.0
+      name: raven-manager
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: raven-manager
+          image: {{ IMAGE_RAVEN_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: raven-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: raven-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: raven-host-ipa
+        - name: os-config-keystone
+          secret:
+            secretName: raven-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: raven-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: raven-namespace-populator
+    version: v0.1.0
+  name: raven-namespace-populator
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: raven-namespace-populator
+        version: v0.1.0
+      name: raven-namespace-populator
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: raven-namespace-populator
+          image: {{ IMAGE_RAVEN_MANAGER_NAMESPACE }}
+          imagePullPolicy: Always
+          env:
+            - name: OS_DOMAIN
+              value: harboros.net
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: raven-kubecfg
+        - name: os-config-keystone
+          secret:
+            secretName: raven-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: raven-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: kubernetes-raven
+    version: v0.1.0
+  name: kubernetes-raven
+  namespace: kube-system
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: kubernetes-raven
+        version: v0.1.0
+      name: openstack-raven
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+      - name: openstack-raven
+        image: {{ IMAGE_RAVEN_AGENT }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        volumeMounts:
+          - name: os-config-kubecfg
+            mountPath: /var/run/harbor/secrets/config-kubecfg
+            readOnly: true
+          - name: os-config-keystone
+            mountPath: /var/run/harbor/secrets/config-keystone
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: false
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: raven-kubecfg
+        - name: os-config-keystone
+          secret:
+            secretName: raven-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: raven-user-ssl-secret

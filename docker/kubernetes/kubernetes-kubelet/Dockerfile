@@ -5,7 +5,9 @@ ENV LC_ALL="en_US.UTF-8" \
     KUBE_COMPONENT="kubelet" \
     KURYR_REPO="https://github.com/portdirect/kuryr.git" \
     KURYR_BRANCH="k8s" \
-    HARBOR_KUBECTL_IMAGE="docker.io/port/kubectl:latest"
+    HARBOR_KUBECTL_IMAGE="docker.io/port/kubectl:latest" \
+    KUBE_CNI_VERSION="v0.3.0"
+
 
 RUN set -e && \
     set -x && \
@@ -26,6 +28,9 @@ RUN set -e && \
     curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubelet > /usr/bin/kubelet && \
     chmod +x /usr/bin/kubelet && \
     mkdir -p /etc/kubernetes/manifests && \
+    mkdir -p /opt/cni/bin && \
+    cd /opt/cni/bin/ && \
+    curl -L https://github.com/containernetworking/cni/releases/download/${KUBE_CNI_VERSION}/cni-${KUBE_CNI_VERSION}.tgz | tar -xvzf - && \
     yum install -y \
       git \
       gcc && \

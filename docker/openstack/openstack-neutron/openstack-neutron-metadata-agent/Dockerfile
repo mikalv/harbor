@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-neutron-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-neutron-alpine-metadata:%%DOCKER_TAG%%
 
 COPY ./assets/ /opt/harbor/assets
 

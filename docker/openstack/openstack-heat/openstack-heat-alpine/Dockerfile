@@ -18,8 +18,7 @@ RUN set -e && \
         libxml2 \
         libxslt \
         libcurl \
-        openssl \
-        docker && \
+        openssl && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

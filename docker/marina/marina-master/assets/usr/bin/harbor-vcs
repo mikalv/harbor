@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script just commits the contents of /etc/harbor to a local git repo.
+# It means we can roll back the config if we need to
+
 set -e
 MESSAGE=$@
 echo "${OS_DISTRO}: Going to commit configs into local repo"
@@ -21,7 +24,6 @@ echo "${OS_DISTRO}: Going to commit configs into local repo"
 cd /etc/harbor
 git init
 git add --all .
-
 if ! [ -z "$(git status --porcelain)" ]; then
   git commit -m "$(date --utc) - ${MESSAGE}"
 fi

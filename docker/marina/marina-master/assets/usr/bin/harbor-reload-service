@@ -14,10 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-HARBOR_AUTH_SECTION=$1
-echo "${OS_DISTRO}: Reloading service auth edit for: $HARBOR_AUTH_SECTION"
-################################################################################
+# This reloads service by first deleting all controllers and ren recreating them
 
-kubectl delete -f /opt/harbor/kubernetes/templates/ipsilon/services.yaml
-kubectl create -f /opt/harbor/kubernetes/templates/ipsilon/services.yaml
+set -e
+HARBOR_SERVICE=$1
+HARBOR_SERVICE=heat
+echo "${OS_DISTRO}: Reloading service: $HARBOR_SERVICE"
+################################################################################
+kubectl delete -f /etc/harbor/marina/${HARBOR_SERVICE}/controllers.yaml
+kubectl create -f /etc/harbor/marina/${HARBOR_SERVICE}/controllers.yaml

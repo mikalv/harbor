@@ -16,17 +16,33 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
+. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
+. /opt/harbor/raven/vars.sh
+. /opt/harbor/raven/env-keystone-auth.sh
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
+echo "${OS_DISTRO}: Keystone config"
 ################################################################################
+export SERVICE_USER="${AUTH_RAVEN_KEYSTONE_USER}"
+export SERVICE_TENANT_NAME="${AUTH_RAVEN_KEYSTONE_PROJECT}"
+export SERVICE_PASSWORD="${AUTH_RAVEN_KEYSTONE_PASSWORD}"
+export SERVICE_CA_CERT="${RAVEN_DB_CA}"
+export IDENTITY_URL="https://${KEYSTONE_API_SERVICE_HOST_SVC}/v2.0"
 
 
-echo "${OS_DISTRO}: Config Starting"
+echo "${OS_DISTRO}: Neutron config"
 ################################################################################
+export OS_URL="https://${NEUTRON_API_SERVICE_HOST_SVC}"
+export PUBLIC_NET_ID="$(neutron net-show ext-net -f value -c id)"
 
+
+echo "${OS_DISTRO}: Kube network config"
+################################################################################
+export SUBNET_POOL="192.168.0.0/16"
+export FLANNEL_NET="172.16.0.0/16"
+export SERVICE_CLUSTER_IP_RANGE="10.10.0.0/24"
 
 echo "${OS_DISTRO}: Launching container application"
 ################################################################################

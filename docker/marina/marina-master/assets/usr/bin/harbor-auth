@@ -14,6 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# This script starts the auth management service, that manages the relationship
+# between /etc/harbor/harbor-auth.conf and vaults in FreeIPA
+
 set -e
 MANAGE_ACTION=$1
 MANAGE_ACTION=start
@@ -33,7 +36,7 @@ check_required_vars MANAGE_ACTION \
                     MY_DEVICE \
                     MY_IP
 
-echo "${OS_DISTRO}: Loading FreIPA, node and network config"
+echo "${OS_DISTRO}: Loading FreeIPA, node and network config"
 ################################################################################
 load_node_config
 load_network_config

@@ -35,7 +35,6 @@ check_required_vars OS_DOMAIN \
                     HEAT_API_CFN_SVC_PORT
 
 
-
 ################################################################################
 for OS_SERVICE_NAME in heat heat-cfn; do
   OS_SVC_ENDPOINTS="PUBLIC ADMIN INTERNAL"

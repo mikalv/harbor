@@ -339,3 +339,72 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: neutron-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: neutron-lbaas
+    version: v0.1.0
+  name: neutron-lbaas-master
+  namespace: os-neutron
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: neutron-lbaas
+        version: v0.1.0
+      name: neutron-lbaas-master
+      namespace: os-neutron
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: lbaas-metadata
+          image: {{ IMAGE_NEUTRON_LBAAS_AGENT }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: host-var-run-openvswitch
+              mountPath: /var/run/openvswitch
+              readOnly: false
+            - name: host-dev
+              mountPath: /dev
+              readOnly: false
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: true
+      volumes:
+        - name: host-var-run-openvswitch
+          hostPath:
+            path: /var/run/openvswitch
+        - name: host-dev
+          hostPath:
+            path: /dev
+        - name: os-config-db
+          secret:
+            secretName: neutron-db
+        - name: os-config-keystone
+          secret:
+            secretName: neutron-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: neutron-user-ssl-secret

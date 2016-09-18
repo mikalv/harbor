@@ -29,11 +29,6 @@ git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
 echo "${OS_DISTRO}: Installing ${OS_COMP}"
 ################################################################################
 pip --no-cache-dir install /opt/stack/${OS_COMP}
-
-cd /opt/stack/${OS_COMP}/contrib/heat_docker/
-  python ./setup.py install
-cd /
-
 mkdir -p /etc/${OS_COMP}/
 mkdir -p  /opt/stack/${OS_COMP}/etc/${OS_COMP}/
 cp -rf /opt/stack/${OS_COMP}/etc/${OS_COMP}/* /etc/${OS_COMP}/

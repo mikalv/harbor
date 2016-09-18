@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring cloudformation API"
+echo "${OS_DISTRO}: Configuring engine"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -27,46 +27,11 @@ PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 ################################################################################
 check_required_vars HEAT_CONFIG_FILE \
                     OS_DOMAIN \
-                    HEAT_API_CFN_SVC_PORT \
                     MY_IP \
-                    API_WORKERS \
-                    HEAT_API_CFN_TLS_CA \
-                    HEAT_API_CFN_TLS_CERT \
-                    HEAT_API_CFN_TLS_KEY \
-                    HEAT_API_CFN_SERVICE_HOST_SVC
+                    API_WORKERS
 
 
 echo "${OS_DISTRO}: Configuring worker params"
 ################################################################################
 echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
-echo "${OS_DISTRO}:    Port: ${HEAT_API_CFN_SVC_PORT}"
-echo "${OS_DISTRO}:    Listen: ${MY_IP}"
-crudini --set ${HEAT_CONFIG_FILE} heat_api_cfn bind_port "${HEAT_API_CFN_SVC_PORT}"
-crudini --set ${HEAT_CONFIG_FILE} heat_api_cfn workers "${API_WORKERS}"
-crudini --set ${HEAT_CONFIG_FILE} heat_api_cfn bind_host "${MY_IP}"
-
-
-
-echo "${OS_DISTRO}: Testing tls certs"
-################################################################################
-openssl verify -CAfile ${HEAT_API_CFN_TLS_CA} ${HEAT_API_CFN_TLS_CERT}
-CERT_MOD="$(openssl x509 -noout -modulus -in ${HEAT_API_CFN_TLS_CERT})"
-KEY_MOD="$(openssl rsa -noout -modulus -in ${HEAT_API_CFN_TLS_KEY})"
-if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then
-  echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."
-  exit 1
-fi
-CERT_MOD=""
-KEY_MOD=""
-echo "${OS_DISTRO}: TLS certs: OK"
-
-
-echo "${OS_DISTRO}: Configuring TLS params"
-################################################################################
-crudini --set ${HEAT_CONFIG_FILE} heat_api_cfn cert_file "${HEAT_API_CFN_TLS_CERT}"
-crudini --set ${HEAT_CONFIG_FILE} heat_api_cfn key_file "${HEAT_API_CFN_TLS_KEY}"
-
-
-echo "${OS_DISTRO}: Api paste deploy"
-################################################################################
-crudini --set ${HEAT_CONFIG_FILE} paste_deploy config_file "/etc/heat/heat-api-paste.ini"
+crudini --set ${HEAT_CONFIG_FILE} DEFAULT num_engine_workers "${API_WORKERS}"
