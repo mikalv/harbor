@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Kube Manager"}
 echo "${OS_DISTRO}: Starting Harbor kubernetes service update"
 ################################################################################
 source /etc/os-container.env
@@ -94,7 +95,7 @@ freeipa_retreve_all_env_vars () {
 freeipa_retreve_all_env_vars
 
 
-echo "$OS_DISTRO: Building List of environment vars to popuulate templates with"
+echo "$OS_DISTRO: Building List of environment vars to populate templates with"
 ################################################################################
 service_env_build_list_from_file () {
   ENV_FILE=$1

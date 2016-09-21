@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Pwgen"}
 touch /etc/os-container.env
 
 AUTH_FILES='/etc/harbor/harbor-auth.conf /etc/harbor/auth.conf'

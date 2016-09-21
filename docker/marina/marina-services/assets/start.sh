@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Marina"}
 echo "${OS_DISTRO}: Starting Harbor service update"
 ################################################################################
 source /etc/os-container.env
@@ -35,12 +36,40 @@ echo "${OS_DISTRO}: Launching user certificate management"
 if [ "$MARINA_SERVICE" == "kubernetes" ]; then
   echo "${OS_DISTRO}: Not launching kube service management (we are kube!)"
   ##############################################################################
+
+
 elif [ "$MARINA_SERVICE" == "keystone" ]; then
-  echo "${OS_DISTRO}: Launching federation management"
+  echo "${OS_DISTRO}: Launching keystone ldap management"
   ##############################################################################
   /usr/bin/harbor-manage-keystone-ldap
+
+
+  echo "${OS_DISTRO}: Launching keystone federation management"
+  ##############################################################################
   /usr/bin/harbor-manage-keystone-federation
+
+
+  echo "${OS_DISTRO}: Launching kube management"
+  ##############################################################################
   /usr/bin/harbor-manage-kube || true
+
+
+elif [ "$MARINA_SERVICE" == "portal" ]; then
+  echo "${OS_DISTRO}: Launching portal permission management"
+  ##############################################################################
+  /usr/bin/harbor-manage-portal-permissions
+
+
+  echo "${OS_DISTRO}: Launching portal keytab management"
+  ##############################################################################
+  /usr/bin/harbor-manage-portal-keytab
+
+
+  echo "${OS_DISTRO}: Launching kube management"
+  ##############################################################################
+  /usr/bin/harbor-manage-kube || true
+
+
 else
   echo "${OS_DISTRO}: Launching kube management"
   ##############################################################################

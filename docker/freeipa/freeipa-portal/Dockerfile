@@ -12,13 +12,28 @@ RUN set -e && \
         python-jinja2 \
         python-sqlalchemy \
         python-pip && \
+    dnf install -y \
+        git && \
+    git clone --depth 1 https://github.com/portdirect/ipa-portal.git /opt/portal && \
+    git clone --depth 1 --branch master-dist https://github.com/patternfly/patternfly.git /opt/patternfly && \
+    pip --no-cache-dir install /opt/portal && \
+    /usr/bin/freeipa-portal-install && \
     dnf clean all && \
-    container-base-systemd-reset.sh && \
-    touch /init-ipa
+    sed -i 's/^Listen 80/#Listen 80/' /etc/httpd/conf/httpd.conf && \
+    sed -i 's/^Listen 443/#Listen 443/' /etc/httpd/conf.d/ssl.conf && \
+    container-base-systemd-reset.sh
 
 ENTRYPOINT []
 
-CMD ["/sbin/init"]
+CMD ["/usr/sbin/init-systemd-env"]
+
+COPY ./assets/ /opt/harbor/assets
+
+RUN set -e && \
+    set -x && \
+    mv /bin/hostnamectl /bin/hostnamectl-real && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
@@ -28,3 +43,5 @@ LABEL license="Apache-2.0" \
       name="%%DOCKER_FULLIMAGE%%" \
       vcs-ref="%%DOCKER_TAG%%" \
       build-date="%%DOCKER_BUILD_DATE%%"
+
+RUN rm -rf /init-ipa

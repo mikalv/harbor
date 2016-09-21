@@ -36,7 +36,7 @@ RUN set -e && \
 
 ENV OS_COMP="ovs" \
     OS_REPO_URL="https://github.com/openvswitch/ovs.git" \
-    OS_REPO_BRANCH="master"
+    OS_REPO_BRANCH="branch-2.6"
 
 RUN set -e && \
     set -x && \
@@ -50,7 +50,7 @@ RUN set -e && \
       ./boot.sh && \
       ./configure --enable-ssl && \
       make rpm-fedora-kmod RPMBUILD_OPT="-D \"kversion ${KERNEL_VERSION}\"" && \
-      make rpm-fedora && \
+      make rpm-fedora RPMBUILD_OPT="--without check" && \
       make python/ovs/version.py && \
       mkdir -p /srv/python && \
       tar -cvf /srv/python/ovs.tar python/ && \

@@ -15,23 +15,28 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Init"}
+echo "${OS_DISTRO}: Container starting"
+################################################################################
 . /usr/sbin/container-gen-env
-: ${OS_DOMAIN:="kube.local"}
-
 touch /etc/os-container.env
 source /etc/os-container.env
 source /opt/harbor/harbor-vars.sh
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 
+echo "${OS_DISTRO}: Running boot checks"
+################################################################################
 boot_checks
+
 
 if [ -f /init-ipa ]
   then
-    ################################################################################
     echo "${OS_DISTRO}: Launching IPA Client enrollment"
-    ################################################################################
+    ############################################################################
     exec /init-ipa-client "$@"
   else
+    echo "${OS_DISTRO}: Running Container Start script"
+    ############################################################################
     exec /start.sh "$@"
 fi

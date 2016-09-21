@@ -1,6 +1,8 @@
 [Unit]
 Description=Harbor Loadbalancer
+After=harbor-auth.service
 After=harbor-kubernetes.service
+After=harbor-etcd.service
 
 [Service]
 Type=simple

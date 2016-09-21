@@ -61,7 +61,7 @@ TEST_VAULT="marina-test-$(uuidgen)"
 until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null ) && \
                                                           ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
                                                           ipa vault-del ${TEST_VAULT} && \
-                                                          kdestroy -A"
+                                                          kdestroy"
 do
   echo "${OS_DISTRO}: Waiting for vaults to be active"
   sleep 60s

@@ -1,0 +1,78 @@
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: portal
+    version: v0.1.0
+  name: portal-api-master
+  namespace: os-portal
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: portal
+        version: v0.1.0
+      name: portal-api-master
+      namespace: os-portal
+    spec:
+      hostNetwork: false
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: portal-api-master
+          image: {{ IMAGE_PORTAL_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 4434
+              hostPort: 4434
+              protocol: TCP
+              name: https
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - mountPath: /sys/fs/cgroup
+              name: host-sys-fs-cgroup
+            - mountPath: /run
+              name: pod-run
+            - mountPath: /run/lock
+              name: pod-run-lock
+            - mountPath: /tmp
+              name: pod-tmp
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keytab-secret
+              mountPath: /run/harbor/auth/keytab
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: host-sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: pod-run
+          emptyDir: {}
+        - name: pod-run-lock
+          emptyDir: {}
+        - name: pod-tmp
+          emptyDir: {}
+        - name: os-config-ssl-secret
+          secret:
+            secretName: portal-ssl-secret
+        - name: os-config-host-ipa
+          secret:
+            secretName: portal-host-ipa
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: portal-user-ssl-secret
+        - name: os-config-keytab-secret
+          secret:
+            secretName: portal-keytab-secret

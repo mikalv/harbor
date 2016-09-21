@@ -58,8 +58,6 @@ RUN set -e && \
 
 VOLUME [ "/sys/fs/cgroup" , "/run", "/tmp" , "/run/lock" ]
 
-
-
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

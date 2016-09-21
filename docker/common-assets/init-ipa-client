@@ -15,19 +15,26 @@
 # limitations under the License.
 
 set -e
-export OS_DOMAIN=$(hostname -d)
+: ${OS_DISTRO:="HarborOS: Init"}
+echo "${OS_DISTRO}: Container starting (FreeIPA Client Container)"
+################################################################################
+touch /etc/os-environment.env
+touch /etc/os-container.env
+source /etc/os-environment.env
+source /etc/os-container.env
+
+: ${OS_DOMAIN:="$(hostname -d)"}
+export OS_DOMAIN
 : ${FREEIPA_HOSTNAME:="freeipa"}
 : ${FREEIPA_SERVICE_HOST:="${FREEIPA_HOSTNAME}.$OS_DOMAIN"}
-export FREEIPA_SERVICE_HOST
-echo "FREEIPA_SERVICE_HOST: $FREEIPA_SERVICE_HOST"
 
-touch /etc/os-container.env
-source /etc/os-container.env
 source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh
 source /opt/harbor/harbor-common.sh
 
-check_required_vars HARBOR_RESOLV_FILE
+
+################################################################################
+check_required_vars FREEIPA_SERVICE_HOST
 touch /etc/resolv.conf
 if [ -f ${HARBOR_RESOLV_FILE} ]; then
     echo "${OS_DISTRO}: overriding host resolv.conf"
@@ -35,22 +42,27 @@ if [ -f ${HARBOR_RESOLV_FILE} ]; then
 fi
 echo "${OS_DISTRO}: Displaying resolv.conf:"
 cat /etc/resolv.conf
-
 boot_checks
 
 
+################################################################################
+TMP_HOSTS="/tmp/$(uuidgen)"
+sed "s/$(hostname -s)/$(hostname -s) $(hostname -s).${OS_DOMAIN}/g" /etc/hosts > ${TMP_HOSTS}
+cat ${TMP_HOSTS} > /etc/hosts
+
+
+################################################################################
+systemctl daemon-reload
 systemctl start systemd-hostnamed.service
 systemctl enable systemd-hostnamed.service
 
 
 if [ -f /etc/ipa/ca.crt ] ; then
-  ################################################################################
   echo "${OS_DISTRO}: IPA: CA Cert found @ /etc/ipa/ca.crt, assuming that we are already enrolled"
-  ################################################################################
+  ##############################################################################
 else
-  ################################################################################
   echo "${OS_DISTRO}: IPA: Installing client"
-  ################################################################################
+  ##############################################################################
   check_required_vars OS_DOMAIN \
                       FREEIPA_SERVICE_HOST \
                       AUTH_FREEIPA_HOST_ADMIN_USER \
@@ -73,4 +85,6 @@ else
       --enable-dns-updates
 fi
 
+echo "${OS_DISTRO}: Running Container Start script"
+################################################################################
 exec /start.sh "$@"

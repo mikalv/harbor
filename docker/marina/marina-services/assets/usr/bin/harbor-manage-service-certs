@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Service Cert Manager"}
 echo "${OS_DISTRO}: Starting IPA host update for kube service"
 ################################################################################
 source /etc/os-container.env
@@ -43,6 +44,8 @@ if [ "$MARINA_SERVICE" = "kubernetes" ]; then
   SERVICE_SERVICES="HTTP"
 elif [ "$MARINA_SERVICE" = "loadbalancer" ]; then
   SERVICE_SERVICES="HTTP"
+elif [ "$MARINA_SERVICE" = "etcd" ]; then
+  SERVICE_SERVICES="HTTP"
 elif [ "$MARINA_SERVICE" = "ipsilon" ]; then
   SERVICE_SERVICES="HTTP pgsql"
 elif [ "$MARINA_SERVICE" = "memcached" ]; then
@@ -59,6 +62,8 @@ elif [ "$MARINA_SERVICE" = "heat" ]; then
   SERVICE_SERVICES="HTTP HTTP-cfn HTTP-cloudwatch mysql"
 elif [ "$MARINA_SERVICE" = "murano" ]; then
   SERVICE_SERVICES="HTTP AMQP mysql"
+elif [ "$MARINA_SERVICE" = "portal" ]; then
+  SERVICE_SERVICES="HTTP"
 else
   SERVICE_SERVICES="HTTP mysql"
 fi;
@@ -74,6 +79,8 @@ for SERVICE in $SERVICE_SERVICES; do
 
   if [ "$MARINA_SERVICE" = "kubernetes" ]; then
     HOSTNAME_VAR_MIDFIX=""
+  elif [ "$MARINA_SERVICE" = "etcd" ]; then
+    HOSTNAME_VAR_MIDFIX="_SERVICE"
   elif [ "$MARINA_SERVICE" = "ipsilon" ]; then
     HOSTNAME_VAR_MIDFIX=""
   elif [ "$MARINA_SERVICE" = "memcached" ]; then
@@ -138,6 +145,10 @@ for SERVICE in $SERVICE_SERVICES; do
       HOSTNAME_VAR_MIDFIX="_MESSAGING_SERVICE"
     elif [ "$SERVICE" = "mysql" ]; then
       HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    fi;
+  elif [ "$MARINA_SERVICE" = "portal" ]; then
+    if [ "$SERVICE" = "HTTP" ]; then
+      HOSTNAME_VAR_MIDFIX=""
     fi;
   else
     HOSTNAME_VAR_MIDFIX="_API_SERVICE"

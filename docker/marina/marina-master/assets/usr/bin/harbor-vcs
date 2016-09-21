@@ -18,6 +18,7 @@
 # It means we can roll back the config if we need to
 
 set -e
+: ${OS_DISTRO:="HarborOS: Service"}
 MESSAGE=$@
 echo "${OS_DISTRO}: Going to commit configs into local repo"
 ################################################################################

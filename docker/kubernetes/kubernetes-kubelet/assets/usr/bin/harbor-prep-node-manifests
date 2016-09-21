@@ -82,9 +82,6 @@ prep_manifests () {
 echo "Prepping the Marina Master node manifests"
 prep_manifests marina-master
 
-echo "Prepping the Master node etcd manifests"
-prep_manifests etcd-master
-
 echo "Prepping the Master node kube manifests"
 prep_manifests kube-master
 

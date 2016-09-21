@@ -1,0 +1,141 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+: ${OS_DISTRO:="HarborOS: Portal Keytab Manager"}
+echo "${OS_DISTRO}: Starting portal keytab management"
+################################################################################
+source /etc/os-container.env
+export OS_DOMAIN=$(hostname -d)
+source /etc/os-container.env
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/freeipa-login-helper.sh
+source /opt/harbor/marina/load-config-helper.sh
+KUBE_AUTH_ROOT=/var/lib/harbor/kube
+KUBE_ADMIN_USER=admin
+KUBE_ADMIN_TOKEN=$(cat ${KUBE_AUTH_ROOT}/known_tokens.csv | grep ",$KUBE_ADMIN_USER$" | awk -F ',' '{ print $1 }')
+LOCAL_AUTH_DATA=/root/.harbor
+mkdir -p ${LOCAL_AUTH_DATA}
+
+
+echo "${OS_DISTRO}: Defining user defaults"
+################################################################################
+IPA_USER=${MARINA_SERVICE}
+
+
+echo "${OS_DISTRO}: Getting FreeIPA user admin creds"
+################################################################################
+AUTH_FREEIPA_USER_ADMIN_USER=$(crudini --get /etc/harbor/harbor-auth.conf freeipa user_admin_user)
+AUTH_FREEIPA_USER_ADMIN_PASSWORD=$(crudini --get /etc/harbor/harbor-auth.conf freeipa user_admin_password)
+
+
+echo "${OS_DISTRO}: Getting user vault auth params"
+################################################################################
+SERVICE_VAULT_PASSWORD_FILE=${LOCAL_AUTH_DATA}/$(uuidgen)
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > /dev/null || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(harbor-gen-password 64 96)) >> /dev/null
+crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > $SERVICE_VAULT_PASSWORD_FILE
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user ${IPA_USER}) >> /dev/null
+IPA_VAULT_USER=$(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user)
+
+
+echo "${OS_DISTRO}: Logging into FreeIPA"
+################################################################################
+freeipa_login
+
+
+################################################################################
+generate_user_keytab () {
+  echo "${OS_DISTRO}: Logging into FreeIPA"
+  ################################################################################
+  freeipa_login
+
+  echo "${OS_DISTRO}: Getting principal for: ${IPA_USER}"
+  ################################################################################
+  PRINCIPAL=$(ipa user-show "${IPA_USER}" | grep "^  Principal name:" | awk '{ print $NF }')
+
+
+  echo "${OS_DISTRO}: Getting Keytab for: ${PRINCIPAL}"
+  ################################################################################
+  ipa-getkeytab --principal="${PRINCIPAL}" --keytab=${LOCAL_AUTH_DATA}/${IPA_USER}.keytab
+
+
+  echo "${OS_DISTRO}: Creating Kube Secret"
+  ##############################################################################
+  cat > ${LOCAL_AUTH_DATA}/portal-keytab-secret.yaml <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: portal-keytab-secret
+  namespace: os-portal
+type: Opaque
+data:
+  keytab: $( base64 --wrap 0 ${LOCAL_AUTH_DATA}/${IPA_USER}.keytab )
+EOF
+
+  echo "${OS_DISTRO}: Archiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in portal-keytab-secret
+  do
+    ipa vault-show --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || \
+    ipa vault-add ${VAULT_NAME} --user ${IPA_VAULT_USER} --type symmetric --password-file ${SERVICE_VAULT_PASSWORD_FILE}
+
+    ipa vault-archive --user ${IPA_VAULT_USER} \
+    ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --in ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+
+    rm -f ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+  done
+
+}
+
+
+
+retreive_user_keytab () {
+  echo "${OS_DISTRO}: Retreiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in portal-keytab-secret
+  do
+    ipa vault-retrieve --user ${IPA_VAULT_USER} ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --out ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+  done
+}
+
+
+upload_cert () {
+  echo "${OS_DISTRO}: Uploading Kube Secret"
+  ##############################################################################
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/portal-keytab-secret.yaml || true
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/portal-keytab-secret.yaml
+}
+
+
+##############################################################################
+retreive_user_keytab || (generate_user_keytab && retreive_user_keytab )
+upload_cert
+
+
+echo "${OS_DISTRO}: Cleaning up"
+################################################################################
+rm -rf ${LOCAL_AUTH_DATA}
+
+echo "${OS_DISTRO}: Logging out of FreeIPA"
+################################################################################
+freeipa_logout

@@ -11,6 +11,8 @@ LimitNOFILE=1048576
 LimitNPROC=1048576
 LimitCORE=infinity
 
+
+
 # Load all kernel modules required
 ExecStartPre=-/sbin/modprobe libcrc32c
 ExecStartPre=-/sbin/modprobe nf_conntrack_ipv6
@@ -20,6 +22,9 @@ ExecStartPre=-/sbin/modprobe openvswitch
 ExecStartPre=-/sbin/modprobe vxlan
 ExecStartPre=-/sbin/modprobe vport_geneve
 ExecStartPre=-/sbin/modprobe vport_vxlan
+
+ExecStartPre=-/sbin/modprobe ip_tables
+ExecStartPre=-/sbin/modprobe ip6_tables
 
 ExecStartPre=-/sbin/modprobe overlay
 ExecStartPre=-/sbin/modprobe dm_thin_pool

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Keystone Federation Manager"}
 echo "${OS_DISTRO}: Starting Keystone <-> Ipsilon management"
 ################################################################################
 source /etc/os-container.env

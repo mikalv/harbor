@@ -13,7 +13,7 @@ cfg_roles=/etc/harbor/roles.conf
 
 
 LOCAL_ENV_LIST=''
-echo "$OS_DISTRO: Enviroment List \$LOCAL_ENV_LIST"
+echo "$OS_DISTRO: environment List \$LOCAL_ENV_LIST"
 
 IFS='
 '

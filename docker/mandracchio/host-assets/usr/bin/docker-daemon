@@ -18,6 +18,25 @@ set -e
 DOCKER_PORT=2375
 HOST_PRIMARY_NETWORK_DEV=eth0
 DOCKER_MTU_OVERHEAD=68
+OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
+
+
+
+# Etcd Settings
+: ${ETCD_SERVICE_NAMESPACE:="os-etcd"}
+: ${ETCD_SERVICE_HOSTNAME:="etcd"}
+: ${ETCD_SERVICE_HOST:="${ETCD_SERVICE_HOSTNAME}.$OS_DOMAIN"}
+: ${ETCD_SERVICE_HOST_SVC:="${ETCD_SERVICE_HOSTNAME}.${ETCD_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}
+
+
+SVC_AUTH_ROOT_HOST=/etc/harbor/node/auth
+echo "Harbor: Checking Host certs in ${SVC_AUTH_ROOT_HOST}"
+################################################################################
+HOST_KEY=${SVC_AUTH_ROOT_HOST}/node.key
+HOST_CERT=${SVC_AUTH_ROOT_HOST}/node.crt
+HOST_CA=${SVC_AUTH_ROOT_HOST}/node-ca.crt
+
+
 
 ROUTES="$(ip route show)"
 if [ "${ROUTES}" == "" ] ; then
@@ -46,15 +65,34 @@ done
 )
 
 
-DOCKER_DEV_MTU=$(ip -f inet -o link show ${HOST_PRIMARY_NETWORK_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
-DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
-DOCKER_CMD="-H tcp://${MY_IP}:${DOCKER_PORT} \
---cluster-advertise=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT} \
---cluster-store etcd://127.0.0.1:4001 \
---swarm-default-advertise-addr=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT}"
 
 systemctl enable iscsid.socket iscsiuio.socket
 systemctl start iscsid.socket iscsiuio.socket
+
+DOCKER_DEV_MTU=$(ip -f inet -o link show ${HOST_PRIMARY_NETWORK_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
+DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)
+
+
+DOCKER_CMD_INIT="-H tcp://127.0.0.1:${DOCKER_PORT}"
+DOCKER_CMD_RUN="-H tcp://${MY_IP}:${DOCKER_PORT} \
+--tlscacert=${HOST_CA} \
+--tlscert=${HOST_CERT} \
+--tlskey=${HOST_KEY} \
+--tlsverify \
+--cluster-advertise=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT} \
+--cluster-store etcd://${ETCD_SERVICE_HOST_SVC}:4001 \
+--cluster-store-opt kv.cacertfile=${HOST_CA} \
+--cluster-store-opt kv.certfile=${HOST_CERT} \
+--cluster-store-opt kv.keyfile=${HOST_KEY} \
+--swarm-default-advertise-addr=${HOST_PRIMARY_NETWORK_DEV}:${DOCKER_PORT}"
+
+if openssl verify -CAfile ${SVC_AUTH_ROOT_HOST}/node-ca.crt ${SVC_AUTH_ROOT_HOST}/node.crt; then
+  echo "Launching without remote access and kuryr, either somthing is wrong of this node has not yet been bootstrapped"
+  DOCKER_CMD="${DOCKER_CMD_RUN}"
+else
+  echo "Launching with remote access and kuryr"
+  DOCKER_CMD="${DOCKER_CMD_INIT}"
+fi
 
 mkdir -p /var/lib/docker
 exec dockerd \

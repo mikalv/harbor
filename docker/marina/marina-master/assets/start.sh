@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Marina"}
 echo "${OS_DISTRO}: Starting Marina"
 ################################################################################
 echo ""

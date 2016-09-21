@@ -1,0 +1,56 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# It is expected that this script wil by run by systemd on the host
+# after being dropped into the hooks dir
+
+set -e
+echo "${OS_DISTRO}: Launching uplink config"
+################################################################################
+SUBNET_POOL="192.168.0.0/16"
+FLANNEL_NET="172.16.0.0/16"
+SERVICE_CLUSTER_IP_RANGE="10.10.0.0/24"
+
+
+UPLINK_IP_CONT="169.254.1.1"
+UPLINK_IP_HOST="169.254.1.2"
+UPLINK_NET="169.254.1.0/30"
+DOCKER_MTU=1442
+
+docker network delete uplink || \
+docker network create --driver bridge --subnet ${UPLINK_NET} -o "com.docker.network.mtu"="${DOCKER_MTU}" uplink
+
+
+UPLINK_CONTAINER=$(docker ps | grep k8s_*.*.$HOSTNAME | awk '{ print $NF }')
+docker network connect uplink 1047af0ff57b ${UPLINK_CONTAINER}
+
+
+echo "${OS_DISTRO}: Cleaning any old uplink config"
+################################################################################
+ip link set ${UPLINK_DEV} down &>/dev/null || true
+ip addr del ${UPLINK_IP_HOST}/30 dev ${UPLINK_DEV} &>/dev/null || true
+route del -net ${SUBNET_POOL} gw ${UPLINK_IP_CONT} &>/dev/null || true
+route del -net ${SERVICE_CLUSTER_IP_RANGE} gw ${UPLINK_IP_CONT} &>/dev/null || true
+brctl delbr ${UPLINK_DEV} &>/dev/null || true
+
+
+echo "${OS_DISTRO}: Creating up-link"
+################################################################################
+/var/run/harbor/hooks/bin/pipework ${UPLINK_DEV} ${UPLINK_CONTAINER} ${UPLINK_IP_CONT}/30
+ip addr add ${UPLINK_IP_HOST}/30 dev ${UPLINK_DEV}
+ip link set br-uplink up
+route add -net ${SUBNET_POOL} gw ${UPLINK_IP_CONT}
+route add -net ${SERVICE_CLUSTER_IP_RANGE} gw ${UPLINK_IP_CONT}

@@ -1,0 +1,30 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  labels:
+    harbor-app: neutron-uplink
+    version: v0.1.0
+  name: neutron-uplink
+  namespace: os-node
+spec:
+  hostNetwork: true
+  containers:
+  - name: neutron-uplink
+    image: port/openstack-neutron-local-connect:latest
+    imagePullPolicy: Always
+    env:
+      - name: OS_DOMAIN
+        value: harboros.net
+    command:
+      - tail
+      - -f
+      - /dev/null
+    volumeMounts:
+      - mountPath: /var/run/openvswitch
+        name: var-run-openvswitch
+    securityContext:
+      privileged: true
+  volumes:
+    - name: var-run-openvswitch
+      hostPath:
+        path: /var/run/openvswitch

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: FreeIPA"}
 echo "${OS_DISTRO}: Marina Kube FreeIPA Pod Starting"
 ################################################################################
 

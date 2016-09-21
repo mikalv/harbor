@@ -1,58 +1,93 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: etcd-master
+  name: os-etcd-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/os-etcd
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: etcd-master
+  name: os-etcd-data
+  namespace: os-etcd
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:
   labels:
-    openstack-app: etcd
+    openstack-app: etcd-master
     version: v0.1.0
-  name: etcd
+  name: etcd-master
   namespace: os-etcd
 spec:
   replicas: 1
   template:
     metadata:
       labels:
-        openstack-app: etcd
+        openstack-app: etcd-master
         version: v0.1.0
-      name: openstack-etcd
+      name: etcd-master
       namespace: os-etcd
     spec:
       hostNetwork: true
       nodeSelector:
-        openstack-etcd: 'true'
+        harbor-role: master
       containers:
-        - name: openstack-etcd
+        - name: etcd-master
           image: {{ IMAGE_ETCD_SERVER }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
-          volumeMounts:
-            - name: etcd
-              mountPath: '/data'
-              readOnly: false
-          command:
-            - etcd
-            - --name=default
-            - --listen-peer-urls
-            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
-            - --initial-advertise-peer-urls
-            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
-            - --initial-cluster
-            - default=http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11701
-            - -listen-client-urls
-            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
-            - -advertise-client-urls
-            - http://{{ OPENSTACK_ETCD_SERVICE_HOST }}:11401
-            - -initial-cluster-token
-            - openstack-etcd
-            - --data-dir=/data
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
           ports:
-            - containerPort: 11401
+            - containerPort: 4001
               name: etcd
               protocol: TCP
-            - containerPort: 11701
+            - containerPort: 7001
               name: etcd-peers
               protocol: TCP
+          command:
+            - /start-master.sh
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
           resources:
             limits:
               cpu: 100m
@@ -61,6 +96,15 @@ spec:
             privileged: false
       restartPolicy: Always
       volumes:
-        - name: etcd
-          hostPath:
-            path: /var/lib/harbor/os-etcd
+        - name: os-config-kubecfg
+          secret:
+            secretName: etcd-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: etcd-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: etcd-user-ssl-secret
+        - name: os-etcd-data
+          persistentVolumeClaim:
+            claimName: os-etcd-data

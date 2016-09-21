@@ -36,6 +36,8 @@ echo "${OS_DISTRO}: Neutron config"
 ################################################################################
 export OS_URL="https://${NEUTRON_API_SERVICE_HOST_SVC}"
 export PUBLIC_NET_ID="$(neutron net-show ext-net -f value -c id)"
+check_required_vars OS_DOMAIN \
+                    PUBLIC_NET_ID
 
 
 echo "${OS_DISTRO}: Kube network config"

@@ -32,10 +32,11 @@ rm -f /lib/systemd/system/basic.target.wants/*
 rm -f /lib/systemd/system/anaconda.target.wants/*
 
 rm -rfv /etc/systemd/system/multi-user.target.wants
-
 mkdir -p /etc/systemd/system/container-up.target.wants
 
 ln -s /etc/systemd/system/container-up.target.wants /etc/systemd/system/multi-user.target.wants
+ln -s /usr/lib/systemd/system/container-up.target /etc/systemd/system/default.target
+ln -s /usr/lib/systemd/system/container-configure-first.service /etc/systemd/system/container-up.target.wants/container-configure-first.service
 
 cd /usr/lib/systemd/system/
 ls *domainname.service && \
@@ -45,9 +46,6 @@ ls *domainname.service && \
   sed -i 's,^ExecStart.*,ExecStart=/bin/true,'  $i)
 done;) || true
 
-systemctl set-default container-up.target
-
-systemctl enable container-configure-first.service
 
 # We might as well fix ping here - as this issue only seems to occur on Fedora Hosts
 setcap cap_net_raw,cap_net_admin+p /usr/bin/ping || true

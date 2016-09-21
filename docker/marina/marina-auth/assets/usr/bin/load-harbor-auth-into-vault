@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Auth"}
 echo "${OS_DISTRO}: Loading auth params into FreeIPA vaults"
 ################################################################################
 source /etc/os-container.env

@@ -1,4 +1,7 @@
 #!/bin/bash
+: ${OVN_L3_MODE:="False"}
+
+
 : ${NEUTRON_MARIADB_SERVICE_PORT:="3308"}
 : ${NEUTRON_DB_CA:="/run/harbor/auth/user/tls.ca"}
 : ${NEUTRON_DB_KEY:="/run/harbor/auth/user/tls.key"}
@@ -30,7 +33,7 @@
 : ${NEUTRON_METADATA_CONFIG_FILE:="/etc/neutron/metadata_agent.ini"}
 : ${NEUTRON_METADATA_OVN_CONFIG_FILE:="/etc/neutron/ovn_metadata_agent.ini"}
 
-: ${OVN_L3_MODE:="True"}
+
 : ${LBAAS_PROVIDER:="haproxy"}
 
 

@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Auth"}
 echo "${OS_DISTRO}: Starting service auth update"
 ################################################################################
 

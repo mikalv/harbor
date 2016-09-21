@@ -17,6 +17,7 @@
 # This script starts the specified harbor service.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Service"}
 MANAGE_ACTION=$1
 MANAGED_SERVICE=$2
 echo "${OS_DISTRO}: ${MANAGED_SERVICE} service: ${MANAGE_ACTION}"
@@ -37,7 +38,7 @@ check_required_vars MANAGE_ACTION \
                     MY_DEVICE \
                     MY_IP
 
-echo "${OS_DISTRO}: Loading FreIPA, node and network config"
+echo "${OS_DISTRO}: Loading FreeIPA, node and network config"
 ################################################################################
 load_node_config
 load_network_config

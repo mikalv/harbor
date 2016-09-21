@@ -1,6 +1,8 @@
 [Unit]
 Description=Harbor Ipslon
+After=harbor-auth.service
 After=harbor-kubernetes.service
+After=harbor-etcd.service
 After=harbor-loadbalancer.service
 After=harbor-ovn.service
 After=harbor-memcached.service

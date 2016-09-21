@@ -57,7 +57,7 @@ for ARGUMENT in ${ARGS} ; do
    ARG_COUNT=$((ARG_COUNT+1))
 done
 
-if [ "${KUBECTL_INTERACTIVE}" == "True" ] ; then
+if ! [ "${KUBECTL_INTERACTIVE}" == "False" ] ; then
   exec docker run \
         -it \
         --rm \

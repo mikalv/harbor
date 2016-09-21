@@ -28,5 +28,5 @@ freeipa_login () {
 }
 
 freeipa_logout () {
-  kdestroy -A
+  kdestroy 
 }

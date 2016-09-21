@@ -17,6 +17,7 @@
 # This reloads service by first deleting all controllers and ren recreating them
 
 set -e
+: ${OS_DISTRO:="HarborOS: Service"}
 HARBOR_SERVICE=$1
 HARBOR_SERVICE=heat
 echo "${OS_DISTRO}: Reloading service: $HARBOR_SERVICE"

@@ -224,6 +224,7 @@ echo "${OS_DISTRO}: Enabling Services"
 systemctl enable ipa-server-update-self-ip-address.service
 systemctl enable ipa.service
 #systemctl enable container-tail-journal.service
+systemctl enable httpd
 
 
 

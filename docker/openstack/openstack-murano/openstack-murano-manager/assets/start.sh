@@ -31,22 +31,31 @@ echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-murano.sh
 
-
-echo "${OS_DISTRO}: Managing database"
-################################################################################
-/opt/harbor/murano/manage/bootstrap-database.sh
-
-
-echo "${OS_DISTRO}: Managing User"
-################################################################################
-/opt/harbor/murano/manage/manage-keystone-user.sh
+if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
+  echo "${OS_DISTRO}: Managing database"
+  ##############################################################################
+  /opt/harbor/murano/manage/bootstrap-database.sh
 
 
-echo "${OS_DISTRO}: Managing Service"
-################################################################################
-/opt/harbor/murano/manage/manage-keystone-service.sh
+  echo "${OS_DISTRO}: Managing User"
+  ##############################################################################
+  /opt/harbor/murano/manage/manage-keystone-user.sh
 
 
-echo "${OS_DISTRO}: Finished management"
-################################################################################
-tail -f /dev/null
+  echo "${OS_DISTRO}: Managing Service"
+  ##############################################################################
+  /opt/harbor/murano/manage/manage-keystone-service.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ##############################################################################
+else
+  echo "${OS_DISTRO}: Bootrapping apps"
+  ##############################################################################
+  /opt/harbor/murano/bootstrap/bootstrap-apps.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ##############################################################################
+  tail -f /dev/null
+fi

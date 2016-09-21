@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: User Cert Manager"}
 echo "${OS_DISTRO}: Starting IPA host update for kube service"
 ################################################################################
 source /etc/os-container.env

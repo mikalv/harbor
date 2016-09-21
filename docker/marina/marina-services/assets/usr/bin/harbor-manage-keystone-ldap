@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: Keystone Ldap Manager"}
 echo "${OS_DISTRO}: Starting Harbor LDAP user update"
 ################################################################################
 source /etc/os-container.env
@@ -126,12 +127,11 @@ ipa group-show ${IPA_USER_GROUP} > /dev/null || ipa group-add ${IPA_USER_GROUP}
 
 echo "${OS_DISTRO}: Managing User: ${IPA_USER}"
 ################################################################################
-freeipa_login
-(TMP_PASSWORD=$(harbor-gen-password 12 24)
-ipa user-show ${IPA_USER} || ( \
+TMP_PASSWORD=$(harbor-gen-password 12 24)
+ipa user-show ${IPA_USER} || (( \
 echo $TMP_PASSWORD | ipa user-add --first=Keystone --last=LDAP --email ${IPA_USER_EMAIL} --password ${IPA_USER} && \
-harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD} > /dev/null )) && \
-(kdestroy -A && echo ${PASSWORD} | kinit ${IPA_USER} > /dev/null && kdestroy -A)
+harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD} > /dev/null ) && \
+(kdestroy && echo ${PASSWORD} | kinit ${IPA_USER} > /dev/null && kdestroy ))
 freeipa_login
 if ! ipa group-show ${IPA_USER_GROUP} | grep "^  Member users:" | grep -q ${IPA_USER}; then
   ipa group-add-member ${IPA_USER_GROUP} --users=${IPA_USER}

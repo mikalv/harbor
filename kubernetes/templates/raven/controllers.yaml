@@ -141,7 +141,7 @@ spec:
         harbor-role: master
       containers:
       - name: openstack-raven
-        image: {{ IMAGE_RAVEN_AGENT }}
+        image: {{ IMAGE_RAVEN }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
           - name: OS_DOMAIN

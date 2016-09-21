@@ -1,30 +1,74 @@
+# kind: PersistentVolume
+# apiVersion: v1
+# metadata:
+#   labels:
+#     openstack-app: k8s-volume-test-cinder
+#   name: k8s-volume-test-cinder
+# spec:
+#   capacity:
+#     storage: 2Gi
+#   accessModes:
+#     - ReadWriteOnce
+#   flexVolume:
+#     driver: "cinder"
+#     fsType: "xfs"
+#     options:
+#       volumeName: "k8s-volume-test-cinder"
+#       size: "2"
+# ---
+# kind: PersistentVolumeClaim
+# apiVersion: v1
+# metadata:
+#   labels:
+#     openstack-app: k8s-volume-test-cinder
+#   name: k8s-volume-test-cinder
+#   namespace: default
+# spec:
+#   accessModes:
+#     - ReadWriteOnce
+#   resources:
+#     requests:
+#       storage: 20Gi
+# ---
 apiVersion: v1
-kind: Pod
+kind: ReplicationController
 metadata:
   labels:
-    harbor-app: cinder-kube-testing
+    openstack-app: k8s-volume-test-cinder
     version: v0.1.0
-  name: cinder-kube-testing
+  name: k8s-volume-test-cinder
+  namespace: default
 spec:
-  hostNetwork: true
-  containers:
-  - name: cinder-kube-testing
-    image: docker.io/port/alpine:latest
-    env:
-      - name: OS_DOMAIN
-        value: localdomain
-    command:
-      - tail
-      - -f
-      - /dev/null
-    volumeMounts:
-      - name: cinder-testing
-        mountPath: /data
-  volumes:
-    - name: cinder-testing
-      flexVolume:
-        driver: "cinder"
-        fsType: "xfs"
-        options:
-          volumeName: "cinder-kube-testing"
-          size: "1"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: k8s-volume-test-cinder
+        version: v0.1.0
+      name: k8s-volume-test-cinder
+      namespace: default
+    spec:
+      hostNetwork: true
+      containers:
+      - name:  k8s-volume-test-cinder
+        image: docker.io/port/centos:latest
+        env:
+          - name: OS_DOMAIN
+            value: localdomain
+        command:
+          - tail
+          - -f
+          - /dev/null
+        volumeMounts:
+          - name: k8s-volume-test-cinder
+            mountPath: /data
+      volumes:
+        - name: k8s-volume-test-cinder
+          flexVolume:
+            driver: "cinder"
+            fsType: "xfs"
+            options:
+              volumeName: "k8s-volume-test-cinder"
+              size: "2"
+#           persistentVolumeClaim:
+#             claimName: k8s-volume-test-cinder

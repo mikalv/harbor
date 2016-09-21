@@ -18,8 +18,8 @@
 # between /etc/harbor/harbor-auth.conf and vaults in FreeIPA
 
 set -e
+: ${OS_DISTRO:="HarborOS: Auth"}
 MANAGE_ACTION=$1
-MANAGE_ACTION=start
 echo "${OS_DISTRO}: ${MANAGED_SERVICE} service: ${MANAGE_ACTION}"
 ################################################################################
 # Update config file git repo
@@ -77,7 +77,7 @@ test_freeipa_vaults () {
                                                             ( ipa vault-del ${TEST_VAULT} || true ) && \
                                                             ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
                                                             ipa vault-del ${TEST_VAULT} && \
-                                                            kdestroy -A"
+                                                            kdestroy"
   do
     echo "${OS_DISTRO}: Waiting for vaults to be active"
     sleep 60s
@@ -178,6 +178,9 @@ if [ "$MANAGE_ACTION" = "start" ]; then
   service_manager_container_logs
 
   service_manager_container_clean
+
+elif [ "$MANAGE_ACTION" = "check" ]; then
+  test_freeipa_vaults
 
 elif [ "$MANAGE_ACTION" = "stop" ]; then
   echo "$OS_DISTRO: No management hooks"

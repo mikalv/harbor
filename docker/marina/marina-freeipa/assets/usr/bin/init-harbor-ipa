@@ -15,6 +15,7 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: FreeIPA"}
 echo "${OS_DISTRO}: Starting Harbor FreeIPA Initialiazation"
 ################################################################################
 LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
@@ -106,13 +107,37 @@ retry_freeipa_command () {
     echo "Command Failed, retying in 60s"
     sleep 60s
   done
-  docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy -A"
+  docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "kdestroy"
 }
 
 
 echo "${OS_DISTRO}: Waiting For DNS from freeipa@${NETWORK_FREEIPA_FREEIPA_MASTER_IP} to resolve ${FREEIPA_SERVICE_HOST}"
 ################################################################################
 retry_freeipa_command dig +short ${FREEIPA_SERVICE_HOST} @${NETWORK_FREEIPA_FREEIPA_MASTER_IP}
+
+
+echo "${OS_DISTRO}: Waiting for Vaults to be active"
+################################################################################
+test_freeipa_vaults () {
+  echo "${OS_DISTRO}: Testing FreeIPA Server"
+  ##############################################################################
+  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null"
+  do
+    echo "${OS_DISTRO}: Waiting for auth"
+    sleep 60s
+  done
+  TEST_VAULT="marina-test-$(uuidgen)"
+  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null ) && \
+                                                            ( ipa vault-del ${TEST_VAULT} || true ) && \
+                                                            ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
+                                                            ipa vault-del ${TEST_VAULT} && \
+                                                            kdestroy"
+  do
+    echo "${OS_DISTRO}: Waiting for vaults to be active"
+    sleep 60s
+  done
+}
+test_freeipa_vaults
 
 
 echo "${OS_DISTRO}: Setting default password policy to 1 year"
@@ -136,7 +161,7 @@ create_freeipa_admin_user () {
   retry_freeipa_command "(ipa user-show ${USER} || ( \
   echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${USER} && \
   harbor-user-password-reset ${USER} $TMP_PASSWORD ${PASSWORD} > /dev/null )) && \
-  (kdestroy -A && echo ${PASSWORD} | kinit ${USER} > /dev/null && kdestroy -A)"
+  (kdestroy && echo ${PASSWORD} | kinit ${USER} > /dev/null && kdestroy )"
   if ! retry_freeipa_command ipa group-show admins | grep "^  Member users:" | grep -q ${USER}; then
     retry_freeipa_command ipa group-add-member admins --users=${USER}
   fi

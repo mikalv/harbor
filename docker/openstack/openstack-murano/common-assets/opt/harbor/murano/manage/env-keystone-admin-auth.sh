@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Setting Enviroment Vars For Keystone"
+echo "${OS_DISTRO}: Setting environment Vars For Keystone"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh

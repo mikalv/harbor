@@ -15,12 +15,12 @@
 # limitations under the License.
 
 set -e
+: ${OS_DISTRO:="HarborOS: FreeIPA"}
 echo "${OS_DISTRO}: Marina Kube FreeIPA Pod Starting"
 ################################################################################
 LOCAL_ENV=/tmp/$(uuidgen)-local-env.env
 rm -f ${LOCAL_ENV}
 touch ${LOCAL_ENV}
-
 
 
 echo "${OS_DISTRO}: Loading default environment"
@@ -98,15 +98,15 @@ for CONF_SECTION in DEFAULT; do
     source ${LOCAL_ENV}
     rm -f ${LOCAL_ENV}
   else
-      IMAGE_NAME_PREFIX=$CONF_SECTION
-      for COMPONENT in $(crudini --get $cfg_auth ${CONF_SECTION}); do
-        VALUE="$(crudini --get $cfg_auth ${CONF_SECTION} ${COMPONENT})"
-        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
-        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
-        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
-        source ${LOCAL_ENV}
-        rm -f ${LOCAL_ENV}
-      done
+    IMAGE_NAME_PREFIX=$CONF_SECTION
+    for COMPONENT in $(crudini --get $cfg_auth ${CONF_SECTION}); do
+      VALUE="$(crudini --get $cfg_auth ${CONF_SECTION} ${COMPONENT})"
+      NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+      LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+      echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+      source ${LOCAL_ENV}
+      rm -f ${LOCAL_ENV}
+    done
   fi;
 done
 
@@ -124,15 +124,15 @@ for CONF_SECTION in freeipa; do
     source ${LOCAL_ENV}
     rm -f ${LOCAL_ENV}
   else
-      IMAGE_NAME_PREFIX=$CONF_SECTION
-      for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
-        VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
-        NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
-        LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
-        echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
-        source ${LOCAL_ENV}
-        rm -f ${LOCAL_ENV}
-      done
+    IMAGE_NAME_PREFIX=$CONF_SECTION
+    for COMPONENT in $(crudini --get $cfg_harbor_auth ${CONF_SECTION}); do
+      VALUE="$(crudini --get $cfg_harbor_auth ${CONF_SECTION} ${COMPONENT})"
+      NAME="$(echo AUTH_${CONF_SECTION}_${COMPONENT} | tr '[:lower:]' '[:upper:]')"
+      LOCAL_ENV_LIST="${LOCAL_ENV_LIST} ${NAME}"
+      echo "${NAME}=${VALUE}" > ${LOCAL_ENV}
+      source ${LOCAL_ENV}
+      rm -f ${LOCAL_ENV}
+    done
   fi;
 done
 
@@ -151,6 +151,8 @@ if ! [ "${FREEIPA_SERVICE_HOST_STATUS}" = "true" ]; then
   IPA_DATA_DIR=/var/lib/harbor/freeipa/${FREEIPA_SERVICE_HOST}
   mkdir -p ${IPA_DATA_DIR}
   WORK_IPA_DATA_DIR=/tmp
+
+
   echo "--allow-zone-overlap" > ${WORK_IPA_DATA_DIR}/ipa-server-install-options
   echo "--setup-dns" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
   echo "--forwarder=${NETWORK_PUBLIC_PUBLIC_DNS}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
@@ -168,8 +170,6 @@ if ! [ "${FREEIPA_SERVICE_HOST_STATUS}" = "true" ]; then
   echo "--domain=${OS_DOMAIN}" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
   echo "--realm=$(echo ${OS_DOMAIN}| tr '[:lower:]' '[:upper:]')" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
   echo "--unattended" >> ${WORK_IPA_DATA_DIR}/ipa-server-install-options
-
-
 
 
   FREEIPA_PROVISIONER=$(docker create --net=none -v="${IPA_DATA_DIR}:/data:rw" ${IMAGE_REPO}/${IMAGE_NAMESPACE}/alpine:${IMAGE_TAG})
@@ -193,6 +193,8 @@ if ! [ "${FREEIPA_SERVICE_HOST_STATUS}" = "true" ]; then
         -v="${IPA_DATA_DIR}:/data:rw" \
         --security-opt="seccomp=unconfined" \
         ${IMAGE_FREEIPA_SERVER}
+
 else
+
   docker logs -f ${FREEIPA_SERVICE_HOST}
 fi

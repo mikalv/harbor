@@ -23,7 +23,6 @@ echo "${OS_DISTRO}: Launching Container Startup Scripts"
 . /opt/harbor/neutron/vars.sh
 
 
-tail -f /dev/null
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-test

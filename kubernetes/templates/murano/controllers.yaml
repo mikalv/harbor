@@ -117,6 +117,87 @@ spec:
           secret:
             secretName: keystone-admin-user
 ---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: murano-bootstrapper
+    version: v0.1.0
+  name: murano-bootstrapper
+  namespace: os-murano
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: murano-bootstrapper
+        version: v0.1.0
+      name: murano-bootstrapper
+      namespace: os-murano
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: murano-bootstrapper
+          image: {{ IMAGE_MURANO_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: OS_MANAGEMENT_ACTION
+              value: bootstrap
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: murano-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: murano-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: murano-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: murano-db-root
+        - name: os-config-db
+          secret:
+            secretName: murano-db
+        - name: os-config-keystone
+          secret:
+            secretName: murano-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: murano-user-ssl-secret
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:

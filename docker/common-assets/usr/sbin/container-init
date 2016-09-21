@@ -23,27 +23,28 @@ mkdir -p /run/ipa
 trap mark_exit_code ERR EXIT
 
 set -e
-################################################################################
+: ${OS_DISTRO:="HarborOS: Init"}
 echo "${OS_DISTRO}: Running Container Start Script"
 ################################################################################
+touch /etc/os-environment.env
+source /etc/os-environment.env
 . /usr/sbin/container-gen-env
 
 
 if [ -f /init-ipa ]
   then
-    ################################################################################
     echo "${OS_DISTRO}: Launching IPA Client enrollment"
-    ################################################################################
+    ############################################################################
     /init-ipa-client
   else
     /init
 fi
 
 if true ; then
-  echo "Container configured."
+  echo "${OS_DISTRO}: Container configured."
   else
     ret=$?
-    echo "Container configuration failed." >&2
+    echo "${OS_DISTRO}: Container configuration failed." >&2
     exit $ret
   fi
 exit

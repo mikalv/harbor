@@ -406,6 +406,11 @@ spec:
         - name: cinder-volume-iscsi
           image: docker.io/port/openstack-cinder-volume-iscsi:latest
           imagePullPolicy: Always
+          ports:
+            - containerPort: 3260
+              hostPort: 3260
+              protocol: TCP
+              name: iscsi
           env:
             - name: OS_DOMAIN
               value: harboros.net

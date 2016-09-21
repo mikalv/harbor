@@ -1,0 +1,17 @@
+[Unit]
+Description=Harbor Etcd
+After=harbor-auth.service
+After=harbor-kubernetes.service
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service check etcd
+ExecStartPre=/usr/bin/harbor-service start etcd
+ExecStart=/usr/bin/harbor-service check etcd
+RemainAfterExit=true
+
+[Install]
+WantedBy=container-up.target
