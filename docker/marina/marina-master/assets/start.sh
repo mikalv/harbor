@@ -39,8 +39,7 @@ HARBOR_SERVICE_LIST="harbor-auth.service \
                     harbor-cinder.service \
                     harbor-nova.service \
                     harbor-heat.service \
-                    harbor-murano.service \
-                    harbor-raven.service"
+                    harbor-murano.service"
 
 
 HOST_USER=harbor

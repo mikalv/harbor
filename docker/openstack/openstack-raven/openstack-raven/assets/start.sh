@@ -46,6 +46,15 @@ export SUBNET_POOL="192.168.0.0/16"
 export FLANNEL_NET="172.16.0.0/16"
 export SERVICE_CLUSTER_IP_RANGE="10.10.0.0/24"
 
+
 echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-exec /usr/bin/raven --config-file /etc/raven/raven.conf
+if ! [ "-f /opt/harbor/${OS_COMP}/vars.sh" == "True" ]; then
+  exec /usr/bin/raven --config-file ${RAVEN_CONFIG_FILE}
+else
+  /usr/bin/raven --config-file ${RAVEN_CONFIG_FILE}
+
+  neutron router-gateway-set \
+      "${RAVEN_ROUTER_NAME}" \
+      "${PUBLIC_NET_NAME}"
+fi

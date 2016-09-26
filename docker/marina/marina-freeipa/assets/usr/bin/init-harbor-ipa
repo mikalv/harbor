@@ -121,13 +121,13 @@ echo "${OS_DISTRO}: Waiting for Vaults to be active"
 test_freeipa_vaults () {
   echo "${OS_DISTRO}: Testing FreeIPA Server"
   ##############################################################################
-  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null"
+  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin > /dev/null"
   do
     echo "${OS_DISTRO}: Waiting for auth"
     sleep 60s
   done
   TEST_VAULT="marina-test-$(uuidgen)"
-  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_HOST_ADMIN_PASSWORD} | kinit ${AUTH_FREEIPA_HOST_ADMIN_USER} > /dev/null ) && \
+  until docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin > /dev/null ) && \
                                                             ( ipa vault-del ${TEST_VAULT} || true ) && \
                                                             ipa vault-add ${TEST_VAULT} --password=${TEST_VAULT} && \
                                                             ipa vault-del ${TEST_VAULT} && \

@@ -23,6 +23,7 @@ spec:
         - name: portal-api-master
           image: {{ IMAGE_PORTAL_API }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          tty: true
           ports:
             - containerPort: 4434
               hostPort: 4434
@@ -40,6 +41,9 @@ spec:
               name: pod-run-lock
             - mountPath: /tmp
               name: pod-tmp
+            - name: os-config-portal-email
+              mountPath: /var/run/harbor/secrets/config-portal-email
+              readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
               readOnly: true
@@ -64,6 +68,9 @@ spec:
           emptyDir: {}
         - name: pod-tmp
           emptyDir: {}
+        - name: os-config-portal-email
+          secret:
+            secretName: portal-email
         - name: os-config-ssl-secret
           secret:
             secretName: portal-ssl-secret
@@ -76,3 +83,131 @@ spec:
         - name: os-config-keytab-secret
           secret:
             secretName: portal-keytab-secret
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: portal-manager
+    version: v0.1.0
+  name: portal-manager
+  namespace: os-portal
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: portal-manager
+        version: v0.1.0
+      name: portal-manager
+      namespace: os-portal
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: portal-manager
+          image: {{ IMAGE_PORTAL_ACCOUNTS }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORTAL_ROLE
+              value: bootstrap-keystone
+          command:
+            - /start-manager.sh
+          volumeMounts:
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-keystone
+          secret:
+            secretName: portal-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: portal-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: portal-accounts
+    version: v0.1.0
+  name: portal-accounts-master
+  namespace: os-portal
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: portal-accounts
+        version: v0.1.0
+      name: portal-accounts-master
+      namespace: os-portal
+    spec:
+      hostNetwork: false
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: portal-accounts-master
+          image: {{ IMAGE_PORTAL_ACCOUNTS }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          tty: true
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - mountPath: /sys/fs/cgroup
+              name: host-sys-fs-cgroup
+            - mountPath: /run
+              name: pod-run
+            - mountPath: /run/lock
+              name: pod-run-lock
+            - mountPath: /tmp
+              name: pod-tmp
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-portal-email
+              mountPath: /var/run/harbor/secrets/config-portal-email
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: host-sys-fs-cgroup
+          hostPath:
+            path: /sys/fs/cgroup
+        - name: pod-run
+          emptyDir: {}
+        - name: pod-run-lock
+          emptyDir: {}
+        - name: pod-tmp
+          emptyDir: {}
+        - name: os-config-portal-email
+          secret:
+            secretName: portal-email
+        - name: os-config-host-ipa
+          secret:
+            secretName: portal-host-ipa
+        - name: os-config-keystone
+          secret:
+            secretName: portal-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: portal-user-ssl-secret

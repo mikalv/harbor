@@ -50,7 +50,7 @@ crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT host "${NEUTRON_API_SERVICE_HOST_SV
 crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT bind_port "${NEUTRON_API_SVC_PORT}"
 crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT api_workers "${API_WORKERS}"
 crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
-crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT web_framework "pecan"
+crudini --set ${NEUTRON_CONFIG_FILE} DEFAULT web_framework "legacy"
 
 
 

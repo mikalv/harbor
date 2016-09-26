@@ -413,7 +413,7 @@ spec:
               name: iscsi
           env:
             - name: OS_DOMAIN
-              value: harboros.net
+              value: {{ OS_DOMAIN }}
           volumeMounts:
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
@@ -431,7 +431,7 @@ spec:
               mountPath: /dev
               readOnly: false
           securityContext:
-            privileged: false
+            privileged: true
       volumes:
         - name: os-config-db
           secret:

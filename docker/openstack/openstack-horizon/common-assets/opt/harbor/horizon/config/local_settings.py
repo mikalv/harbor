@@ -89,12 +89,12 @@ OPENSTACK_KEYSTONE_FEDERATION_MANAGEMENT = True
 # Set Console type:
 # valid options are "AUTO"(default), "VNC", "SPICE", "RDP", "SERIAL" or None
 # Set to None explicitly if you want to deactivate the console.
-#CONSOLE_TYPE = "AUTO"
+CONSOLE_TYPE = "SERIAL"
 
 # If provided, a "Report Bug" link will be displayed in the site header
 # which links to the value of this setting (ideally a URL containing
 # information on how to report issues).
-HORIZON_CONFIG["bug_url"] = "https://githube.com/portdirect/harbor"
+HORIZON_CONFIG["bug_url"] = "https://github.com/portdirect/harbor"
 
 # Show backdrop element outside the modal, do not close the modal
 # after clicking on backdrop.
@@ -281,7 +281,7 @@ OPENSTACK_CINDER_FEATURES = {
 # balancer service, security groups, quotas, VPN service.
 OPENSTACK_NEUTRON_NETWORK = {
     'enable_router': True,
-    'enable_quotas': False,
+    'enable_quotas': True,
     'enable_ipv6': True,
     'enable_distributed_router': False,
     'enable_ha_router': False,
@@ -295,7 +295,7 @@ OPENSTACK_NEUTRON_NETWORK = {
     # list of dns servers when creating a new subnet.
     # The entries below are examples only, and are not appropriate for
     # real deployments
-    # 'default_dns_nameservers': ["8.8.8.8", "8.8.4.4", "208.67.222.222"],
+    'default_dns_nameservers': ["10.20.0.10"],
 
     # The profile_support option is used to detect if an external router can be
     # configured via the dashboard. When using specific plugins the
@@ -766,7 +766,7 @@ REST_API_REQUIRED_SETTINGS = ['OPENSTACK_HYPERVISOR_FEATURES',
 
 # Help URL can be made available for the client. To provide a help URL, edit the
 # following attribute to the URL of your choice.
-#HORIZON_CONFIG["help_url"] = "http://openstack.mycompany.org"
+HORIZON_CONFIG["help_url"] = "https://github.com/portdirect/harbor/wiki"
 
 # Settings for OperationLogMiddleware
 # OPERATION_LOG_ENABLED is flag to use the function to log an operation on

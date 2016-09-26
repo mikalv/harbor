@@ -28,8 +28,39 @@ check_required_vars HEAT_CONFIG_FILE \
                     OS_DOMAIN \
                     AUTH_MESSAGING_PASS \
                     AUTH_MESSAGING_USER \
-                    RABBITMQ_SERVICE_HOST_SVC
+                    RABBITMQ_SERVICE_HOST_SVC \
+                    HEAT_DB_KEY \
+                    HEAT_DB_CERT \
+                    HEAT_DB_CA
 
 
+echo "${OS_DISTRO}: messaging: RPC backend"
 ################################################################################
-crudini --set $HEAT_CONFIG_FILE DEFAULT transport_url "rabbit://${AUTH_MESSAGING_USER}:${AUTH_MESSAGING_PASS}@${RABBITMQ_SERVICE_HOST_SVC}:5672/"
+crudini --set ${HEAT_CONFIG_FILE} DEFAULT rpc_backend "rabbit"
+
+
+echo "${OS_DISTRO}: messaging: connection"
+################################################################################
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_use_ssl "True"
+
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "5672"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:5672"
+
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MESSAGING_USER}"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MESSAGING_PASS}"
+
+
+echo "${OS_DISTRO}: messaging: TLS"
+################################################################################
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_version "TLSv1_2"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_keyfile "${HEAT_DB_KEY}"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_certfile "${HEAT_DB_CERT}"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_ca_certs "${HEAT_DB_CA}"
+
+
+echo "${OS_DISTRO}: messaging: config"
+################################################################################
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
+crudini --set ${HEAT_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"

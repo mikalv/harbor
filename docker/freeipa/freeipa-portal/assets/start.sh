@@ -1,19 +1,43 @@
 #!/bin/bash
-echo hello
-tail -f /dev/null
 
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-
-
+set -e
+echo "${OS_DISTRO}: Portal Container Starting"
 ################################################################################
-echo "${OS_DISTRO}: ${OPENSTACK_COMPONENT}: ${OPENSTACK_SUBCOMPONENT}: FreeIPA Portal Install"
-################################################################################
-/opt/harbor/accounts/config-email.sh
-/opt/harbor/accounts/retrieve-keytab.sh
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/portal/vars.sh
 
 
+echo "${OS_DISTRO}: Configuring Email"
+################################################################################
+/opt/harbor/portal/config-email.sh
 
+
+echo "${OS_DISTRO}: Configuring Keytab"
 ################################################################################
-echo "${OS_DISTRO}: ${OPENSTACK_COMPONENT}: ${OPENSTACK_SUBCOMPONENT}: Launching Webserver"
+/opt/harbor/portal/config-keytab.sh
+
+
+echo "${OS_DISTRO}: Launching Apache Service"
 ################################################################################
-exec httpd -D FOREGROUND
+systemctl start httpd || true
+systemctl enable httpd
+
+
+echo "${OS_DISTRO}: Finished container config"
+################################################################################

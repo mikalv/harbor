@@ -30,6 +30,14 @@ echo "${OS_DISTRO}: Configuring branding"
 /opt/harbor/config-keystone-branding.sh
 
 
+echo "${OS_DISTRO}: Enable Debugging"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/keystone/vars.sh
+crudini --set ${KEYSTONE_CONFIG_FILE} DEFAULT debug "True"
+
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################
 exec httpd -D FOREGROUND

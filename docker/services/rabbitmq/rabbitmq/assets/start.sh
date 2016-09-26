@@ -53,12 +53,40 @@ echo "${OS_DISTRO}:    Client port:      ${RABBIT_PORT}"
 echo "${OS_DISTRO}:    Dist Port:        ${RABBIT_DIST_PORT}"
 
 
+if [ -z "${!RABBIT_TLS}" ]; then
+  echo "${OS_DISTRO}: This container supports and requires TLS auth"
+  echo "${OS_DISTRO}: Testing tls certs"
+  ################################################################################
+  openssl verify -CAfile ${RABBIT_TLS}/tls.ca ${RABBIT_TLS}/tls.crt
+  CERT_MOD="$(openssl x509 -noout -modulus -in ${RABBIT_TLS}/tls.crt)"
+  KEY_MOD="$(openssl rsa -noout -modulus -in ${RABBIT_TLS}/tls.key)"
+  if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then
+    echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."
+    exit 1
+  fi
+  CERT_MOD=""
+  KEY_MOD=""
+  echo "${OS_DISTRO}: TLS certs: OK"
+  rm -f /etc/rabbitmq/rabbitmq.config
+  mv /etc/rabbitmq/rabbitmq-ssl.config /etc/rabbitmq/rabbitmq.config
+  sed -i '
+    s|@RABBITMQ_TLS_CA@|'"${RABBIT_TLS}/tls.ca"'|g
+    s|@RABBITMQ_TLS_CERT@|'"${RABBIT_TLS}/tls.crt"'|g
+    s|@RABBITMQ_TLS_KEY@|'"${RABBIT_TLS}/tls.key"'|g
+  ' /etc/rabbitmq/rabbitmq.config
+fi
+
+
 echo "${OS_DISTRO}: Writing config files"
 ################################################################################
 sed -i '
+  s|@RABBIT_NODENAME@|'"$RABBIT_NODENAME"'|g
+  s|@RABBIT_LOG_BASE@|'"$RABBIT_LOG_BASE"'|g
+  s|@RABBIT_PORT@|'"$RABBIT_PORT"'|g
+  s|@RABBIT_DIST_PORT@|'"$RABBIT_DIST_PORT"'|g
+  s|@RABBIT_NODE_IP_ADDRESS@|'"$MY_IP"'|g
   s|@RABBIT_USER@|'"$RABBIT_USER_VAL"'|g
   s|@RABBIT_PASS@|'"$RABBIT_PASS_VAL"'|g
-  s|@RABBIT_PORT@|'"$RABBIT_PORT"'|g
 ' /etc/rabbitmq/rabbitmq.config
 
 sed -i '
@@ -82,7 +110,6 @@ mkdir -p /var/lib/rabbitmq
 chown -R rabbitmq:rabbitmq /var/lib/rabbitmq
 mkdir -p ${RABBIT_LOG_BASE}
 chown -R rabbitmq:rabbitmq ${RABBIT_LOG_BASE}
-
 
 echo "${OS_DISTRO}: Starting Container Application"
 ################################################################################

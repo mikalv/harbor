@@ -23,15 +23,25 @@ echo "${OS_DISTRO}: Launching Container Startup Scripts"
 . /opt/harbor/neutron/vars.sh
 
 
+echo "${OS_DISTRO}: Configuring Container"
+################################################################################
+check_required_vars NEUTRON_CONFIG_FILE \
+                    OS_DOMAIN
+
+
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Configuring Container"
+echo "${OS_DISTRO}: Checking OVS"
 ################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN
+if ! ovs-vsctl list-br | grep -q "^br-int"; then
+  echo "${OS_DISTRO}: The integration brige does not yet exist in OVS, is it online?"
+  echo "${OS_DISTRO}: Sleeping for 10s, before exiting"
+  sleep 10
+  exit 1
+fi
 
 
 echo "${OS_DISTRO}: Starting neutron config"

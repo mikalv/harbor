@@ -1,37 +1,48 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%fedora:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="rabbitmq" \
-    RABBITMQ_VERSION=3.6.1
+    RABBITMQ_VERSION=3.6.5
 
 COPY ./assets /opt/harbor/assets
 
-RUN set -e && \
-    set -x && \
-    apk add --no-cache --virtual run-deps \
-        erlang \
-        erlang-mnesia \
-        erlang-public-key \
-        erlang-crypto \
-        erlang-ssl \
-        erlang-sasl \
+RUN dnf install -y \
         erlang-asn1 \
+        erlang-compiler \
+        erlang-crypto \
+        erlang-erts \
+        erlang-hipe \
         erlang-inets \
-        erlang-os-mon \
-        erlang-xmerl \
+        erlang-kernel \
+        erlang-mnesia \
         erlang-eldap \
-        erlang-syntax-tools && \
-    apk add --no-cache --virtual build-deps \
+        erlang-os_mon \
+        erlang-otp_mibs \
+        erlang-public_key \
+        erlang-runtime_tools \
+        erlang-sasl \
+        erlang-sd_notify \
+        erlang-snmp \
+        erlang-ssl \
+        erlang-stdlib \
+        erlang-syntax_tools \
+        erlang-tools \
+        erlang-xmerl \
+        lksctp-tools \
+        logrotate \
+        make \
+        openssl \
         curl \
         tar \
         xz && \
+    dnf clean all && \
     curl -sSL https://www.rabbitmq.com/releases/rabbitmq-server/v${RABBITMQ_VERSION}/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz | tar -xJ -C / --strip-components 1 && \
     rm -rf /share/**/rabbitmq*.xz && \
-    apk del build-deps && \
-    addgroup rabbitmq && \
-    adduser -DS -g "" -G rabbitmq -s /bin/sh -h /var/lib/rabbitmq rabbitmq && \
-    mkdir -p /data/rabbitmq && \
-    chown -R rabbitmq:rabbitmq /data/rabbitmq && \
-    cp -rf /opt/harbor/assets/* /
+    groupadd rabbitmq -g 1000 && \
+    adduser -u 1000 -g rabbitmq --system rabbitmq && \
+    mkdir -p /home/rabbitmq && \
+    chown rabbitmq:rabbitmq /home/rabbitmq && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

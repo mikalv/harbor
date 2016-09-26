@@ -37,7 +37,7 @@ echo "${OS_DISTRO}: Getting glance admin endpoint"
 export OS_IMAGE_URL="$(openstack endpoint list --service glance --interface admin -f value -c URL)"
 echo "${OS_DISTRO}: Glance endpoint: ${OS_IMAGE_URL}"
 
-tail -f /dev/null
+
 # Image upload function
 ################################################################################
 upload_docker_image () {
@@ -66,12 +66,12 @@ upload_docker_image () {
 
 echo "${OS_DISTRO}: Uploading images"
 ################################################################################
-DOCKER_IMAGE=docker.io/nginx:latest
+DOCKER_IMAGES="docker.io/nginx:latest \
+               docker.io/ewindisch/cirros:latest \
+               docker.io/port/intermodal-centos:latest"
 
-DOCKER_IMAGE=docker.io/ewindisch/cirros:latest
-DOCKER_IMAGE=docker.io/port/intermodal-centos:latest
-
-
-docker pull ${DOCKER_IMAGE}
-((glance image-list --property-filter docker-id=$(docker inspect -f {{.Id}} ${DOCKER_IMAGE}) | grep -q ${DOCKER_IMAGE}) && \
-  echo "${OS_DISTRO}: Image is already loaded into glance") || upload_docker_image ${DOCKER_IMAGE}
+for DOCKER_IMAGE in $DOCKER_IMAGES; do
+  docker pull ${DOCKER_IMAGE}
+  ((glance image-list --property-filter docker-id=$(docker inspect -f {{.Id}} ${DOCKER_IMAGE}) | grep -q ${DOCKER_IMAGE}) && \
+    echo "${OS_DISTRO}: Image is already loaded into glance") || upload_docker_image ${DOCKER_IMAGE}
+done

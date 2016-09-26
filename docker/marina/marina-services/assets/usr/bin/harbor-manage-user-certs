@@ -186,9 +186,11 @@ elif [ "$MARINA_SERVICE" = "messaging" ]; then
 elif [ "$MARINA_SERVICE" = "api" ]; then
   HARBOR_SERVICE_PREFIX="HORIZON"
 fi;
+
+
 SERVICE_NAMESPACE_VAR="${HARBOR_SERVICE_PREFIX}_SERVICE_NAMESPACE"
 SERVICE_NAMESPACE=${!SERVICE_NAMESPACE_VAR}
-if [ "$MARINA_SERVICE" = "raven" ]; then
+if ( [ "$MARINA_SERVICE" == "raven" ] || [ "$MARINA_SERVICE" == "kuryr" ] || [ "$MARINA_SERVICE" == "flexvolume" ] ) ; then
   SERVICE_NAMESPACE="kube-system"
 fi;
 

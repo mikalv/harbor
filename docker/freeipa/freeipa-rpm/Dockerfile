@@ -10,10 +10,7 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
-
-RUN set -e && \
-    set -x && \
+    rm -rf /opt/harbor/assets && \
     dnf install -y \
         'dnf-command(config-manager)' && \
     dnf config-manager --set-enabled updates-testing && \

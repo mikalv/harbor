@@ -9,7 +9,8 @@ RUN set -e && \
     echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories && \
     apk add --no-cache --virtual run-deps  \
         arping \
-        ip6tables && \
+        ip6tables \
+        openvswitch && \
     chmod 0640 /etc/sudoers && \
     echo "neutron ALL = (root) NOPASSWD: /usr/bin/neutron-rootwrap-daemon" >> /etc/sudoers && \
     echo "Defaults!/usr/bin/neutron-rootwrap-daemon !requiretty" >> /etc/sudoers && \

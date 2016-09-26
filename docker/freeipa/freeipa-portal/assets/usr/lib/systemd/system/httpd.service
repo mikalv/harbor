@@ -1,0 +1,19 @@
+[Unit]
+Description=The Apache HTTP Server
+After=network.target remote-fs.target nss-lookup.target
+
+[Service]
+Type=notify
+Environment=LANG=C
+Restart=always
+RestartSec=10
+ExecStart=/usr/sbin/httpd $OPTIONS -DFOREGROUND
+ExecReload=/usr/sbin/httpd $OPTIONS -k graceful
+# Send SIGWINCH for graceful stop
+KillSignal=SIGWINCH
+KillMode=mixed
+#PrivateTmp=true
+StandardOutput=tty
+
+[Install]
+WantedBy=multi-user.target

@@ -1,5 +1,5 @@
 [Unit]
-Description=Harbor Cinder
+Description=Harbor Cinder and Kube Flexvolume
 After=harbor-auth.service
 After=harbor-kubernetes.service
 After=harbor-etcd.service
@@ -19,6 +19,7 @@ Restart=always
 RestartSec=20
 TimeoutSec=0
 ExecStartPre=/usr/bin/harbor-service start cinder
+ExecStartPre=/usr/bin/harbor-service start flexvolume
 ExecStart=/usr/bin/harbor-service check cinder
 ExecStop=/usr/bin/harbor-service stop cinder
 RemainAfterExit=true

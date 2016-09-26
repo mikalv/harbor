@@ -1,0 +1,90 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+################################################################################
+cfg_network=/etc/harbor/network.conf
+export OS_DOMAIN=$(crudini --get $cfg_network DEFAULT os_domain)
+source /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/kube/vars.sh
+
+STATUS_LOCATION="/var/run/harbor/neutron-status"
+mkdir -p $(dirname ${STATUS_LOCATION})
+touch ${STATUS_LOCATION}
+NEUTRON_STATUS=$(cat ${STATUS_LOCATION})
+if ! [ "$NEUTRON_STATUS" == "ACTIVE" ]; then
+  ################################################################################
+  check_required_vars OS_DOMAIN \
+                      FLEXVOLUME_IMAGE \
+                      AUTH_FLEXVOLUME_KEYSTONE_REGION \
+                      AUTH_FLEXVOLUME_KEYSTONE_PROJECT \
+                      AUTH_FLEXVOLUME_KEYSTONE_PROJECT_DOMAIN \
+                      AUTH_FLEXVOLUME_KEYSTONE_DOMAIN \
+                      KEYSTONE_API_SERVICE_HOST_SVC
+
+
+  ################################################################################
+  AUTH_FLEXVOLUME_KEYSTONE_USER=$(kubectl \
+    --namespace ${AUTH_FLEXVOLUME_KEYSTONE_NAMESPACE} \
+    get secrets ${AUTH_FLEXVOLUME_KEYSTONE_SECRET} --output=json | \
+    jq -r '.data ."kuryr-keystone-user"' | base64 --decode | cut -f 1 -d '=' --complement)
+  AUTH_FLEXVOLUME_KEYSTONE_PASSWORD=$(kubectl \
+    --namespace ${AUTH_FLEXVOLUME_KEYSTONE_NAMESPACE} \
+    get secrets ${AUTH_FLEXVOLUME_KEYSTONE_SECRET} --output=json | \
+    jq -r '.data ."kuryr-keystone-password"' | base64 --decode | cut -f 1 -d '=' --complement)
+
+
+  ################################################################################
+  unset OS_AUTH_URL
+  unset OS_REGION_NAME
+  unset OS_CACERT
+  unset OS_IDENTITY_API_VERSION
+  unset OS_PROJECT_NAME
+  unset OS_PROJECT_DOMAIN_NAME
+  unset OS_DOMAIN_NAME
+  unset OS_PASSWORD
+  unset OS_USERNAME
+  unset OS_USER_DOMAIN_NAME
+
+
+  ################################################################################
+  export OS_AUTH_URL="https://${KEYSTONE_API_SERVICE_HOST_SVC}/v3"
+  export OS_REGION_NAME="${AUTH_FLEXVOLUME_KEYSTONE_REGION}"
+  export OS_CACERT="/rootfs/var/lib/harbor/kube/ca.crt"
+  export OS_IDENTITY_API_VERSION="3"
+  export OS_PROJECT_NAME="${AUTH_FLEXVOLUME_KEYSTONE_PROJECT}"
+  export OS_PROJECT_DOMAIN_NAME="${AUTH_FLEXVOLUME_KEYSTONE_PROJECT_DOMAIN}"
+  export OS_DOMAIN_NAME="${AUTH_FLEXVOLUME_KEYSTONE_DOMAIN}"
+  export OS_PASSWORD="${AUTH_FLEXVOLUME_KEYSTONE_PASSWORD}"
+  export OS_USERNAME="${AUTH_FLEXVOLUME_KEYSTONE_USER}"
+  export OS_USER_DOMAIN_NAME="${AUTH_FLEXVOLUME_KEYSTONE_DOMAIN}"
+
+
+  ################################################################################
+  NEUTRON_STATUS=$(neutron router-show raven-default-router -f value -c status)
+  if [ "$NEUTRON_STATUS" == "ACTIVE" ]; then
+    echo $NEUTRON_STATUS > ${STATUS_LOCATION}
+    echo $NEUTRON_STATUS
+  else
+    NEUTRON_STATUS="OFFLINE"
+    echo $NEUTRON_STATUS > ${STATUS_LOCATION}
+    echo $NEUTRON_STATUS
+  fi
+else
+  echo $NEUTRON_STATUS
+fi

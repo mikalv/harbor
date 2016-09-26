@@ -93,7 +93,7 @@ spec:
           imagePullPolicy: Always
           env:
             - name: OS_DOMAIN
-              value: harboros.net
+              value: {{ OS_DOMAIN }}
           volumeMounts:
             - name: os-config-kubecfg
               mountPath: /var/run/harbor/secrets/config-kubecfg
@@ -141,7 +141,7 @@ spec:
         harbor-role: master
       containers:
       - name: openstack-raven
-        image: {{ IMAGE_RAVEN }}
+        image: {{ IMAGE_RAVEN_RAVEN }}
         imagePullPolicy: {{ IMAGE_PULL_POLICY }}
         env:
           - name: OS_DOMAIN

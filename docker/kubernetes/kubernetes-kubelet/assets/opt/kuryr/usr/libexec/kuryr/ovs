@@ -1,0 +1,71 @@
+#!/bin/bash
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License. You may obtain
+# a copy of the License at
+#
+#      http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+# License for the specific language governing permissions and limitations
+# under the License.
+
+INT_BRIDGE="br-int"
+OPERATION=$1
+PORT=$2
+VETH=$3
+CONTAINER_UUID=$4
+MAC_ADDRESS=$5
+
+
+reboot_check() {
+    echo "checking that neutron has been seen since the kubelet started"
+    if ! [ $(kuryr-check-neutron-been-up) == "ACTIVE" ]; then
+        echo >&2 "Neutron is not online"
+        exit 1
+    fi
+
+}
+
+
+bind_port() {
+    reboot_check
+    echo "plugging veth $VETH (Neutron port $PORT)..."
+    if ! sudo ovs-vsctl -- --may-exist add-port $INT_BRIDGE $VETH -- \
+        set interface $VETH external_ids:attached-mac=$MAC_ADDRESS \
+        external_ids:iface-id=$PORT external_ids:vm-uuid=$CONTAINER_UUID \
+        external_ids:iface-status=active external_ids:owner=kuryr ; then
+      echo "plugging veth $VETH failed, is ovs up?"
+    fi
+}
+
+unbind_port() {
+    reboot_check
+    echo "unplugging veth $PORT..."
+    PORT=`sudo ovs-vsctl --data=bare --no-heading --columns=name \
+          find interface external_ids:iface-id=$PORT \
+          external_ids:owner=kuryr`
+    if [ -z "$PORT" ]; then
+        echo >&2 "Failed to find port $PORT."
+        exit 1
+    fi
+    sudo ovs-vsctl del-port $INT_BRIDGE $PORT
+}
+
+case $OPERATION in
+    "bind")
+        shift
+        bind_port
+        exit 0
+        ;;
+    "unbind")
+        shift
+        unbind_port
+        exit 0
+        ;;
+    *)
+        echo >&2 "$0: Invalid command $OPERATION."
+        exit 1
+        ;;
+esac

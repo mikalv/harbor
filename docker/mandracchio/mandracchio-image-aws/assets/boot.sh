@@ -25,6 +25,7 @@ IMAGE_USER="harbor"
 INSTANCE_TYPE="r3.xlarge"
 
 KEY_PAIR_NAME=harbor-dev
+#KEY_PAIR_NAME=port-master
 
 aws ec2 delete-key-pair --key-name ${KEY_PAIR_NAME} || true
 sudo chmod 0600 $HOME/.aws/${KEY_PAIR_NAME}.pem

@@ -30,6 +30,16 @@ check_required_vars NEUTRON_CONFIG_FILE \
                     NEUTRON_L3_CONFIG_FILE
 
 
+echo "${OS_DISTRO}: Checking OVS"
+################################################################################
+if ! ovs-vsctl list-br | grep -q "^br-ex"; then
+  echo "${OS_DISTRO}: The external brige does not yet exist in OVS, is it online?"
+  echo "${OS_DISTRO}: Sleeping for 10s, before exiting"
+  sleep 10
+  exit 1
+fi
+
+
 echo "${OS_DISTRO}: Starting neutron config"
 ################################################################################
 /opt/harbor/config-neutron.sh

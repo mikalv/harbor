@@ -1,0 +1,121 @@
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: kuryr-manager
+    version: v0.1.0
+  name: kuryr-manager
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: kuryr-manager
+        version: v0.1.0
+      name: kuryr-manager
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: kuryr-manager
+          image: {{ IMAGE_KURYR_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-keystone
+          secret:
+            secretName: kuryr-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: kuryr-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: extensions/v1beta1
+kind: DaemonSet
+metadata:
+  labels:
+    openstack-app: kuryr-libnetwork
+    version: v0.1.0
+  name: openstack-kuryr-libnetwork
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: kuryr-libnetwork
+        version: v0.1.0
+      name: openstack-kuryr-libnetwork
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      containers:
+      - name: openstack-kuryr-libnetwork
+        image: {{ IMAGE_KURYR_LIBNETWORK }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+        volumeMounts:
+          - name: host-var-run-openvswitch
+            mountPath: /var/run/openvswitch
+            readOnly: false
+          - name: os-config-keystone
+            mountPath: /var/run/harbor/secrets/config-keystone
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: true
+      - name: openstack-kuryr-uplink
+        image: {{ IMAGE_KURYR_UPLINK }}
+        imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+        env:
+          - name: OS_DOMAIN
+            value: {{ OS_DOMAIN }}
+          - name: IMAGE_PULL_POLICY
+            value: {{ IMAGE_PULL_POLICY }}
+          - name: IMAGE_KURYR_ROUTER
+            value: {{ IMAGE_KURYR_ROUTER }}
+        volumeMounts:
+          - name: docker-socket
+            mountPath: /var/run/docker.sock
+            readOnly: false
+          - name: os-config-keystone
+            mountPath: /var/run/harbor/secrets/config-keystone
+            readOnly: true
+          - name: os-config-ssl-user-secret
+            mountPath: /run/harbor/auth/user
+            readOnly: true
+        securityContext:
+          privileged: true
+      volumes:
+        - name: host-var-run-openvswitch
+          hostPath:
+            path: /var/run/openvswitch
+        - name: os-config-keystone
+          secret:
+            secretName: kuryr-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: kuryr-user-ssl-secret
+        - name: docker-socket
+          hostPath:
+            path: /var/run/docker.sock

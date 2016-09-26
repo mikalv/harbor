@@ -5,7 +5,8 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps  \
-        haproxy && \
+        haproxy \
+        openvswitch && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

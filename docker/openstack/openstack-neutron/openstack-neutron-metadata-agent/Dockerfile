@@ -6,6 +6,8 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
+    apk add --no-cache --virtual run-deps  \
+        openvswitch && \
     pip --no-cache-dir install supervisor && \
     pip --no-cache-dir install supervisor-stdout && \
     mkdir -p /var/log/supervisor && \

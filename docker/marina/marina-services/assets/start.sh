@@ -21,7 +21,7 @@ echo "${OS_DISTRO}: Starting Harbor service update"
 source /etc/os-container.env
 
 
-if ! [ "$MARINA_SERVICE" == "raven" ]; then
+if ! ( [ "$MARINA_SERVICE" == "raven" ] || [ "$MARINA_SERVICE" == "kuryr" ] || [ "$MARINA_SERVICE" == "flexvolume" ] ) ; then
   echo "${OS_DISTRO}: Launching service certificate management"
   ##############################################################################
   /usr/bin/harbor-manage-service-certs

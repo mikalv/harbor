@@ -28,8 +28,39 @@ check_required_vars NOVA_CONFIG_FILE \
                     OS_DOMAIN \
                     AUTH_MESSAGING_PASS \
                     AUTH_MESSAGING_USER \
-                    RABBITMQ_SERVICE_HOST_SVC
+                    RABBITMQ_SERVICE_HOST_SVC \
+                    NOVA_DB_KEY \
+                    NOVA_DB_CERT \
+                    NOVA_DB_CA
 
 
+echo "${OS_DISTRO}: RPC Backend"
 ################################################################################
-crudini --set $NOVA_CONFIG_FILE DEFAULT transport_url "rabbit://${AUTH_MESSAGING_USER}:${AUTH_MESSAGING_PASS}@${RABBITMQ_SERVICE_HOST_SVC}:5672/"
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT rpc_backend "rabbit"
+
+
+echo "${OS_DISTRO}: Connection"
+################################################################################
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_use_ssl "True"
+
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "5672"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:5672"
+
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MESSAGING_USER}"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MESSAGING_PASS}"
+
+
+echo "${OS_DISTRO}: TLS"
+################################################################################
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_version "TLSv1_2"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_keyfile "${NOVA_DB_KEY}"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_certfile "${NOVA_DB_CERT}"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_ca_certs "${NOVA_DB_CA}"
+
+
+echo "${OS_DISTRO}: Config"
+################################################################################
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"

@@ -17,17 +17,15 @@
 set -e
 echo "${OS_DISTRO}: Kubelet Starting"
 ################################################################################
-: ${SECRETS_DIR:="/var/run/harbor/secrets"}
-: ${OVS_INTERGRATION_BRIDGE:="br-int"}
-. /usr/sbin/container-gen-env
 cfg_node=/etc/harbor/node.conf
 cfg_network=/etc/harbor/network.conf
+. /usr/sbin/container-gen-env
+. /etc/os-container.env
 export OS_DOMAIN=$(crudini --get $cfg_network DEFAULT os_domain)
 export NODE_ROLE=$(crudini --get $cfg_node DEFAULT role)
-source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-export KUBELET_CMD='exec kubelet'
+
 export KUBE_STATUS_DIR="/run/harbor"
 export KUBE_STATUS_FILE="${KUBE_STATUS_DIR}/kube-status"
 
@@ -86,7 +84,6 @@ check_required_vars NODE_HOSTNAME \
                     NETWORK_KUBE_SERVICE_IPS_SERVICE_IP_DNS_FREEIPA \
                     OS_DOMAIN \
                     NODE_ROLE \
-                    OVS_INTERGRATION_BRIDGE \
                     KUBE_STATUS_FILE \
                     NODE_NETWORK_DEFAULT_IP
 

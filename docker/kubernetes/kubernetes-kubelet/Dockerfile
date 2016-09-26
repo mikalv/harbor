@@ -27,6 +27,8 @@ RUN set -e && \
     chmod 0440 /etc/sudoers && \
     curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubelet > /usr/bin/kubelet && \
     chmod +x /usr/bin/kubelet && \
+    curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubectl > /usr/bin/kubectl && \
+    chmod +x /usr/bin/kubectl && \
     mkdir -p /etc/kubernetes/manifests && \
     mkdir -p /opt/cni/bin && \
     cd /opt/cni/bin/ && \
@@ -41,11 +43,6 @@ RUN set -e && \
     yum clean all && \
     container-base-systemd-reset.sh
 
-# What a horrible hack. Whats going on here?
-RUN set -e && \
-    set -x && \
-    /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
-
 ENTRYPOINT ["/kubelet"]
 
 COPY ./assets/ /opt/harbor/assets
@@ -54,6 +51,11 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+# What a horrible hack. Whats going on here?
+RUN set -e && \
+    set -x && \
+    /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

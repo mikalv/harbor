@@ -1,0 +1,48 @@
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: flexvolume-manager
+    version: v0.1.0
+  name: flexvolume-manager
+  namespace: kube-system
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: flexvolume-manager
+        version: v0.1.0
+      name: flexvolume-manager
+      namespace: kube-system
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: flexvolume-manager
+          image: {{ IMAGE_FLEXVOLUME_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-keystone
+          secret:
+            secretName: flexvolume-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: flexvolume-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user

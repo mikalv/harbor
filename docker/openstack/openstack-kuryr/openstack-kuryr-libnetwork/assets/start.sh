@@ -13,21 +13,32 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
+. /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
+. /opt/harbor/kuryr/vars.sh
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
+echo "${OS_DISTRO}: Testing environment"
 ################################################################################
+/opt/harbor/kuryr/manage/env-keystone-auth.sh
 
 
-echo "${OS_DISTRO}: Config Starting"
+echo "${OS_DISTRO}: Configuring Kuryr"
 ################################################################################
+/opt/harbor/config-kuryr.sh
 
 
-echo "${OS_DISTRO}: Launching container application"
+echo "${OS_DISTRO}: launching"
 ################################################################################
-tail -f /dev/null
+exec /usr/sbin/uwsgi \
+    --plugin /usr/lib/uwsgi/python \
+    --http-socket :${KURYR_PORT} \
+    -w kuryr_libnetwork.server:app \
+    --master \
+    --processes "${KURYR_PROCESSES}" \
+    --threads "${KURYR_THREADS}"

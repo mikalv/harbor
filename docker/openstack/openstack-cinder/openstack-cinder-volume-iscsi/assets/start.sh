@@ -37,16 +37,16 @@ echo "${OS_DISTRO}: Component specific config starting"
 /opt/harbor/cinder/components/config-volume.sh
 
 
-CINDER_DEVICE=sda4
+CINDER_DEVICE=xvdf
 echo "${OS_DISTRO}: Setting up ${DEVICE} for cinder with volume group ${CINDER_VOLUME_GROUP}"
 ################################################################################
 check_required_vars CINDER_DEVICE \
                     CINDER_VOLUME_GROUP
 
-pvdisplay /dev/${CINDER_DEVICE} &> /dev/null || (
-  pvcreate /dev/${CINDER_DEVICE}
-)
 if ! vgscan | grep -q "${CINDER_VOLUME_GROUP}"; then
+  pvdisplay /dev/${CINDER_DEVICE} &> /dev/null || (
+    pvcreate /dev/${CINDER_DEVICE}
+  )
   vgcreate ${CINDER_VOLUME_GROUP} /dev/${CINDER_DEVICE}
 fi
 

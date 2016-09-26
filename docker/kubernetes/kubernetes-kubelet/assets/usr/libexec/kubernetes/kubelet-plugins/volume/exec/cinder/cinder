@@ -16,7 +16,7 @@
 
 
 # Notes:
-#  - Please install "jq" package before using this driver.
+#  - Please install the "jq" & "kubelet" packages before using this driver.
 #  - Docker must be running with support for shared mounts,
 #    this diver is only tested with docker>=v1.12.
 #  - This driver requires that a config file be present at
@@ -30,25 +30,15 @@ source /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/kube/vars.sh
-CINDER_MOUNT_IMAGE=docker.io/port/openstack-cinder-mounter
 
-: ${AUTH_KUBE_KEYSTONE_PROJECT:="service"}
-: ${AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN:="default"}
-: ${AUTH_KUBE_KEYSTONE_PROJECT_USER_ROLE:="admin"}
-: ${AUTH_KUBE_KEYSTONE_DOMAIN:="default"}
-: ${AUTH_KUBE_KEYSTONE_REGION:="RegionOne"}
-: ${AUTH_KUBE_KEYSTONE_PASSWORD:="yiegh5shenahPh6fai0Aek7yi5tuwaegh1ingea1Faehee2eelaifawivai5ahph"}
-: ${AUTH_KUBE_KEYSTONE_USER:="heat"}
 
 ################################################################################
 check_required_vars OS_DOMAIN \
-                    CINDER_MOUNT_IMAGE \
-                    AUTH_KUBE_KEYSTONE_REGION \
-                    AUTH_KUBE_KEYSTONE_PROJECT \
-                    AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN \
-                    AUTH_KUBE_KEYSTONE_DOMAIN \
-                    AUTH_KUBE_KEYSTONE_USER \
-                    AUTH_KUBE_KEYSTONE_PASSWORD \
+                    FLEXVOLUME_IMAGE \
+                    AUTH_FLEXVOLUME_KEYSTONE_REGION \
+                    AUTH_FLEXVOLUME_KEYSTONE_PROJECT \
+                    AUTH_FLEXVOLUME_KEYSTONE_PROJECT_DOMAIN \
+                    AUTH_FLEXVOLUME_KEYSTONE_DOMAIN \
                     KEYSTONE_API_SERVICE_HOST_SVC
 
 
@@ -77,21 +67,32 @@ log() {
 }
 
 client_container () {
+
+  ################################################################################
+  AUTH_FLEXVOLUME_KEYSTONE_USER=$(kubectl \
+    --namespace ${AUTH_FLEXVOLUME_KEYSTONE_NAMESPACE} \
+    get secrets ${AUTH_FLEXVOLUME_KEYSTONE_SECRET} --output=json | \
+    jq -r '.data ."kuryr-keystone-user"' | base64 --decode | cut -f 1 -d '=' --complement)
+  AUTH_FLEXVOLUME_KEYSTONE_PASSWORD=$(kubectl \
+    --namespace ${AUTH_FLEXVOLUME_KEYSTONE_NAMESPACE} \
+    get secrets ${AUTH_FLEXVOLUME_KEYSTONE_SECRET} --output=json | \
+    jq -r '.data ."kuryr-keystone-password"' | base64 --decode | cut -f 1 -d '=' --complement)
+
   docker run -i --rm \
     --net=host \
     --privileged \
     -e OS_AUTH_URL="https://${KEYSTONE_API_SERVICE_HOST_SVC}/v3" \
     -e OS_CACERT="/rootfs/var/lib/harbor/kube/ca.crt" \
     -e OS_IDENTITY_API_VERSION="3" \
-    -e OS_REGION_NAME="${AUTH_KUBE_KEYSTONE_REGION}" \
-    -e OS_PROJECT_NAME="${AUTH_KUBE_KEYSTONE_PROJECT}" \
-    -e OS_PROJECT_DOMAIN_NAME="${AUTH_KUBE_KEYSTONE_PROJECT_DOMAIN}" \
-    -e OS_USER_DOMAIN_NAME="${AUTH_KUBE_KEYSTONE_DOMAIN}" \
-    -e OS_USERNAME="${AUTH_KUBE_KEYSTONE_USER}" \
-    -e OS_PASSWORD="${AUTH_KUBE_KEYSTONE_PASSWORD}" \
+    -e OS_REGION_NAME="${AUTH_FLEXVOLUME_KEYSTONE_REGION}" \
+    -e OS_PROJECT_NAME="${AUTH_FLEXVOLUME_KEYSTONE_PROJECT}" \
+    -e OS_PROJECT_DOMAIN_NAME="${AUTH_FLEXVOLUME_KEYSTONE_PROJECT_DOMAIN}" \
+    -e OS_USER_DOMAIN_NAME="${AUTH_FLEXVOLUME_KEYSTONE_DOMAIN}" \
+    -e OS_USERNAME="${AUTH_FLEXVOLUME_KEYSTONE_USER}" \
+    -e OS_PASSWORD="${AUTH_FLEXVOLUME_KEYSTONE_PASSWORD}" \
     -v /:/rootfs:rshared \
     -v /dev:/dev:rshared \
-    ${CINDER_MOUNT_IMAGE} "${@}" 2> /dev/null
+    ${FLEXVOLUME_IMAGE} "${@}" 2> /dev/null
 }
 
 

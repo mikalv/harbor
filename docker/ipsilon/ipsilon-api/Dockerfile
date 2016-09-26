@@ -6,8 +6,6 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     curl -L https://copr.fedorainfracloud.org/coprs/puiterwijk/Ipsilon-master-dependencies/repo/fedora-24/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo > /etc/yum.repos.d/puiterwijk-Ipsilon-master-dependencies-fedora-24.repo && \
     sed -i '/\[fedora\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora.repo && \
     dnf install -y \
@@ -24,6 +22,9 @@ RUN set -e && \
         ipsilon-saml2 \
         ipsilon-saml2-base && \
     dnf clean all && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets && \
+    cat /usr/share/ipsilon/ui/css.css >> /usr/share/ipsilon/ui/css/styles.css && \
     container-base-systemd-reset.sh
 
 LABEL license="Apache-2.0" \

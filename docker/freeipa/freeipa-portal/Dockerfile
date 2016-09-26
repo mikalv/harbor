@@ -16,6 +16,10 @@ RUN set -e && \
         git && \
     git clone --depth 1 https://github.com/portdirect/ipa-portal.git /opt/portal && \
     git clone --depth 1 --branch master-dist https://github.com/patternfly/patternfly.git /opt/patternfly && \
+    mkdir -p /opt/portal/freeipa_community_portal/assets && \
+    mv /opt/patternfly/dist/* /opt/portal/freeipa_community_portal/assets && \
+    rm -rf /opt/portal/freeipa_community_portal/assets/tests && \
+    cp -rf /opt/portal/freeipa_community_portal/custom/* /opt/portal/freeipa_community_portal/assets/ && \
     pip --no-cache-dir install /opt/portal && \
     /usr/bin/freeipa-portal-install && \
     dnf clean all && \
@@ -43,5 +47,3 @@ LABEL license="Apache-2.0" \
       name="%%DOCKER_FULLIMAGE%%" \
       vcs-ref="%%DOCKER_TAG%%" \
       build-date="%%DOCKER_BUILD_DATE%%"
-
-RUN rm -rf /init-ipa

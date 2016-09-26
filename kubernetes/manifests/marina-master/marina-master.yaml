@@ -15,7 +15,7 @@ spec:
     tty: true
     env:
       - name: OS_DOMAIN
-        value: harboros.net
+        value: {{ OS_DOMAIN }}
     ports:
       - containerPort: 9090
         hostPort: 9090
