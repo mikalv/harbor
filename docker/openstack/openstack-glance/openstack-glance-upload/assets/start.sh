@@ -63,12 +63,14 @@ upload_docker_image () {
 }
 
 
-
+tail -f /dev/null
 echo "${OS_DISTRO}: Uploading images"
 ################################################################################
 DOCKER_IMAGES="docker.io/nginx:latest \
                docker.io/ewindisch/cirros:latest \
-               docker.io/port/intermodal-centos:latest"
+               docker.io/port/intermodal-ubuntu:latest \
+               docker.io/port/intermodal-centos:latest \
+               docker.io/port/intermodal-ubuntu-murano:latest"
 
 for DOCKER_IMAGE in $DOCKER_IMAGES; do
   docker pull ${DOCKER_IMAGE}

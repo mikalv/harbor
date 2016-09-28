@@ -157,11 +157,13 @@ fi
 create_freeipa_admin_user () {
   USER=$1
   PASSWORD=$2
-  TMP_PASSWORD=$(harbor-gen-password 12 24)
-  retry_freeipa_command "(ipa user-show ${USER} || ( \
-  echo $TMP_PASSWORD | ipa user-add --first=Host --last=Admin --email ${USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local --password ${USER} && \
-  harbor-user-password-reset ${USER} $TMP_PASSWORD ${PASSWORD} > /dev/null )) && \
-  (kdestroy && echo ${PASSWORD} | kinit ${USER} > /dev/null && kdestroy )"
+  docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "(echo ${AUTH_FREEIPA_ADMIN_PASSWORD} | kinit admin > /dev/null ) && \
+                                                            ipa user-show ${USER} && \
+                                                            kdestroy" || (
+  TMP_PASS="$(retry_freeipa_command "ipa user-add --first=Host --last=Admin --email ${USER}@${NETWORK_DEFAULT_OS_DOMAIN}.local ${USER} --random" | grep "^  Random password" | awk '{ print $NF }')"
+  docker exec "${FREEIPA_SERVICE_HOST}" /bin/sh -c "harbor-user-password-reset ${USER} ${TMP_PASS} ${PASSWORD}"
+  )
+
   if ! retry_freeipa_command ipa group-show admins | grep "^  Member users:" | grep -q ${USER}; then
     retry_freeipa_command ipa group-add-member admins --users=${USER}
   fi

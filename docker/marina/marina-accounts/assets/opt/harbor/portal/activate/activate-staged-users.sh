@@ -48,7 +48,6 @@ echo "${AUTH_FREEIPA_HOST_ADMIN_PASSWORD}" | kinit ${AUTH_FREEIPA_HOST_ADMIN_USE
 echo "${OS_DISTRO}: ${OPENSTACK_COMPONENT}: ${OPENSTACK_SUBCOMPONENT}: Provisioning Accounts"
 ################################################################################
 ipa stageuser-find --pkey-only | grep "^  User login: " | awk '{print $NF}' | while read STAGE_USER; do
-    NEW_USERNAME=sqdqwd
   NEW_USERNAME=${STAGE_USER}
   echo "User: ${NEW_USERNAME}"
   USER_EMAIL="$(ipa stageuser-show $NEW_USERNAME | grep "^  Email address: " | head -n1 | awk '{print $NF}')"

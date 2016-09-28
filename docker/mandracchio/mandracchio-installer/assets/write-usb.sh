@@ -18,13 +18,11 @@ set -e
 echo "${OS_DISTRO}: Writing ISO file to USB Key"
 ################################################################################
 
+USB_KEY_DEV=sdc
 DOCKER_IMAGE=port/mandracchio-installer
-
 IMAGE_NAME=harbor-host-7
 IMAGE_ROOT=/srv/images/installer/images/images
-DOCKER_IMAGE=port/mandracchio-installer
 COMPRESSED_IMAGE_LOC="${IMAGE_ROOT}/installer.iso"
-
 DOCKER_CONTAINER=$(docker run -d --privileged -v /dev:/dev:rw ${DOCKER_IMAGE})
-
-docker exec ${DOCKER_CONTAINER} /bin/sh -c "dd bs=4M if=${COMPRESSED_IMAGE_LOC} of=/dev/sdc && sync"
+docker exec ${DOCKER_CONTAINER} /bin/sh -c "dd bs=4M if=${COMPRESSED_IMAGE_LOC} of=/dev/${USB_KEY_DEV} && sync"
+docker rm -f ${DOCKER_CONTAINER}
