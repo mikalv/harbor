@@ -178,14 +178,20 @@ cert_service_manager () {
 
 
 if [ "$MANAGE_ACTION" = "start" ]; then
-  echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
   cert_service_manager $MANAGED_SERVICE
-  # if [ "$MANAGED_SERVICE" = "kubernetes" ]; then
-  #   echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
-  #   docker rm -v -f $(docker ps | awk '{ if ($NF ~ "^k8s_kube-") print $1}') || true
-  # else
-  #   echo "$OS_DISTRO: No post management hooks"
-  # fi;
+  if [ "$MANAGED_SERVICE" = "kubernetes" ]; then
+     echo "$OS_DISTRO: Removing All kubenetes containers on node to restart services"
+     docker rm -v -f $(docker ps | awk '{ if ($NF ~ "^k8s_kube-") print $1}') || true
+     echo "${OS_DISTRO}: Testing FreeIPA Server"
+     ################################################################################
+     until kubectl cluster-info
+     do
+       echo "${OS_DISTRO}: Waiting for kube to come back online"
+       sleep 10
+     done
+  else
+     echo "$OS_DISTRO: No post management hooks"
+  fi;
 elif [ "$MANAGE_ACTION" = "stop" ]; then
   echo "$OS_DISTRO: No management hooks"
 fi;
