@@ -1,3 +1,14 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    openstack-app: ingress-loadbalancer
+    version: v0.1.0
+  name: ingress-loadbalancer-conf
+  namespace: os-loadbalancer
+data:
+  server-name-hash-bucket-size: "128"
+---
 apiVersion: extensions/v1beta1
 kind: DaemonSet
 metadata:
@@ -44,6 +55,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: NGINX_CONFIGMAP
+            value: ingress-loadbalancer-conf
         volumeMounts:
           - name: os-config-kubecfg
             mountPath: /var/run/harbor/secrets/config-kubecfg

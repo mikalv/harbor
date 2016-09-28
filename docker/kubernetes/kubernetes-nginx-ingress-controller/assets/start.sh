@@ -14,7 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
+set -eo pipefail
 echo "${OS_DISTRO}: Starting kubernetes ingress controller container"
 ################################################################################
 RESPONSE=$(curl --fail --silent --max-time 1 127.0.0.1:8080/healthz/ping)
@@ -26,4 +26,4 @@ fi;
 
 echo "${OS_DISTRO}: Launching kubernetes ingress controller"
 ################################################################################
-exec /nginx-ingress-controller --v=3 --default-backend-service=os-loadbalancer/error-page-server
+exec /nginx-ingress-controller --v=3 --default-backend-service=os-loadbalancer/error-page-server --nginx-configmap="os-loadbalancer/${NGINX_CONFIGMAP}"

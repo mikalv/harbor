@@ -127,11 +127,17 @@ ipa group-show ${IPA_USER_GROUP} > /dev/null || ipa group-add ${IPA_USER_GROUP}
 
 echo "${OS_DISTRO}: Managing User: ${IPA_USER}"
 ################################################################################
+freeipa_create_user () {
+  freeipa_login
+  ipa user-del ${IPA_USER} || true
+  echo $TMP_PASSWORD | ipa user-add --first=Keystone --last=LDAP --email ${IPA_USER_EMAIL} --password ${IPA_USER} && \
+  harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD}
+  freeipa_logout
+  (kdestroy && echo ${PASSWORD} | kinit ${IPA_USER} > /dev/null && kdestroy )
+}
+
 TMP_PASSWORD=$(harbor-gen-password 12 24)
-ipa user-show ${IPA_USER} || (( \
-echo $TMP_PASSWORD | ipa user-add --first=Keystone --last=LDAP --email ${IPA_USER_EMAIL} --password ${IPA_USER} && \
-harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD} > /dev/null ) && \
-(kdestroy && echo ${PASSWORD} | kinit ${IPA_USER} > /dev/null && kdestroy ))
+ipa user-show ${IPA_USER} || until freeipa_create_user; do echo "User Creation Failed"; done
 freeipa_login
 if ! ipa group-show ${IPA_USER_GROUP} | grep "^  Member users:" | grep -q ${IPA_USER}; then
   ipa group-add-member ${IPA_USER_GROUP} --users=${IPA_USER}

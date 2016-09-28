@@ -50,7 +50,7 @@ From there you can install Harbor like any other CentOS based distro, with a few
 
 
 ### Setting up harbor
-The config files for harbor are kept in ```/etc/harbor```, you shouldn't need to touch any of them for a POC, but may want to set some passwords in ```harbor-auth.conf```, or adjust values in ```network.conf```, though the latter is quite fragile at the moment. One exception to this is 'os_domain' in ```network.conf```, which you will probably want to change from the default of 'novalocal'. The kubelet image will run ad docker container on first start start runs through the config files and replaces values in the form '{{ PASSWORD_[0-9][0-9] }}' with an appropriate length string from pwgen.
+The config files for harbor are kept in ```/etc/harbor```, you shouldn't need to touch any of them for a POC, but may want to set some passwords in ```harbor-auth.conf```, or adjust values in ```network.conf```, though the latter is quite fragile at the moment. One exception to this is 'os_domain' in ```network.conf```, which you will probably want to change from the default of 'novalocal'. The kubelet image will run a docker container on first start that runs through the config files and replaces values in the form ```{{ PASSWORD_[0-9][0-9] }}``` with an appropriate length string from pwgen.
 
 
 ### Starting harbor
@@ -114,7 +114,7 @@ After the "marina-master" pod is running, you can log into the cockpit dashboard
 marina
 ```
 Commands of interest in this container are (using keystone as an example):
-
+* ```journalctl --unit harbor-*.service ``` get the logs for the services.
 * ```systemctl [status|restart] harbor-keystone.service``` get status or restart the service, services should be started in order initially (see "/start.sh") but can be restarted in any order once they have all come up, currently only one service should be restarting at any one time, as FreeIPA gets upset when we are logging in an out from multiple containers at the same time - a good thing usually.
 
 * ```harbor-service-edit-auth keystone```, loads the keystone vars used to populate secrets from its vault into vi for editing, before saving it back to the vault.
@@ -134,7 +134,7 @@ Once all services are reported as started, you want to enroll the host to FreeIP
 #!/bin/bash
 harbor-ipa-client-install
 ```
-It typically takes about an hour to get here on a Intel Xeon 1230, 32GB, and a SSD.
+It typically takes about an hour and a half to get here on a Intel Xeon 1230, 32GB, and a SSD.
 
 Now restart the node, once it has come back up run ```docker info``` if it has an entry like: ```etcd://etcd.os-etcd.svc.build.${OS_DOMAIN}:4001``` then you are ready to actually start harbor for real:
 
@@ -146,6 +146,6 @@ docker logs -f kubelet
 # and then after kthe k8s api is up:
 watch kubectl get --all-namespaces pods
 ```
-After about
+After about another 15 mins or so all services should be up and running.
 
 ### Management
