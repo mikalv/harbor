@@ -22,32 +22,41 @@ echo "${OS_DISTRO}: Launching"
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/neutron/vars.sh
 
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-neutron.sh
+: ${OS_MANAGEMENT_ACTION:="manage"}
+if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
+  echo "${OS_DISTRO}: Testing service dependancies"
+  ################################################################################
+  /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Managing database"
-################################################################################
-/opt/harbor/neutron/manage/bootstrap-database.sh
+  echo "${OS_DISTRO}: Config Starting"
+  ################################################################################
+  /opt/harbor/config-neutron.sh
 
 
-echo "${OS_DISTRO}: Managing User"
-################################################################################
-/opt/harbor/neutron/manage/manage-keystone-user.sh
+  echo "${OS_DISTRO}: Managing database"
+  ################################################################################
+  /opt/harbor/neutron/manage/bootstrap-database.sh
 
 
-echo "${OS_DISTRO}: Managing Service"
-################################################################################
-/opt/harbor/neutron/manage/manage-keystone-service.sh
+  echo "${OS_DISTRO}: Managing User"
+  ################################################################################
+  /opt/harbor/neutron/manage/manage-keystone-user.sh
 
 
-echo "${OS_DISTRO}: Finished management"
-################################################################################
-tail -f /dev/null
+  echo "${OS_DISTRO}: Managing Service"
+  ################################################################################
+  /opt/harbor/neutron/manage/manage-keystone-service.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ################################################################################
+else
+  echo "${OS_DISTRO}: Bootstrapping External Network"
+  ################################################################################
+  /opt/harbor/neutron/bootstrap/bootstrap-ext-net.sh
+
+
+  echo "${OS_DISTRO}: Finished management"
+  ################################################################################
+fi

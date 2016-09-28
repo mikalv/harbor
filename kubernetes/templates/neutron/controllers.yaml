@@ -119,6 +119,53 @@ spec:
           secret:
             secretName: keystone-admin-user
 ---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: neutron-manager
+    version: v0.1.0
+  name: neutron-manager
+  namespace: os-neutron
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: neutron-manager
+        version: v0.1.0
+      name: neutron-manager
+      namespace: os-neutron
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: neutron-manager
+          image: {{ IMAGE_NEUTRON_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: OS_MANAGEMENT_ACTION
+              value: bootstrap
+          volumeMounts:
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-keystone
+          secret:
+            secretName: neutron-keystone
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: neutron-user-ssl-secret
+---
 apiVersion: v1
 kind: ReplicationController
 metadata:

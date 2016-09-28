@@ -38,3 +38,16 @@
 
 
 : ${NOVA_METADATA_SVC_PORT:="8775"}
+
+
+: ${PUBLIC_NET_NAME:="ext-net"}
+: ${PUBLIC_SUBNET_NAME:="ext-subnet"}
+: ${PUBLIC_IP_START:="10.80.1.0"}
+: ${PUBLIC_IP_END:="10.95.255.254"}
+: ${PUBLIC_GATEWAY:="10.80.0.1/12"}
+: ${PUBLIC_IP_RANGE:="10.80.0.0/12"}
+
+: ${ADMIN_ROUTER_NAME:="admin"}
+: ${ADMIN_NET_NAME:="admin"}
+: ${ADMIN_SUBNET_NAME:="admin"}
+: ${ADMIN_IP_RANGE:="10.63.0.0/16"}
