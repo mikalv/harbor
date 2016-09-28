@@ -27,6 +27,7 @@ export OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
 
 HARBOR_SERVICE_LIST="harbor-auth.service \
                     harbor-kubernetes.service \
+                    harbor-etcd.service \
                     harbor-loadbalancer.service \
                     harbor-ovn.service \
                     harbor-memcached.service \
