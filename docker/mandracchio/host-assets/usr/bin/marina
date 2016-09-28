@@ -21,4 +21,5 @@ MARINA_MASTER=$(kubectl --namespace=marina get pods --no-headers | grep "^marina
 
 echo "${OS_DISTRO}: Entering marina master pod"
 ################################################################################
+export KUBECTL_INTERACTIVE=True
 kubectl --namespace=marina exec -it $MARINA_MASTER bash

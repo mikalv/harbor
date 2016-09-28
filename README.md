@@ -61,6 +61,8 @@ harbor-node-setup
 systemctl start docker
 systemctl enable docker
 systemctl start kubelet
+docker logs -f kubelet
+# and then after kthe k8s api is up:
 watch kubectl get --all-namespaces pods
 ```
 
@@ -106,8 +108,18 @@ ${HARBOR_HOST_IP} murano.os-murano.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} portal.os-portal.svc.${OS_DOMAIN}
 EOF
 ```
-Your all done! It usually takes about an hour and a half for all services to be fully up.
-After the "marina-master" pod is running, you can log into the cockpit dashboard @ https://$HARBOR_HOST_IP:9090. One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
+After the "marina-master" pod is running, you can log into the cockpit dashboard @ https://$HARBOR_HOST_IP:9090, or you can enter it using:
+```bash
+#!/bin/bash
+marina
+```
+Commands of interest in this container are (using keystone as an example):
+
+* ```systemctl [status|restart] harbor-keystone.service``` get status or restart the service, services should be started in order initially (see "/start.sh") but can be restarted in any order once they have all come up, currently only one service should be restarting at any one time, as FreeIPA gets upset when we are logging in an out from multiple containers at the same time - a good thing usually.
+
+* ```harbor-service-edit-auth keystone```, loads the keystone vars used to populate secrets from its vault into vi for editing, before saving it back to the vault.
+
+One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
 
 It is also worth checking out what the master freeipa-server container is up to (currently this is lauched by a pod that binds to the docker socket, but will soon be a petset):
 
@@ -115,4 +127,25 @@ It is also worth checking out what the master freeipa-server container is up to 
 #!/bin/bash
 docker logs -f freeipa.${OS_DOMAIN}
 ```
-Once you are in the cokpit dashboard
+Once you are in the cockpit dashboard, check out the systemd services tab, and logs to monitor the OpenStack services being set up. If you want to manage the host that cockpit is running on with cockpit you will need to add it to the dashboard, you need to enter the ip of the host thats already in the dashboard, which will then open an ssh connection to the host...
+
+Once all services are reported as started, you want to enroll the host to FreeIPA by running:
+```bash
+#!/bin/bash
+harbor-ipa-client-install
+```
+It typically takes about an hour to get here on a Intel Xeon 1230, 32GB, and a SSD.
+
+Now restart the node, once it has come back up run ```docker info``` if it has an entry like: ```etcd://etcd.os-etcd.svc.build.${OS_DOMAIN}:4001``` then you are ready to actually start harbor for real:
+
+```bash
+#!/bin/bash
+systemctl enable kubelet
+systemctl start kubelet
+docker logs -f kubelet
+# and then after kthe k8s api is up:
+watch kubectl get --all-namespaces pods
+```
+After about
+
+### Management
