@@ -166,4 +166,4 @@ The Ipsilon UI is available at: ```https://ipsilon.${OS_DOMAIN}/idp```
 Credentials for the default domain (ie services) can be got from the marina container and running the ```harbor-service-auth-edit``` for a service.
 The Horizon Dashboard is available at: ```https://api.${OS_DOMAIN}/```
 
-You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone. You should however be able to log in via the ${OS_DOMAIN} using normal keystone auth.
+You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone, this creates a situation that requires you to clear your cookies manually, as ipsilon will attempt to log you out of keystone which is not possible if you didn't login... You should however be able to log in via the ${OS_DOMAIN} using normal keystone auth.
