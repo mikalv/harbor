@@ -6,6 +6,11 @@
 Harbor is the Kubernetes, Openstack, Atomic Linux and FreeIPA stack from port.direct.
 
 Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswitch/ovs) project, improving both control and performance upon both the reference OpenStack and Kubernetes networking layers and allows seamless integration between the two platforms.
+ * kube-proxy is replaced by neturons lbaas v2 service
+ * each node runs an uplink pod and ingress controller, in the hosts network namespace to provide access to the cluster
+ * every pod can run either in the hosts network namespace or its own, so the cloud can bootsrap itself and allow other services to continue operation even if neutron/ovn goes down
+ * Cinder can be used for persistent storage for all components (databases etc), bar itself and keystone (requires manual config)
+
 
 This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
 
