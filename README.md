@@ -77,6 +77,7 @@ ${HARBOR_HOST_IP} ipsilon.${OS_DOMAIN}
 ${HARBOR_HOST_IP} api.${OS_DOMAIN}
 ${HARBOR_HOST_IP} keystone.${OS_DOMAIN}
 ${HARBOR_HOST_IP} neutron.${OS_DOMAIN}
+${HARBOR_HOST_IP} ovn.${OS_DOMAIN}
 ${HARBOR_HOST_IP} nova.${OS_DOMAIN}
 ${HARBOR_HOST_IP} metadata.${OS_DOMAIN}
 ${HARBOR_HOST_IP} serial.${OS_DOMAIN}
@@ -95,6 +96,7 @@ ${HARBOR_HOST_IP} ipsilon.os-ipsilon.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} api.os-api.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} keystone.os-keystone.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} neutron.os-neutron.svc.${OS_DOMAIN}
+${HARBOR_HOST_IP} ovn.os-ovn.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} nova.os-nova.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} metadata.os-nova.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} serial.os-nova.svc.${OS_DOMAIN}
@@ -157,13 +159,11 @@ kubectl create -f /etc/harbor/marina/raven/controllers.yaml
 
 ### Usage
 You can find the FreeIPA User Credentials in the now updated ```/etc/harbor/harbor-auth.conf```
-The FreeIPA UI is available at:
-```https://freeipa.${OS_DOMAIN}/ipa/ui/```
+The FreeIPA UI is available at: ```https://freeipa.${OS_DOMAIN}/ipa/ui/```
 
-The Ipsilon UI is available at:
-```https://ipsilon.${OS_DOMAIN}/idp```
+The Ipsilon UI is available at: ```https://ipsilon.${OS_DOMAIN}/idp```
+
 Credentials for the default domain (ie services) can be got from the marina container and running the ```harbor-service-auth-edit``` for a service.
-The Horizon Dashboard is available at:
-```https://api.${OS_DOMAIN}/```
+The Horizon Dashboard is available at: ```https://api.${OS_DOMAIN}/```
 
 You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone. You should however be able to log in via the ${OS_DOMAIN} using normal keystone auth.
