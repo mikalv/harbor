@@ -5,9 +5,26 @@
 
 Harbor is the Kubernetes, Openstack, Atomic Linux and FreeIPA stack from port.direct.
 
-Harbor pre-packages all of the open source components required to build a modern enterprise class container infrastructure, that easily integrates with your existing IT, and scales from a single laptop to the largest of data centers. Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswitch/ovs) project, improving both control and performance upon both the reference OpenStack and Kubernetes networking layers and allows seamless integration between the two platforms.
+Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswitch/ovs) project, improving both control and performance upon both the reference OpenStack and Kubernetes networking layers and allows seamless integration between the two platforms.
 
 This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
+
+
+
+## Screenshots
+ * Cockpit
+ <div align="center">
+         <img width="45%" src="docs/img/cockpit-topology.png" alt="Single Node Topology View" title="Single Node Topology View"</img>
+         <img height="0" width="8px">
+         <img width="45%" src="docs/img/cockpit-details.png" alt="Service Details" title="Service Details"></img>
+ </div>
+
+ * Horizon
+  <div align="center">
+          <img width="45%" src="docs/img/horizon.png" alt="Horizon" title="Horizon"</img>
+          <img height="0" width="8px">
+          <img width="45%" src="docs/img/murano-apps.png" alt="Murano" title="Murano"></img>
+  </div>
 
 
 ## Getting Started
@@ -145,7 +162,7 @@ Now restart the node, once it has come back up run ```docker info``` if it has a
 systemctl enable kubelet
 systemctl start kubelet
 docker logs -f kubelet
-# and then after kthe k8s api is up:
+# and then after the k8s api is up:
 watch kubectl get --all-namespaces pods
 ```
 After about another 15 mins or so all services should be up and running.
