@@ -31,6 +31,8 @@ This repo contains the Dockerfiles and build scripts for the Harbor platform con
           <img width="45%" src="docs/img/murano-apps.png" alt="Murano" title="Murano"></img>
   </div>
 
+ * [Video of murano in action](https://github.com/HarborOS/videos/blob/master/horizon-placeholder.webm?raw=true)
+
 
 ## Getting Started
 
