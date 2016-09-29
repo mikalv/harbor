@@ -121,7 +121,7 @@ Commands of interest in this container are (using keystone as an example):
 
 One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
 
-It is also worth checking out what the master freeipa-server container is up to (currently this is lauched by a pod that binds to the docker socket, but will soon be a petset):
+It is also worth checking out what the master freeipa-server container is up to (currently this is launched by a pod that binds to the docker socket, but will soon be a petset):
 
 ```bash
 #!/bin/bash
@@ -134,9 +134,9 @@ Once all services are reported as started, you want to enroll the host to FreeIP
 #!/bin/bash
 harbor-ipa-client-install
 ```
-It typically takes about an hour and a half to get here on a Intel Xeon 1230, 32GB, and a SSD.
+It typically takes about an hour and a half to get here on a Intel Xeon 1230, 32GB, SSD, 150Mbs(Cable modem - UK).
 
-Now restart the node, once it has come back up run ```docker info``` if it has an entry like: ```etcd://etcd.os-etcd.svc.build.${OS_DOMAIN}:4001``` then you are ready to actually start harbor for real:
+Now restart the node, once it has come back up run ```docker info``` if it has an entry like: ```etcd://etcd.os-etcd.svc.${OS_DOMAIN}:4001``` then you are ready to actually start harbor for real:
 
 ```bash
 #!/bin/bash
@@ -148,4 +148,22 @@ watch kubectl get --all-namespaces pods
 ```
 After about another 15 mins or so all services should be up and running.
 
-### Management
+Sometimes the raven service gets out of sync, due to the large number of namespaces present when it first comes up, this will be fixed ASAP, but for now you may need to run the following a few times:
+```bash
+#!/bin/bash
+kubectl delete -f /etc/harbor/marina/raven/controllers.yaml
+kubectl create -f /etc/harbor/marina/raven/controllers.yaml
+```
+
+### Usage
+You can find the FreeIPA User Credentials in the now updated ```/etc/harbor/harbor-auth.conf```
+The FreeIPA UI is available at:
+```https://freeipa.${OS_DOMAIN}/ipa/ui/```
+
+The Ipsilon UI is available at:
+```https://ipsilon.${OS_DOMAIN}/idp```
+Credentials for the default domain (ie services) can be got from the marina container and running the ```harbor-service-auth-edit``` for a service.
+The Horizon Dashboard is available at:
+```https://api.${OS_DOMAIN}/```
+
+You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone. You should however be able to log in via the ${OS_DOMAIN} using normal keystone auth.
