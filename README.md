@@ -8,7 +8,7 @@ Harbor is the Kubernetes, Openstack, Atomic Linux and FreeIPA stack from port.di
 Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswitch/ovs) project, improving both control and performance upon both the reference OpenStack and Kubernetes networking layers and allows seamless integration between the two platforms.
  * kube-proxy is replaced by neturons lbaas v2 service
  * each node runs an uplink pod and ingress controller, in the hosts network namespace to provide access to the cluster
- * every pod can run either in the hosts network namespace or its own, so the cloud can bootsrap itself and allow other services to continue operation even if neutron/ovn goes down
+ * every pod can run either in the hosts network namespace or a neutron subnet, so the cloud can bootstrap itself and allow other services to continue operation even if neutron/ovn goes down.
  * Cinder can be used for persistent storage for all components (databases etc), bar itself and keystone (requires manual config)
 
 
