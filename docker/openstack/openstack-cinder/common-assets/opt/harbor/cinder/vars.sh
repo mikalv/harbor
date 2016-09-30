@@ -28,3 +28,6 @@
 
 : ${CINDER_VOLUME_GROUP:="cinder-lvmdriver"}
 : ${CINDER_BACKEND_ISCSI_NAME:="lvm-scsi-1"}
+
+
+: ${CINDER_BACKEND_DEV:="loop0"}

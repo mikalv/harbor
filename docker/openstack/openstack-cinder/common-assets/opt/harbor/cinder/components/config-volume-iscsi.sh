@@ -15,11 +15,14 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
+echo "${OS_DISTRO}: Configuring Cinder volume"
 ################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
 . /opt/harbor/cinder/vars.sh
 
 
-echo "${OS_DISTRO}: Starting container application"
+echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-exec cinder-scheduler --config-file=${CINDER_CONFIG_FILE} --debug
+/opt/harbor/cinder/components/config-volume.sh

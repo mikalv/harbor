@@ -1,15 +1,22 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-cinder-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="cinder-scheduler"
+ENV OPENSTACK_COMPONENT="cinder-init"
 
 COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    apk add --no-cache --virtual build-deps \
+        gcc \
+        musl-dev \
+        python-dev \
+        linux-headers \
+        openssl-dev && \
+    mkdir -p /opt/stack && \
+    pip --no-cache-dir install python-openstackclient && \
+    apk del build-deps && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
-
-USER cinder
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
