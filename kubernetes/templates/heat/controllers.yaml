@@ -226,6 +226,73 @@ spec:
         version: v0.1.0
       name: heat-api-master
       namespace: os-heat
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "heat-api-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "heat"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-domain",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-domain",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trust",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trust",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-heat",
+          			"mountPath": "/pod/etc/heat",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -243,20 +310,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-keystone-domain
-              mountPath: /var/run/harbor/secrets/config-keystone-domain
-              readOnly: true
-            - name: os-config-keystone-trust
-              mountPath: /var/run/harbor/secrets/config-keystone-trust
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-heat
+              mountPath: /etc/heat
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -267,6 +322,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-heat
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: heat-db
@@ -306,6 +363,73 @@ spec:
         version: v0.1.0
       name: heat-api-cfn-master
       namespace: os-heat
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "heat-api-cfn-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api-cfn"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "heat"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-domain",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-domain",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trust",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trust",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-heat",
+          			"mountPath": "/pod/etc/heat",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -323,20 +447,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-keystone-domain
-              mountPath: /var/run/harbor/secrets/config-keystone-domain
-              readOnly: true
-            - name: os-config-keystone-trust
-              mountPath: /var/run/harbor/secrets/config-keystone-trust
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-heat
+              mountPath: /etc/heat
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -347,6 +459,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-heat
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: heat-db
@@ -386,6 +500,73 @@ spec:
         version: v0.1.0
       name: heat-api-cloudwatch-master
       namespace: os-heat
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "heat-api-cloudwatch-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api-cloudwatch"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "heat"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-domain",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-domain",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trust",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trust",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-heat",
+          			"mountPath": "/pod/etc/heat",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -403,20 +584,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-keystone-domain
-              mountPath: /var/run/harbor/secrets/config-keystone-domain
-              readOnly: true
-            - name: os-config-keystone-trust
-              mountPath: /var/run/harbor/secrets/config-keystone-trust
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-heat
+              mountPath: /etc/heat
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -427,6 +596,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-heat
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: heat-db
@@ -466,6 +637,68 @@ spec:
         version: v0.1.0
       name: heat-engine-master
       namespace: os-heat
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "heat-engine-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "engine"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "heat"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-domain",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-domain",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trust",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trust",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-heat",
+          			"mountPath": "/pod/etc/heat",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -478,27 +711,17 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-keystone-domain
-              mountPath: /var/run/harbor/secrets/config-keystone-domain
-              readOnly: true
-            - name: os-config-keystone-trust
-              mountPath: /var/run/harbor/secrets/config-keystone-trust
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
-              readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: pod-etc-heat
+              mountPath: /etc/heat
               readOnly: true
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-heat
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: heat-db

@@ -17,27 +17,8 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/heat/vars.sh
-
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-heat.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/heat/components/config-engine.sh
-
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec su -s /bin/sh -c "exec heat-engine --config-file=${HEAT_CONFIG_FILE} --debug" heat
+exec heat-engine --config-file=${HEAT_CONFIG_FILE} --debug

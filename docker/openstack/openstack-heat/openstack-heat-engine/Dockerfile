@@ -17,7 +17,8 @@ RUN set -e && \
     apk del build-deps && \
     pip --no-cache-dir install docker-py
 
-
+USER heat
+ 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \
