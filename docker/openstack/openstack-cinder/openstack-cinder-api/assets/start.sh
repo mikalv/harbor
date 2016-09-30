@@ -17,28 +17,9 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/cinder/vars.sh
-
-
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-cinder.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/cinder/components/config-api.sh
 
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec su -s /bin/sh -c "exec cinder-api --config-file=${CINDER_CONFIG_FILE} --debug" cinder
+exec cinder-api --config-file=${CINDER_CONFIG_FILE} --debug

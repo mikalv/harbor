@@ -17,38 +17,7 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/cinder/vars.sh
-
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-cinder.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/cinder/components/config-volume.sh
-
-
-CINDER_DEVICE=xvdf
-echo "${OS_DISTRO}: Setting up ${DEVICE} for cinder with volume group ${CINDER_VOLUME_GROUP}"
-################################################################################
-check_required_vars CINDER_DEVICE \
-                    CINDER_VOLUME_GROUP
-
-if ! vgscan | grep -q "${CINDER_VOLUME_GROUP}"; then
-  pvdisplay /dev/${CINDER_DEVICE} &> /dev/null || (
-    pvcreate /dev/${CINDER_DEVICE}
-  )
-  vgcreate ${CINDER_VOLUME_GROUP} /dev/${CINDER_DEVICE}
-fi
 
 
 echo "${OS_DISTRO}: Launching container applications"

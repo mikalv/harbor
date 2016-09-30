@@ -261,6 +261,63 @@ spec:
         version: v0.1.0
       name: cinder-api-master
       namespace: os-cinder
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "cinder-api-init",
+            "image": "{{ IMAGE_CINDER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "api"
+              },
+              {
+                "name": "APP_USER",
+                "value": "cinder"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-secret",
+                "mountPath": "/run/harbor/auth/ssl",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-cinder",
+                "mountPath": "/pod/etc/cinder",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -273,14 +330,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-cinder
+              mountPath: /etc/cinder
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -309,6 +360,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-cinder
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: cinder-db
@@ -342,6 +395,58 @@ spec:
         version: v0.1.0
       name: cinder-scheduler-master
       namespace: os-cinder
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "cinder-scheduler-init",
+            "image": "{{ IMAGE_CINDER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "scheduler"
+              },
+              {
+                "name": "APP_USER",
+                "value": "cinder"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-cinder",
+                "mountPath": "/pod/etc/cinder",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -354,14 +459,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-cinder
+              mountPath: /etc/cinder
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -369,6 +468,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-cinder
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: cinder-db
@@ -398,13 +499,97 @@ spec:
         version: v0.1.0
       name: cinder-volume-iscsi
       namespace: os-cinder
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "cinder-volume-iscsi-init",
+            "image": "{{ IMAGE_CINDER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "volume-iscsi"
+              },
+              {
+                "name": "APP_USER",
+                "value": "cinder"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-cinder",
+                "mountPath": "/pod/etc/cinder",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          },
+          {
+            "name": "cinder-volume-iscsi-prep",
+            "image": "{{ IMAGE_CINDER_VOLUME_ISCSI }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "volume-iscsi"
+              },
+              {
+                "name": "APP_USER",
+                "value": "cinder"
+              }
+            ],
+            "command": [
+              "/init-devs.sh"
+            ],
+            "volumeMounts": [
+              {
+                "name": "host-dev",
+                "mountPath": "/dev",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": true
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
         - name: cinder-volume-iscsi
-          image: docker.io/port/openstack-cinder-volume-iscsi:latest
+          image: {{ IMAGE_CINDER_VOLUME_ISCSI }}
           imagePullPolicy: Always
           ports:
             - containerPort: 3260
@@ -415,14 +600,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-cinder
+              mountPath: /etc/cinder
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -433,6 +612,8 @@ spec:
           securityContext:
             privileged: true
       volumes:
+        - name: pod-etc-cinder
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: cinder-db
