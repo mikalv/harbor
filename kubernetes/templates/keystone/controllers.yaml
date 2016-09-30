@@ -297,68 +297,6 @@ spec:
         version: v0.1.0
       name: keystone-api-master
       namespace: os-keystone
-      annotations:
-        pod.alpha.kubernetes.io/init-containers: '[
-          {
-          	"name": "keystone-api-init",
-          	"image": "{{ IMAGE_KEYSTONE_INIT }}",
-          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
-          	"env": [
-          		{
-          			"name": "OS_DOMAIN",
-          			"value": "{{ OS_DOMAIN }}"
-          		},
-          		{
-          			"name": "APP_COMPONENT",
-          			"value": "api"
-          		},
-          		{
-          			"name": "APP_USER",
-          			"value": "apache"
-          		}
-          	],
-          	"volumeMounts": [
-          		{
-          			"name": "os-config-db",
-          			"mountPath": "/var/run/harbor/secrets/config-db",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "os-config-ldap",
-          			"mountPath": "/var/run/harbor/secrets/config-ldap",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "os-config-user",
-          			"mountPath": "/var/run/harbor/secrets/config-user",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "os-config-ssl-secret",
-          			"mountPath": "/run/harbor/auth/ssl",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "os-config-ssl-user-secret",
-          			"mountPath": "/run/harbor/auth/user",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "os-config-federation-saml2-secret",
-          			"mountPath": "/run/harbor/auth/mellon",
-          			"readOnly": true
-          		},
-          		{
-          			"name": "pod-etc-keystone",
-          			"mountPath": "/pod/etc/keystone",
-          			"readOnly": false
-          		}
-          	],
-          	"securityContext": {
-          		"privileged": false
-          	}
-          }
-        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -380,8 +318,17 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: pod-etc-keystone
-              mountPath: /etc/keystone
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-ldap
+              mountPath: /var/run/harbor/secrets/config-ldap
+              readOnly: true
+            - name: os-config-user
+              mountPath: /var/run/harbor/secrets/config-user
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -395,8 +342,9 @@ spec:
           securityContext:
             privileged: false
       volumes:
-        - name: pod-etc-keystone
-          emptyDir: {}
+        - name: os-config-host-ipa
+          secret:
+            secretName: keystone-host-ipa
         - name: os-config-db
           secret:
             secretName: keystone-db
