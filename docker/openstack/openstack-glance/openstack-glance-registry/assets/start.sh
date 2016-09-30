@@ -17,29 +17,9 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/glance/vars.sh
 
 
-
-echo "${OS_DISTRO}: Testing service dependancies"
+echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-glance.sh
-
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/glance/components/config-registry.sh
-
-
-echo "${OS_DISTRO}: Finished management"
-################################################################################
-exec su -s /bin/sh -c "exec glance-registry --config-file=${GLANCE_CONFIG_FILE} --debug" glance
+exec glance-registry --config-file=${GLANCE_CONFIG_FILE} --debug
