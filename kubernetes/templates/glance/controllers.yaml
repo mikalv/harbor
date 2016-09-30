@@ -301,6 +301,63 @@ spec:
         version: v0.1.0
       name: glance-api-master
       namespace: os-glance
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "glance-api-init",
+          	"image": "{{ IMAGE_GLANCE_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "glance"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-glance",
+          			"mountPath": "/pod/etc/glance",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -318,14 +375,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-glance
+              mountPath: /etc/glance
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -339,6 +390,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-glance
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: glance-db
@@ -375,6 +428,63 @@ spec:
         version: v0.1.0
       name: glance-reg-master
       namespace: os-glance
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "glance-reg-init",
+          	"image": "{{ IMAGE_GLANCE_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "registry"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "glance"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-glance",
+          			"mountPath": "/pod/etc/glance",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -392,14 +502,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-glance
+              mountPath: /etc/glance
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -413,6 +517,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-glance
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: glance-db

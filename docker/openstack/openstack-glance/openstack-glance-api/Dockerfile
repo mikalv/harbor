@@ -7,6 +7,8 @@ RUN set -e && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
+USER glance
+
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

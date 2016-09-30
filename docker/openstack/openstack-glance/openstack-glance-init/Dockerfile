@@ -1,6 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-heat-alpine:%%DOCKER_TAG%%
-
-ENV OPENSTACK_COMPONENT="heat-api-cfn"
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-glance-alpine:%%DOCKER_TAG%%
 
 COPY ./assets/ /opt/harbor/assets
 
@@ -8,8 +6,6 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
-
-USER heat
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

@@ -1,15 +1,11 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-heat-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine-common-deps:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="heat-api-cfn"
-
-COPY ./assets/ /opt/harbor/assets
+ENV OPENSTACK_COMPONENT="init"
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
-
-USER heat
+    apk add --no-cache --virtual run-deps \
+        openssl
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

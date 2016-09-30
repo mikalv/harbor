@@ -17,33 +17,10 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/glance/vars.sh
 
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-glance.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/glance/components/config-api.sh
-
-
-echo "${OS_DISTRO}: Ensuring that glance owns /var/lib/glance/images"
-################################################################################
-mkdir -p /var/lib/glance/images
-chown glance:glance /var/lib/glance/images
 
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec su -s /bin/sh -c "exec glance-api --config-file=${GLANCE_CONFIG_FILE} --debug" glance
+exec glance-api --config-file=${GLANCE_CONFIG_FILE} --debug
