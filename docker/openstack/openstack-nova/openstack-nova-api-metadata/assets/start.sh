@@ -16,35 +16,9 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/nova/vars.sh
-check_required_vars OS_DOMAIN \
-                    NOVA_CONFIG_FILE
-
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Common config starting"
-################################################################################
-/opt/harbor/config-nova-controller.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/nova/components/config-api-metadata.sh
-
-
-echo "${OS_DISTRO}: Fixing permissions"
-################################################################################
-mkdir -p /usr/lib/python2.7/site-packages/keys
-chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 
 
 echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-exec su -s /bin/sh -c "exec nova-api-metadata --config-file=${NOVA_CONFIG_FILE} --debug" nova
+exec nova-api-metadata --config-file=${NOVA_CONFIG_FILE} --debug

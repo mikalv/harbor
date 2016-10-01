@@ -20,31 +20,28 @@ echo "${OS_DISTRO}: Launching"
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/nova/vars.sh
-check_required_vars OS_DOMAIN \
-                    NOVA_CONFIG_FILE
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
-/usr/bin/mysql-test
+check_required_vars OS_DOMAIN \
+                    NOVA_CONFIG_FILE \
+                    NOVA_ROLE
 
 
 echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-/opt/harbor/config-nova-controller.sh
+/opt/harbor/config-nova-${NOVA_ROLE}.sh
 
 
 echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/nova/components/config-api.sh
+/opt/harbor/nova/components/config-${APP_COMPONENT}.sh
 
 
-echo "${OS_DISTRO}: Fixing permissions"
+echo "${OS_DISTRO}: Moving pod configs into place"
 ################################################################################
-mkdir -p /usr/lib/python2.7/site-packages/keys
-chown -R nova:nova /usr/lib/python2.7/site-packages/keys
+cp -rfav $(dirname ${NOVA_CONFIG_FILE})/* /pod$(dirname ${NOVA_CONFIG_FILE})/
 
 
-echo "${OS_DISTRO}: Launching container application"
+echo "${OS_DISTRO}: Pod init finished"
 ################################################################################
-exec su -s /bin/sh -c "exec nova-api-os-compute --config-file=${NOVA_CONFIG_FILE} --debug" nova

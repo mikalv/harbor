@@ -28,6 +28,11 @@ check_required_vars NOVA_CONFIG_FILE \
                     OS_DOMAIN
 
 
+echo "${OS_DISTRO}: Testing service dependancies"
+################################################################################
+/usr/bin/mysql-test
+
+
 echo "${OS_DISTRO}: Starting common config"
 ################################################################################
 /opt/harbor/config-nova.sh
