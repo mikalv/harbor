@@ -16,6 +16,8 @@ RUN set -e && \
     echo "Defaults!/usr/bin/neutron-rootwrap-daemon !requiretty" >> /etc/sudoers && \
     chmod 0440 /etc/sudoers
 
+USER neutron
+
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

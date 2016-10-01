@@ -17,11 +17,10 @@
 set -e
 echo "${OS_DISTRO}: Launching neutron-ovn-metadata-agent"
 ################################################################################
-. /etc/os-container.env
 . /opt/harbor/neutron/vars.sh
 
 
 ################################################################################
-exec su -s /bin/sh -c "exec neutron-ovn-metadata-agent  --debug \
+exec neutron-ovn-metadata-agent  --debug \
                       --config-file ${NEUTRON_CONFIG_FILE} \
-                      --config-file ${NEUTRON_METADATA_OVN_CONFIG_FILE}" neutron
+                      --config-file ${NEUTRON_METADATA_OVN_CONFIG_FILE}

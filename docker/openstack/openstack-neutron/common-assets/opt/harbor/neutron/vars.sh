@@ -40,6 +40,7 @@
 : ${NOVA_METADATA_SVC_PORT:="8775"}
 
 
+: ${PUBLIC_NET_BRIDGE:="br-ex"}
 : ${PUBLIC_NET_NAME:="ext-net"}
 : ${PUBLIC_SUBNET_NAME:="ext-subnet"}
 : ${PUBLIC_IP_START:="10.80.1.0"}

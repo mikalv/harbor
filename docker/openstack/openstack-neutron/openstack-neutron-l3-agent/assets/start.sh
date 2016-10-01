@@ -17,52 +17,11 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/neutron/vars.sh
-
-
-echo "${OS_DISTRO}: Configuring Container"
-################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN \
-                    NEUTRON_L3_CONFIG_FILE
-
-
-echo "${OS_DISTRO}: Checking OVS"
-################################################################################
-if ! ovs-vsctl list-br | grep -q "^br-ex"; then
-  echo "${OS_DISTRO}: The external brige does not yet exist in OVS, is it online?"
-  echo "${OS_DISTRO}: Sleeping for 10s, before exiting"
-  sleep 10
-  exit 1
-fi
-
-
-echo "${OS_DISTRO}: Starting neutron config"
-################################################################################
-/opt/harbor/config-neutron.sh
-
-
-echo "${OS_DISTRO}: Starting l3-agent config"
-################################################################################
-/opt/harbor/neutron/components/config-l3-agent.sh
-
-
-echo "${OS_DISTRO}: Removing any existing network namespaces"
-################################################################################
-ip netns list | grep "^qrouter" | while read -r NET_NS ; do
-  ip netns delete $NET_NS
-done
-# why do we have to run this twice sometimes?
-ip netns list | grep "^qrouter" | while read -r NET_NS ; do
-  ip netns delete $NET_NS
-done
 
 
 echo "${OS_DISTRO}: Launching Application"
 ################################################################################
-exec su -s /bin/sh -c "exec neutron-l3-agent --debug \
-                      --config-file ${NEUTRON_CONFIG_FILE} \
-                      --config-file ${NEUTRON_L3_CONFIG_FILE}" neutron
+exec neutron-l3-agent --config-file ${NEUTRON_CONFIG_FILE} \
+                      --config-file ${NEUTRON_L3_CONFIG_FILE} \
+                      --debug

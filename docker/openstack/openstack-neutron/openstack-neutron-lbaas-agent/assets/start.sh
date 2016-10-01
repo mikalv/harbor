@@ -17,47 +17,11 @@
 set -e
 echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/neutron/vars.sh
 
 
-echo "${OS_DISTRO}: Configuring Container"
+echo "${OS_DISTRO}: Configuring Container Application"
 ################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN
-
-
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Checking OVS"
-################################################################################
-if ! ovs-vsctl list-br | grep -q "^br-int"; then
-  echo "${OS_DISTRO}: The integration brige does not yet exist in OVS, is it online?"
-  echo "${OS_DISTRO}: Sleeping for 10s, before exiting"
-  sleep 10
-  exit 1
-fi
-
-
-echo "${OS_DISTRO}: Starting neutron config"
-################################################################################
-/opt/harbor/config-neutron.sh
-
-
-echo "${OS_DISTRO}: Starting api-server config"
-################################################################################
-#/opt/harbor/neutron/components/config-lbaas.sh
-
-
-################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    NEUTRON_LBAAS_CONFIG_FILE \
-                    NEUTRON_LBAAS_AGENT_CONFIG_FILE
 exec neutron-lbaasv2-agent --config-file ${NEUTRON_CONFIG_FILE} \
                            --config-file ${NEUTRON_LBAAS_CONFIG_FILE} \
                            --config-file ${NEUTRON_LBAAS_AGENT_CONFIG_FILE} \

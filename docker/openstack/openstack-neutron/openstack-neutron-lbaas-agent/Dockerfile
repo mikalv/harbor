@@ -6,9 +6,15 @@ RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps  \
         haproxy \
-        openvswitch && \
+        openvswitch  && \
+    chmod 0640 /etc/sudoers && \
+    echo "neutron ALL = (root) NOPASSWD: /usr/bin/neutron-rootwrap-daemon" >> /etc/sudoers && \
+    echo "Defaults!/usr/bin/neutron-rootwrap-daemon !requiretty" >> /etc/sudoers && \
+    chmod 0440 /etc/sudoers && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+USER neutron
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
