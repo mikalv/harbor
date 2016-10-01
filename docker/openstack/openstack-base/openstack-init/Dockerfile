@@ -5,7 +5,8 @@ ENV OPENSTACK_COMPONENT="init"
 RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps \
-        openssl
+        openssl \
+        ansible
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

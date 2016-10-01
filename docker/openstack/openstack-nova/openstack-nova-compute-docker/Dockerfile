@@ -13,7 +13,7 @@ RUN set -e && \
         sysfsutils \
         open-iscsi \
         util-linux && \
-  cp -rf /opt/harbor/assets/* / && \
+  cp -rfav /opt/harbor/assets/* / && \
   rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \

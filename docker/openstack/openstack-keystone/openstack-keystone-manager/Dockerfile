@@ -7,7 +7,7 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     pip --no-cache-dir install python-openstackclient && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \

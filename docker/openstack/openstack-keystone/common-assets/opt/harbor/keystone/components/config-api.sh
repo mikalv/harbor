@@ -6,7 +6,7 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Keystone configuring sso callback templates"
+echo "${OS_DISTRO}: Configuring Keystone API"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -30,6 +30,7 @@ check_required_vars KEYSTONE_CONFIG_FILE \
                     HORIZON_API_SERVICE_HOST
 
 
+echo "${OS_DISTRO}: Keystone configuring sso callback templates"
 ################################################################################
 sed -i "s|{{ OS_DOMAIN }}|${OS_DOMAIN}|g" ${KEYSTONE_SSO_CALLBACK_TEMPLATE}
 sed -i "s|{{ HORIZON_API_SERVICE_HOST }}|${HORIZON_API_SERVICE_HOST}|g" ${KEYSTONE_SSO_CALLBACK_TEMPLATE}

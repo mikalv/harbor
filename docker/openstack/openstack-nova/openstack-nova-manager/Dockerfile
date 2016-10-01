@@ -15,7 +15,7 @@ RUN set -e && \
     mkdir -p /opt/stack && \
     pip --no-cache-dir install python-openstackclient && \
     apk del build-deps && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \

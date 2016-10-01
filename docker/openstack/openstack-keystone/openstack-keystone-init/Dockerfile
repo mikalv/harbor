@@ -1,15 +1,14 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-heat-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-keystone-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="heat-api-cloudwatch"
+ENV OPENSTACK_COMPONENT="keystone-init"
 
 COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rfav /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets
-
-USER heat
+    rm -rf /opt/harbor/assets && \
+    chown keystone:keystone /etc/keystone/sso_callback_template.html
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

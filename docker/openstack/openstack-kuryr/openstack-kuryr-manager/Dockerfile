@@ -11,9 +11,9 @@ COPY ./assets/ /opt/harbor/assets
 RUN set -e && \
     set -x && \
     pip install python-neutronclient && \
-    cp -rf /opt/harbor/common-assets/* / && \
+    cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \

@@ -35,7 +35,9 @@ rm -rfv /etc/systemd/system/multi-user.target.wants
 mkdir -p /etc/systemd/system/container-up.target.wants
 
 ln -s /etc/systemd/system/container-up.target.wants /etc/systemd/system/multi-user.target.wants
+rm -f /etc/systemd/system/default.target
 ln -s /usr/lib/systemd/system/container-up.target /etc/systemd/system/default.target
+rm -f /etc/systemd/system/container-up.target.wants/container-configure-first.service
 ln -s /usr/lib/systemd/system/container-configure-first.service /etc/systemd/system/container-up.target.wants/container-configure-first.service
 
 cd /usr/lib/systemd/system/

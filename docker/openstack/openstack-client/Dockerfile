@@ -30,7 +30,7 @@ RUN set -e && \
     addgroup ${OS_CLIENT} -g 1000 && \
     adduser -u 1000 -D -s /bin/false -G ${OS_CLIENT} ${OS_CLIENT} && \
     chown -R ${OS_CLIENT}:${OS_CLIENT} /var/log/${OS_CLIENT} && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 USER openstack
