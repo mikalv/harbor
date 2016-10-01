@@ -261,6 +261,63 @@ spec:
         version: v0.1.0
       name: neutron-api-master
       namespace: os-neutron
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "neutron-api-init",
+          	"image": "{{ IMAGE_NEUTRON_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "neutron"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-neutron",
+          			"mountPath": "/pod/etc/neutron",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -278,14 +335,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-neutron
+              mountPath: /etc/neutron
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -296,6 +347,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-neutron
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: neutron-db
@@ -329,6 +382,93 @@ spec:
         version: v0.1.0
       name: neutron-metadata-master
       namespace: os-neutron
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "neutron-metadata-init",
+          	"image": "{{ IMAGE_NEUTRON_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "metadata-agent"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "neutron"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-neutron-shared-secret",
+          			"mountPath": "/var/run/harbor/secrets/config-neutron-shared-secret",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-neutron",
+          			"mountPath": "/pod/etc/neutron",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          },
+          {
+            "name": "neutron-metadata-prep",
+            "image": "{{ IMAGE_NEUTRON_METADATA_AGENT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              }
+            ],
+            "command": [
+              "/start-prep.sh"
+            ],
+            "volumeMounts": [
+              {
+                "name": "host-dev",
+                "mountPath": "/dev",
+                "readOnly": false
+              },
+              {
+                "name": "host-var-run-openvswitch",
+                "mountPath": "/var/run/openvswitch",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": true,
+              "runAsUser": 0
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -347,17 +487,8 @@ spec:
             - name: host-dev
               mountPath: /dev
               readOnly: false
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
-              readOnly: true
-            - name: os-config-neutron-shared-secret
-              mountPath: /var/run/harbor/secrets/config-neutron-shared-secret
+            - name: pod-etc-neutron
+              mountPath: /etc/neutron
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -365,6 +496,8 @@ spec:
           securityContext:
             privileged: true
       volumes:
+        - name: pod-etc-neutron
+          emptyDir: {}
         - name: host-var-run-openvswitch
           hostPath:
             path: /var/run/openvswitch
@@ -404,6 +537,88 @@ spec:
         version: v0.1.0
       name: neutron-lbaas-master
       namespace: os-neutron
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "neutron-lbaas-init",
+          	"image": "{{ IMAGE_NEUTRON_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "lbaas-agent"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "neutron"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-neutron",
+          			"mountPath": "/pod/etc/neutron",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          },
+          {
+            "name": "neutron-lbaas-prep",
+            "image": "{{ IMAGE_NEUTRON_LBAAS_AGENT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              }
+            ],
+            "command": [
+              "/start-prep.sh"
+            ],
+            "volumeMounts": [
+              {
+                "name": "host-dev",
+                "mountPath": "/dev",
+                "readOnly": false
+              },
+              {
+                "name": "host-var-run-openvswitch",
+                "mountPath": "/var/run/openvswitch",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": true,
+              "runAsUser": 0
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -422,14 +637,8 @@ spec:
             - name: host-dev
               mountPath: /dev
               readOnly: false
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-neutron
+              mountPath: /etc/neutron
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -437,6 +646,8 @@ spec:
           securityContext:
             privileged: true
       volumes:
+        - name: pod-etc-neutron
+          emptyDir: {}
         - name: host-var-run-openvswitch
           hostPath:
             path: /var/run/openvswitch
@@ -473,6 +684,88 @@ spec:
         version: v0.1.0
       name: neuton-l3-master
       namespace: os-neutron
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "neutron-l3-init",
+          	"image": "{{ IMAGE_NEUTRON_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "l3-agent"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "neutron"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-neutron",
+          			"mountPath": "/pod/etc/neutron",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          },
+          {
+            "name": "neutron-l3-prep",
+            "image": "{{ IMAGE_NEUTRON_L3_AGENT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              }
+            ],
+            "command": [
+              "/start-prep.sh"
+            ],
+            "volumeMounts": [
+              {
+                "name": "host-dev",
+                "mountPath": "/dev",
+                "readOnly": false
+              },
+              {
+                "name": "host-var-run-openvswitch",
+                "mountPath": "/var/run/openvswitch",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": true,
+              "runAsUser": 0
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -491,14 +784,8 @@ spec:
             - name: host-dev
               mountPath: /dev
               readOnly: false
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-neutron
+              mountPath: /etc/neutron
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -506,6 +793,8 @@ spec:
           securityContext:
             privileged: true
       volumes:
+        - name: pod-etc-neutron
+          emptyDir: {}
         - name: host-var-run-openvswitch
           hostPath:
             path: /var/run/openvswitch

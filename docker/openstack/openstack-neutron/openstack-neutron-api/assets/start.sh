@@ -17,34 +17,9 @@
 set -e
 echo "${OS_DISTRO}: Launching Container Startup Scripts"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/neutron/vars.sh
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
+echo "${OS_DISTRO}: Launching Application"
 ################################################################################
-/usr/bin/mysql-test
-
-
-echo "${OS_DISTRO}: Configuring Container"
-################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    OS_DOMAIN
-
-
-echo "${OS_DISTRO}: Starting neutron config"
-################################################################################
-/opt/harbor/config-neutron.sh
-
-
-echo "${OS_DISTRO}: Starting api-server config"
-################################################################################
-/opt/harbor/neutron/components/config-api.sh
-
-
-################################################################################
-check_required_vars NEUTRON_CONFIG_FILE \
-                    NEUTRON_ML2_CONFIG_FILE
 exec neutron-server --config-file ${NEUTRON_CONFIG_FILE} --config-file ${NEUTRON_ML2_CONFIG_FILE} --debug

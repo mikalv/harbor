@@ -27,7 +27,7 @@ echo "${OS_DISTRO}: Configuring Neutron Lbaas Agent"
 check_required_vars NEUTRON_LBAAS_CONFIG_FILE \
                     NEUTRON_LBAAS_AGENT_CONFIG_FILE \
                     OS_DOMAIN \
-                    KEYSTONE_SERVICE_HOST_SVC \
+                    KEYSTONE_API_SERVICE_HOST_SVC \
                     LBAAS_PROVIDER
 
 
@@ -36,7 +36,7 @@ crudini --set $cfg_lbaas service_auth auth_version "2"
 crudini --set $cfg_lbaas service_auth admin_password "password"
 crudini --set $cfg_lbaas service_auth admin_user "admin"
 crudini --set $cfg_lbaas service_auth admin_tenant_name "admin"
-crudini --set $cfg_lbaas service_auth auth_url "http://${KEYSTONE_SERVICE_HOST_SVC}/v2.0"
+crudini --set $cfg_lbaas service_auth auth_url "http://${KEYSTONE_API_SERVICE_HOST_SVC}/v2.0"
 
 
 ################################################################################
