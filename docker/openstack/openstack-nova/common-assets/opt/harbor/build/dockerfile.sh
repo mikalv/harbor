@@ -70,5 +70,10 @@ mkdir -p /var/lib/${OS_COMP}/instances
 chown -R ${OS_COMP}:${OS_COMP} /var/lib/${OS_COMP}
 
 
+mkdir -p /usr/lib/python2.7/site-packages/keys
+chown -R ${OS_COMP}:${OS_COMP} /usr/lib/python2.7/site-packages/keys
+
+
+
 ################################################################################
 echo "${OS_DISTRO}: Finished installing ${OS_COMP}"

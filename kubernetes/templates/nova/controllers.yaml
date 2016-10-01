@@ -232,6 +232,72 @@ spec:
         version: v0.1.0
       name: nova-api-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-api-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -249,17 +315,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -270,6 +327,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -306,6 +365,67 @@ spec:
         version: v0.1.0
       name: nova-conductor-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-conductor-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "conductor"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -318,17 +438,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -336,6 +447,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -369,6 +482,67 @@ spec:
         version: v0.1.0
       name: nova-scheduler-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-scheduler-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "scheduler"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -381,17 +555,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -399,6 +564,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -432,6 +599,67 @@ spec:
         version: v0.1.0
       name: nova-consoleauth-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-consoleauth-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "consoleauth"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -444,17 +672,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -462,6 +681,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -495,6 +716,72 @@ spec:
         version: v0.1.0
       name: nova-api-metadata-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-consoleauth-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "consoleauth"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-neutron-shared-secret",
+          			"mountPath": "/var/run/harbor/secrets/config-neutron-shared-secret",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -512,20 +799,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
-              readOnly: true
-            - name: os-config-neutron-shared-secret
-              mountPath: /var/run/harbor/secrets/config-neutron-shared-secret
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -536,6 +811,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -575,6 +852,67 @@ spec:
         version: v0.1.0
       name: nova-serialproxy-master
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-serialproxy-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "serialproxy"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "controller"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-api-db",
+          			"mountPath": "/var/run/harbor/secrets/config-api-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -592,17 +930,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-api-db
-              mountPath: /var/run/harbor/secrets/config-api-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-nova
+              mountPath: /etc/nova
               readOnly: true
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -613,6 +942,8 @@ spec:
           securityContext:
             privileged: false
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: nova-db
@@ -648,6 +979,57 @@ spec:
         version: v0.1.0
       name: nova-compute-node-docker
       namespace: os-nova
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "nova-compute-init",
+          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "compute-docker"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "nova"
+          		},
+          		{
+          			"name": "NOVA_ROLE",
+          			"value": "compute"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-nova",
+          			"mountPath": "/pod/etc/nova",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
     spec:
       hostNetwork: true
       hostPID: true
@@ -680,11 +1062,8 @@ spec:
           - name: host-docker-socket
             mountPath: /var/run/docker.sock
             readOnly: false
-          - name: os-config-keystone
-            mountPath: /var/run/harbor/secrets/config-keystone
-            readOnly: true
-          - name: os-config-messaging-auth
-            mountPath: /var/run/harbor/secrets/config-messaging-auth
+          - name: pod-etc-nova
+            mountPath: /etc/nova
             readOnly: true
           - name: os-config-ssl-user-secret
             mountPath: /run/harbor/auth/user
@@ -692,6 +1071,8 @@ spec:
         securityContext:
           privileged: true
       volumes:
+        - name: pod-etc-nova
+          emptyDir: {}
         - name: host-var-run-openvswitch
           hostPath:
             path: /var/run/openvswitch

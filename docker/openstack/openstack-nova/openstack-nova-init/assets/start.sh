@@ -6,16 +6,15 @@
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
 #
-# http://www.apache.org/licenses/LICENSE-2.0
+#     http://www.apache.org/licenses/LICENSE-2.0
 #
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 set -e
-echo "${OS_DISTRO}: Nova Config Starting"
+echo "${OS_DISTRO}: Launching"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -24,21 +23,25 @@ echo "${OS_DISTRO}: Nova Config Starting"
 
 
 ################################################################################
-check_required_vars NOVA_CONFIG_FILE \
-                    OS_DOMAIN
+check_required_vars OS_DOMAIN \
+                    NOVA_CONFIG_FILE \
+                    NOVA_ROLE
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
+echo "${OS_DISTRO}: Common config starting"
 ################################################################################
-/usr/bin/mysql-test
+/opt/harbor/config-nova-${NOVA_ROLE}.sh
 
 
-echo "${OS_DISTRO}: Starting common config"
+echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/config-nova.sh
+/opt/harbor/nova/components/config-${APP_COMPONENT}.sh
 
 
-echo "${OS_DISTRO}: Starting database config"
+echo "${OS_DISTRO}: Moving pod configs into place"
 ################################################################################
-/opt/harbor/nova/config-database.sh
-/opt/harbor/nova/config-api-database.sh
+cp -rfav $(dirname ${NOVA_CONFIG_FILE})/* /pod$(dirname ${NOVA_CONFIG_FILE})/
+
+
+echo "${OS_DISTRO}: Pod init finished"
+################################################################################

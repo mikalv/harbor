@@ -1,15 +1,11 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-nova-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="nova-conductor"
-
 COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
-
-USER nova
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

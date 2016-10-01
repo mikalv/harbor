@@ -16,35 +16,12 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/nova/vars.sh
-check_required_vars OS_DOMAIN \
-                    NOVA_CONFIG_FILE
 
-
+# Todo - make this configurable
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 docker -H unix://var/run/docker.sock version
-
-
-echo "${OS_DISTRO}: Common config starting"
-################################################################################
-/opt/harbor/config-nova-compute.sh
-
-
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/nova/components/config-compute-docker.sh
-
-
-echo "${OS_DISTRO}: Fixing permissions"
-################################################################################
-mkdir -p /var/cache/nova
-chown -R nova:nova /var/cache/nova
-mkdir -p /usr/lib/python2.7/site-packages/keys
-chown -R nova:nova /usr/lib/python2.7/site-packages/keys
 
 
 echo "${OS_DISTRO}: Launching container application"
