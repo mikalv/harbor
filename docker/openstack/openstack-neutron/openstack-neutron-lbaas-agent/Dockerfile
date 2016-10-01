@@ -11,7 +11,7 @@ RUN set -e && \
     echo "neutron ALL = (root) NOPASSWD: /usr/bin/neutron-rootwrap-daemon" >> /etc/sudoers && \
     echo "Defaults!/usr/bin/neutron-rootwrap-daemon !requiretty" >> /etc/sudoers && \
     chmod 0440 /etc/sudoers && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 USER neutron

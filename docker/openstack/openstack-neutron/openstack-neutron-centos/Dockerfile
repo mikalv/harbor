@@ -18,9 +18,9 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/common-assets/* / && \
+    cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     yum install -y \
         python-openvswitch \

@@ -22,18 +22,15 @@ RUN set -e && \
 
 COPY ./common-assets /opt/harbor/common-assets
 
-COPY ./assets/ /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
-    rm -rf /etc/httpd/conf.d/*.conf && \
-    cp -rf /opt/harbor/common-assets/* / && \
+    rm -rfv /etc/httpd/conf.d/* && \
+    cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rf /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     dnf install -y \
         gcc \
         git \
+        libgcc \
         openssl-devel \
         python-devel \
         libffi-devel \

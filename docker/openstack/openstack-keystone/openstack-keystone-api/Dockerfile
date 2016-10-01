@@ -6,9 +6,15 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
-    chown keystone:keystone /etc/keystone/sso_callback_template.html
+    chown keystone:keystone /etc/keystone/sso_callback_template.html && \
+    chmod 0640 /etc/sudoers && \
+    echo "keystone ALL = (root) NOPASSWD: /usr/sbin/httpd" >> /etc/sudoers && \
+    echo "Defaults!/usr/sbin/httpd !requiretty" >> /etc/sudoers && \
+    chmod 0440 /etc/sudoers
+
+USER keystone
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

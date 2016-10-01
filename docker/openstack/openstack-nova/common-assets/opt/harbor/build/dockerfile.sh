@@ -34,7 +34,7 @@ pip --no-cache-dir install /opt/stack/${OS_COMP_1}
 
 mkdir -p /etc/${OS_COMP}/
 mkdir -p  /opt/stack/${OS_COMP}/etc/${OS_COMP}/
-cp -rf /opt/stack/${OS_COMP}/etc/${OS_COMP}/* /etc/${OS_COMP}/
+cp -rfav /opt/stack/${OS_COMP}/etc/${OS_COMP}/* /etc/${OS_COMP}/
 
 
 echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"

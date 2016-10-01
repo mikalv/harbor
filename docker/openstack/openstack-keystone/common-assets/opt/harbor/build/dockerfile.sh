@@ -29,7 +29,7 @@ pip --no-cache-dir install /opt/stack/${OS_COMP}
 
 mkdir -p /etc/${OS_COMP}
 
-cp -rf /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/
+cp -rfav /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/
 
 rm -rf /opt/stack/${OS_COMP}
 
@@ -40,7 +40,6 @@ mkdir -p /var/cache/${OS_COMP}
 if [ "$OS_DISTRO" = "HarborOS-Alpine" ]; then
   addgroup ${OS_COMP} -g 1000
   adduser -u 1000 -D -s /bin/false -G ${OS_COMP} ${OS_COMP}
-  ln -s /usr/sbin/iscsid /sbin/iscsid
 else
   groupadd ${OS_COMP} -g 1000
   adduser -u 1000 -g ${OS_COMP} --system ${OS_COMP}

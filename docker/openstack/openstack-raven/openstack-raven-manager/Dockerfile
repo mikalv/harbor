@@ -8,7 +8,7 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets  && \
     pip install python-neutronclient
 

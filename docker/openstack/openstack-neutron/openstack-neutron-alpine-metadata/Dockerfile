@@ -19,7 +19,7 @@ COPY ./common-assets/etc/ /opt/harbor/common-assets/etc
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/common-assets/* / && \
+    cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
     apk add --no-cache --virtual run-deps  \
         libxml2 \
@@ -52,7 +52,7 @@ COPY ./common-assets /opt/harbor/common-assets
 
 RUN set -e && \
     set -x && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 

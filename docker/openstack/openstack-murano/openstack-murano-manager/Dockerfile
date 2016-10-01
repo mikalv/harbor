@@ -17,7 +17,7 @@ RUN set -e && \
     git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP} && \
     pip --no-cache-dir install python-openstackclient && \
     apk del build-deps && \
-    cp -rf /opt/harbor/assets/* / && \
+    cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
 LABEL license="Apache-2.0" \
