@@ -3,17 +3,16 @@
 </p>
 # Harbor
 
-Harbor is the Kubernetes, Openstack, Atomic Linux and FreeIPA stack from port.direct.
+Harbor is the Kubernetes, OpenStack, Atomic Linux and FreeIPA stack from port.direct.
 
 Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswitch/ovs) project, improving both control and performance upon both the reference OpenStack and Kubernetes networking layers and allows seamless integration between the two platforms.
- * kube-proxy is replaced by neutron's lbaas v2 service (HAProxy by default)
- * each node runs an uplink pod and ingress controller, in the hosts network namespace to provide access to the cluster
- * every pod can run either in the hosts network namespace or a neutron subnet, so the cloud can bootstrap itself and allow other services to continue operation even if neutron/ovn goes down.
+ * kube-proxy is replaced by neutron's LBaaS v2 service (HAProxy by default)
+ * each node runs an uplink pod and ingress controller, in the host's network namespace to provide access to the cluster
+ * every pod can run either in the host's network namespace or a neutron subnet, so the cloud can bootstrap itself and allow other services to continue operation even if Neutron/OVN goes down.
  * Cinder can be used for persistent storage for all components (databases etc), bar itself and keystone (requires manual config)
 
 
-This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
-
+ This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the Linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/marina) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
 
 
 ## Screenshots
@@ -54,8 +53,8 @@ docker rm -f ${DOCKER_CONTAINER}
 
 From there you can install Harbor like any other CentOS based distro, with a few caveats:
  * You must create a "harbor" user, and add them to the docker group.
- * You cannot use xfs for the partation containing /var/lib/docker, unless you create it manually prior to starting docker with ftype enabled (this is already done for the cloud images)
- * You should set up NTP, and a single network interface with anaconda: this interface will subsequently allways be renamed to 'eth0' even with predictable device naming active.
+ * You cannot use xfs for the partition containing /var/lib/docker, unless you create it manually prior to starting docker with ftype enabled (this is already done for the cloud images)
+ * You should set up NTP, and a single network interface with anaconda: this interface will subsequently always be renamed to 'eth0' even with predictable device naming active.
 
 
 
@@ -67,14 +66,14 @@ From there you can install Harbor like any other CentOS based distro, with a few
  systemctl start docker
  harbor-host-update
  ```
- This will pull the rmpostree server image, start it and set up the host to use it as the remote, before running ```rpm-ostree upgrade```.
+ This will pull the rpm-ostree server image, start it and set up the host to use it as the remote, before running ```rpm-ostree upgrade```.
 
  If there are any updates applied, reboot the node and you should be good to go.
 
 
 
 ### Setting up harbor
-The config files for harbor are kept in ```/etc/harbor```, you shouldn't need to touch any of them for a POC, but may want to set some passwords in ```harbor-auth.conf```, or adjust values in ```network.conf```, though the latter is quite fragile at the moment. One exception to this is 'os_domain' in ```network.conf```, which you will probably want to change from the default of 'novalocal'. The kubelet image will run a docker container on first start that runs through the config files and replaces values in the form ```{{ PASSWORD_[0-9][0-9] }}``` with an appropriate length string from pwgen.
+The config files for harbor are kept in ```/etc/harbor```, you shouldn't need to touch any of them for a POC, but may want to set some passwords in ```harbor-auth.conf```, or adjust values in ```network.conf```, though the latter is quite fragile at the moment. One exception to this is 'os_domain' in ```network.conf```, which you will probably want to change from the default of 'novalocal'. The Kubelet image will run a docker container on the first start that runs through the config files and replaces values in the form ```{{ PASSWORD_[0-9][0-9] }}``` with an appropriate length string from pwgen.
 
 
 ### Starting harbor
@@ -147,20 +146,20 @@ Commands of interest in this container are (using keystone as an example):
 
 One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
 
-It is also worth checking out what the master freeipa-server container is up to (currently this is launched by a pod that binds to the docker socket, but will soon be a petset):
+It is also worth checking out what the master freeipa-server container is up to (currently, this is launched by a pod that binds to the docker socket, but will soon be a petset):
 
 ```bash
 #!/bin/bash
 docker logs -f freeipa.${OS_DOMAIN}
 ```
-Once you are in the cockpit dashboard, check out the systemd services tab, and logs to monitor the OpenStack services being set up. If you want to manage the host that cockpit is running on with cockpit you will need to add it to the dashboard, you need to enter the ip of the host thats already in the dashboard, which will then open an ssh connection to the host...
+Once you are in the cockpit dashboard, check out the systemd services tab, and logs to monitor the OpenStack services being set up. If you want to manage the host that cockpit is running on with cockpit you will need to add it to the dashboard, you need to enter the IP of the host that's already active on the dashboard, which will then open an ssh connection to the host...
 
 Once all services are reported as started, you want to enroll the host to FreeIPA by running:
 ```bash
 #!/bin/bash
 harbor-ipa-client-install
 ```
-It typically takes about an hour and a half to get here on a Intel Xeon 1230, 32GB, SSD, 150Mbs(Cable modem - UK).
+It typically takes about an hour and a half to get here on an Intel Xeon 1230, 32GB, SSD, 150Mbs(Cable modem - UK).
 
 Now restart the node, once it has come back up run ```docker info``` if it has an entry like: ```etcd://etcd.os-etcd.svc.${OS_DOMAIN}:4001``` then you are ready to actually start harbor for real:
 
@@ -190,4 +189,4 @@ The Ipsilon UI is available at: ```https://ipsilon.${OS_DOMAIN}/idp```
 Credentials for the default domain (ie services) can be got from the marina container and running the ```harbor-service-auth-edit``` for a service.
 The Horizon Dashboard is available at: ```https://api.${OS_DOMAIN}/```
 
-You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone, this creates a situation that requires you to clear your cookies manually, as ipsilon will attempt to log you out of keystone which is not possible if you didn't login... You should however be able to log in via the ${OS_DOMAIN} using normal keystone auth.
+You should be able to log in using federation via the 'hostadmin' and 'useradmin' accounts. The 'admin' account will not work, as it is members of groups that do not have mirrored projects and roles created in keystone, this creates a situation that requires you to clear your cookies manually, as Ipsilon will attempt to log you out of keystone which is not possible if you didn't log in... You should, however, be able to log in via the ${OS_DOMAIN} using normal keystone auth.
