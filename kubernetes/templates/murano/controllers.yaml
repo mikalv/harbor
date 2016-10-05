@@ -293,6 +293,63 @@ spec:
         version: v0.1.0
       name: murano-api-master
       namespace: os-murano
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "murano-api-init",
+            "image": "{{ IMAGE_MURANO_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "api"
+              },
+              {
+                "name": "APP_USER",
+                "value": "murano"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-secret",
+                "mountPath": "/run/harbor/auth/ssl",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-murano",
+                "mountPath": "/pod/etc/murano",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
     spec:
       hostNetwork: true
       nodeSelector:
@@ -305,14 +362,8 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           volumeMounts:
-            - name: os-config-db
-              mountPath: /var/run/harbor/secrets/config-db
-              readOnly: true
-            - name: os-config-keystone
-              mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-messaging-auth
-              mountPath: /var/run/harbor/secrets/config-messaging-auth
+            - name: pod-etc-murano
+              mountPath: /etc/murano
               readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -337,6 +388,8 @@ spec:
               mountPath: /run/harbor/auth/ssl
               readOnly: true
       volumes:
+        - name: pod-etc-murano
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: murano-db
