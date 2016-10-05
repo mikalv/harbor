@@ -28,9 +28,9 @@ check_required_vars DESIGNATE_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "designate-manage database sync" designate
+su -s /bin/sh -c "designate-manage pool-manager-cache sync" designate
 
 
 echo "${OS_DISTRO}: DB version:"
 ################################################################################
-su -s /bin/sh -c "designate-manage database version" designate
+su -s /bin/sh -c "designate-manage pool-manager-cache version" designate

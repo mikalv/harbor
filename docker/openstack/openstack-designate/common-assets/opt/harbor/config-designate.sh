@@ -40,6 +40,7 @@ echo "${OS_DISTRO}: Starting logging config"
 echo "${OS_DISTRO}: Starting database config"
 ################################################################################
 /opt/harbor/designate/config-database.sh
+/opt/harbor/designate/config-database-pool.sh
 
 
 echo "${OS_DISTRO}: Starting messaging config"
