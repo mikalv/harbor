@@ -26,7 +26,7 @@ echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-test
 
-
+tail -f /dev/null
 echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-designate.sh

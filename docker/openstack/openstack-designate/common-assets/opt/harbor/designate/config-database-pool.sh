@@ -31,11 +31,12 @@ check_required_vars DESIGNATE_CONFIG_FILE \
                     DESIGNATE_DB_CA \
                     DESIGNATE_DB_KEY \
                     DESIGNATE_DB_CERT \
-                    AUTH_DESIGNATE_DB_USER \
-                    AUTH_DESIGNATE_DB_PASSWORD \
-                    AUTH_DESIGNATE_DB_NAME
+                    AUTH_DESIGNATE_POOL_DB_USER \
+                    AUTH_DESIGNATE_POOL_DB_PASSWORD \
+                    AUTH_DESIGNATE_POOL_DB_NAME
 
 
 ################################################################################
-crudini --set ${DESIGNATE_CONFIG_FILE} storage:sqlalchemy connection \
-"mysql+pymysql://${AUTH_DESIGNATE_DB_USER}:${AUTH_DESIGNATE_DB_PASSWORD}@${DESIGNATE_MARIADB_SERVICE_HOST_SVC}:${DESIGNATE_MARIADB_SERVICE_PORT}/${AUTH_DESIGNATE_DB_NAME}?charset=utf8&ssl_ca=${DESIGNATE_DB_CA}&ssl_key=${DESIGNATE_DB_KEY}&ssl_cert=${DESIGNATE_DB_CERT}&ssl_verify_cert"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:pool_manager cache_driver "sqlalchemy"
+crudini --set ${DESIGNATE_CONFIG_FILE} pool_manager_cache:sqlalchemy connection \
+"mysql+pymysql://${AUTH_DESIGNATE_POOL_DB_USER}:${AUTH_DESIGNATE_POOL_DB_PASSWORD}@${DESIGNATE_MARIADB_SERVICE_HOST_SVC}:${DESIGNATE_MARIADB_SERVICE_PORT}/${AUTH_DESIGNATE_POOL_DB_NAME}?charset=utf8&ssl_ca=${DESIGNATE_DB_CA}&ssl_key=${DESIGNATE_DB_KEY}&ssl_cert=${DESIGNATE_DB_CERT}&ssl_verify_cert"

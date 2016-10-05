@@ -37,12 +37,13 @@ for OS_SERVICE_NAME in designate; do
   OS_SVC_ENDPOINTS="PUBLIC ADMIN INTERNAL"
 
   if [ "$OS_SERVICE_NAME" == "designate" ]; then
-    OS_SERVICE_TYPE="application-catalog"
+    OS_SERVICE_TYPE="dns"
     OS_SERVICE_DESC="${OS_DOMAIN}: ${OS_SERVICE_NAME} (${OS_SERVICE_TYPE}) service"
     OS_SVC_ENDPOINT_INTERNAL="https://${DESIGNATE_API_SERVICE_HOST_SVC}"
     OS_SVC_ENDPOINT_ADMIN="https://${DESIGNATE_API_SERVICE_HOST_SVC}:${DESIGNATE_API_SVC_PORT}"
     OS_SVC_ENDPOINT_PUBLIC="https://${DESIGNATE_API_SERVICE_HOST}"
   fi
+
 
 
   ################################################################################

@@ -103,6 +103,13 @@ EOSQL
     echo "GRANT ALL ON $DB_NAME_1.* TO '$DB_USER_1'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
   fi
 
+  if ! [ -z "$DB_NAME_2" -a -z "$DB_USER_2" -a -z "$DB_PASSWORD_2" ]; then
+    echo "${OS_DISTRO}: Writing 1st boot script: $DB_NAME_2 database: $DB_USER_2"
+    echo "CREATE DATABASE IF NOT EXISTS $DB_NAME_2 ;" >> "$TEMP_FILE"
+    echo "CREATE USER '$DB_USER_2'@'%' IDENTIFIED BY '$DB_PASSWORD_2' ;" >> "$TEMP_FILE"
+    echo "GRANT ALL ON $DB_NAME_2.* TO '$DB_USER_2'@'%' $MARIADB_X509 ;" >> "$TEMP_FILE"
+  fi
+
   echo 'FLUSH PRIVILEGES ;' >> "$TEMP_FILE"
   MYSQLD_CMD="${MYSQLD_CMD} --init-file="$TEMP_FILE""
 

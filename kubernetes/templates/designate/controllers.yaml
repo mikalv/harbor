@@ -1,0 +1,445 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: designate-db
+  name: os-designate-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/designate/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: designate-db
+  name: os-designate-db
+  namespace: os-designate
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: designate-manager
+    version: v0.1.0
+  name: designate-manager
+  namespace: os-designate
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-manager
+        version: v0.1.0
+      name: designate-manager
+      namespace: os-designate
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-manager
+          image: {{ IMAGE_DESIGNATE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-pool
+              mountPath: /var/run/harbor/secrets/config-db-pool
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: designate-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: designate-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: designate-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: designate-db-root
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: designate-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: designate-bootstrapper
+    version: v0.1.0
+  name: designate-bootstrapper
+  namespace: os-designate
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-bootstrapper
+        version: v0.1.0
+      name: designate-bootstrapper
+      namespace: os-designate
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-bootstrapper
+          image: {{ IMAGE_DESIGNATE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: OS_MANAGEMENT_ACTION
+              value: bootstrap
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: designate-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: designate-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: designate-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: designate-db-root
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-db
+    version: v0.1.0
+  name: designate-db
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-db
+        version: v0.1.0
+      name: designate-db
+      namespace: os-designate
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3315
+              hostPort: 3315
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3315'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_DESIGNATE_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_DESIGNATE_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_DESIGNATE_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_DESIGNATE_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_DESIGNATE_DB_NAME
+            - name: DB_USER
+              value: AUTH_DESIGNATE_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_DESIGNATE_DB_PASSWORD
+            - name: DB_NAME_1
+              value: AUTH_DESIGNATE_POOL_DB_NAME
+            - name: DB_USER_1
+              value: AUTH_DESIGNATE_POOL_DB_USER
+            - name: DB_PASSWORD_1
+              value: AUTH_DESIGNATE_POOL_DB_PASSWORD
+            - name: DB_NAME_2
+              value: AUTH_DESIGNATE_PDNS_DB_NAME
+            - name: DB_USER_2
+              value: AUTH_DESIGNATE_PDNS_DB_USER
+            - name: DB_PASSWORD_2
+              value: AUTH_DESIGNATE_PDNS_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-pool
+              mountPath: /var/run/harbor/secrets/config-db-pool
+              readOnly: true
+            - name: os-config-db-pdns
+              mountPath: /var/run/harbor/secrets/config-db-pdns
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-designate-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: designate-db-root
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-db-pdns
+          secret:
+            secretName: designate-db-pdns
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: designate-db-ssl-secret
+        - name: os-designate-db
+          persistentVolumeClaim:
+            claimName: os-designate-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate
+    version: v0.1.0
+  name: designate-api-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate
+        version: v0.1.0
+      name: designate-api-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-api-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "api"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-secret",
+                "mountPath": "/run/harbor/auth/ssl",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-api
+          image: {{ IMAGE_DESIGNATE_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+        - name: designate-api-tls
+          image: {{ IMAGE_HAPROXY_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9001
+              hostPort: 9001
+              protocol: TCP
+              name: d-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '8082'
+            - name: PORT_LOCAL
+              value: '8082'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: designate-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
