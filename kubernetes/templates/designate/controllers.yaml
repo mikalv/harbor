@@ -415,9 +415,9 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
             - name: PORT_EXPOSE
-              value: '8082'
+              value: '9001'
             - name: PORT_LOCAL
-              value: '8082'
+              value: '9001'
           volumeMounts:
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
@@ -440,6 +440,568 @@ spec:
         - name: os-config-ssl-secret
           secret:
             secretName: designate-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-central
+    version: v0.1.0
+  name: designate-central-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-central
+        version: v0.1.0
+      name: designate-central-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-central-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "central"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-central
+          image: {{ IMAGE_DESIGNATE_CENTRAL }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-pool-manager
+    version: v0.1.0
+  name: designate-pool-manager-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-pool-manager
+        version: v0.1.0
+      name: designate-pool-manager-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-pool-manager-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "pool-manager"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-pool-manager
+          image: {{ IMAGE_DESIGNATE_POOL_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-zone-manager
+    version: v0.1.0
+  name: designate-zone-manager-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-zone-manager
+        version: v0.1.0
+      name: designate-zone-manager-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-zone-manager-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "zone-manager"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-zone-manager
+          image: {{ IMAGE_DESIGNATE_ZONE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-mdns
+    version: v0.1.0
+  name: designate-mdns-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-mdns
+        version: v0.1.0
+      name: designate-mdns-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-mdns-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "mdns"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-mdns
+          image: {{ IMAGE_DESIGNATE_MDNS }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          ports:
+            - containerPort: 5354
+              name: mdns-tcp
+              protocol: TCP
+            - containerPort: 5354
+              name: mdns-udp
+              protocol: UDP
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: designate-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-sink
+    version: v0.1.0
+  name: designate-sink-master
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-sink
+        version: v0.1.0
+      name: designate-sink-master
+      namespace: os-designate
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "designate-sink-init",
+            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "sink"
+              },
+              {
+                "name": "APP_USER",
+                "value": "designate"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db-pool",
+                "mountPath": "/var/run/harbor/secrets/config-db-pool",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-designate",
+                "mountPath": "/pod/etc/designate",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-sink
+          image: {{ IMAGE_DESIGNATE_SINK }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-designate
+              mountPath: /etc/designate
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+      volumes:
+        - name: pod-etc-designate
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-keystone
+          secret:
+            secretName: designate-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
         - name: os-config-ssl-user-secret
           secret:
             secretName: designate-user-ssl-secret

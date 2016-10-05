@@ -7,7 +7,7 @@
 : ${DESIGNATE_DB_KEY:="/run/harbor/auth/user/tls.key"}
 : ${DESIGNATE_DB_CERT:="/run/harbor/auth/user/tls.crt"}
 
-: ${DESIGNATE_API_SVC_PORT:="8082"}
+: ${DESIGNATE_API_SVC_PORT:="9001"}
 : ${DESIGNATE_API_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
 : ${DESIGNATE_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
 : ${DESIGNATE_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}

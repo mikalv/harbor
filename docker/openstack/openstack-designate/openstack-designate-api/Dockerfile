@@ -9,6 +9,8 @@ RUN set -e && \
     cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 
+USER designate
+
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

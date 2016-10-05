@@ -30,6 +30,9 @@ DB_PASSWORD=${!DB_PASSWORD}
 DB_NAME_1=${!DB_NAME_1}
 DB_USER_1=${!DB_USER_1}
 DB_PASSWORD_1=${!DB_PASSWORD_1}
+DB_NAME_2=${!DB_NAME_2}
+DB_USER_2=${!DB_USER_2}
+DB_PASSWORD_2=${!DB_PASSWORD_2}
 DB_PORT=$DB_PORT
 source /opt/harbor/harbor-vars.sh
 source /opt/harbor/service-hosts.sh

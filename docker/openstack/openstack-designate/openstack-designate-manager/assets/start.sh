@@ -26,15 +26,17 @@ echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-test
 
-tail -f /dev/null
+
 echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-designate.sh
+
 
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Managing database"
   ##############################################################################
   /opt/harbor/designate/manage/bootstrap-database.sh
+  /opt/harbor/designate/manage/bootstrap-database-pools.sh
 
 
   echo "${OS_DISTRO}: Managing User"
@@ -49,7 +51,9 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
 
   echo "${OS_DISTRO}: Finished management"
   ##############################################################################
+  tail -f /dev/null
 else
+  tail -f /dev/null
   echo "${OS_DISTRO}: Bootrapping apps"
   ##############################################################################
   /opt/harbor/designate/bootstrap/bootstrap-apps.sh
