@@ -17,9 +17,9 @@
 set -e
 echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /opt/harbor/murano/vars.sh
+. /opt/harbor/designate/vars.sh
 
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec murano-api --config-file=${MURANO_CONFIG_FILE} --debug
+exec designate-api --config-file=${DESIGNATE_CONFIG_FILE} --debug

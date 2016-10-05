@@ -1,7 +1,7 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-base-alpine:%%DOCKER_TAG%%
 
-ENV OS_COMP="heatclient" \
-    OS_CLIENT="heat"
+ENV OS_COMP="designateclient" \
+    OS_CLIENT="designate"
 
 ADD ./assets /opt/harbor/assets
 

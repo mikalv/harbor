@@ -20,33 +20,33 @@ echo "${OS_DISTRO}: Cinder Config Starting"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/murano/vars.sh
+. /opt/harbor/designate/vars.sh
 
 
 ################################################################################
-check_required_vars MURANO_CONFIG_FILE \
+check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN
 
 
 ################################################################################
-mkdir -p /etc/murano
+mkdir -p /etc/designate
 
 
 echo "${OS_DISTRO}: Starting logging config"
 ################################################################################
-/opt/harbor/murano/config-logging.sh
+/opt/harbor/designate/config-logging.sh
 
 
 echo "${OS_DISTRO}: Starting database config"
 ################################################################################
-/opt/harbor/murano/config-database.sh
+/opt/harbor/designate/config-database.sh
 
 
 echo "${OS_DISTRO}: Starting messaging config"
 ################################################################################
-/opt/harbor/murano/config-messaging.sh
+/opt/harbor/designate/config-messaging.sh
 
 
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
-/opt/harbor/murano/config-keystone.sh
+/opt/harbor/designate/config-keystone.sh

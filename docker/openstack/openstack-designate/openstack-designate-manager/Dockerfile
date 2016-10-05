@@ -1,6 +1,6 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-murano-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-designate-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="murano-manager"
+ENV OPENSTACK_COMPONENT="designate-manager"
 
 COPY ./assets/ /opt/harbor/assets
 
