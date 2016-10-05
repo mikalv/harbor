@@ -30,7 +30,7 @@ docker run -d --name openvswitch-repo -p 172.17.0.1:80:80/tcp port/openvswitch-r
 docker run -d --name mandracchio-repo -p 172.17.0.1:81:80/tcp port/mandracchio-rpms:latest
 docker run -d --name freeipa-repo -p 172.17.0.1:83:80/tcp port/freeipa-rpm:latest
 docker run -d --name ipsilon-repo -p 172.17.0.1:82:80/tcp port/ipsilon-rpm:latest
-docker run -d --name cinder-docker-repo -p 172.17.0.1:83:80/tcp port/openstack-cinder-docker-rpm:latest
+#docker run -d --name cinder-docker-repo -p 172.17.0.1:83:80/tcp port/openstack-cinder-docker-rpm:latest
 cd /home/harbor/Documents/Builder/github/harbor
 ./tools/update-build-links
 ./tools/make-scripts-exec.sh
