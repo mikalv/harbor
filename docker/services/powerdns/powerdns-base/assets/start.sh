@@ -15,11 +15,6 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
+echo "${OS_DISTRO}: Launching container application"
 ################################################################################
-. /opt/harbor/murano/vars.sh
-
-
-echo "${OS_DISTRO}: Starting container application"
-################################################################################
-exec murano-api --config-file=${MURANO_CONFIG_FILE} --debug
+exec /usr/sbin/pdns_server

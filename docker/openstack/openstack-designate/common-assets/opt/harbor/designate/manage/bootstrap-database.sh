@@ -15,11 +15,22 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
+echo "${OS_DISTRO}: Bootstrapping database"
 ################################################################################
-. /opt/harbor/murano/vars.sh
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/designate/vars.sh
 
 
-echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec murano-api --config-file=${MURANO_CONFIG_FILE} --debug
+check_required_vars DESIGNATE_CONFIG_FILE
+
+
+################################################################################
+su -s /bin/sh -c "designate-db-manage --config-file ${DESIGNATE_CONFIG_FILE} upgrade" designate
+
+
+echo "${OS_DISTRO}: DB version:"
+################################################################################
+su -s /bin/sh -c "designate-db-manage version" designate

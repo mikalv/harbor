@@ -33,7 +33,8 @@ RUN dnf install -y \
         openssl \
         curl \
         tar \
-        xz && \
+        xz \
+        hostname && \
     dnf clean all && \
     curl -sSL https://www.rabbitmq.com/releases/rabbitmq-server/v${RABBITMQ_VERSION}/rabbitmq-server-generic-unix-${RABBITMQ_VERSION}.tar.xz | tar -xJ -C / --strip-components 1 && \
     rm -rf /share/**/rabbitmq*.xz && \

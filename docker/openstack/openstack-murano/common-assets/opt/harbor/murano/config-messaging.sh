@@ -32,5 +32,33 @@ check_required_vars MURANO_CONFIG_FILE \
                     MURANO_RABBITMQ_SERVICE_PORT
 
 
+echo "${OS_DISTRO}: messaging: RPC backend"
 ################################################################################
-crudini --set $MURANO_CONFIG_FILE DEFAULT transport_url "rabbit://${AUTH_MURANO_RABBITMQ_USER}:${AUTH_MURANO_RABBITMQ_PASS}@${MURANO_RABBITMQ_SERVICE_HOST_SVC}:${MURANO_RABBITMQ_SERVICE_PORT}/"
+crudini --set ${MURANO_CONFIG_FILE} DEFAULT rpc_backend "rabbit"
+
+
+echo "${OS_DISTRO}: messaging: connection"
+################################################################################
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_use_ssl "True"
+
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "${MURANO_RABBITMQ_SERVICE_PORT}"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:${MURANO_RABBITMQ_SERVICE_PORT}"
+
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MURANO_RABBITMQ_USER}"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MURANO_RABBITMQ_PASS}"
+
+
+echo "${OS_DISTRO}: messaging: TLS"
+################################################################################
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_version "TLSv1_2"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_keyfile "${MURANO_DB_KEY}"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_certfile "${MURANO_DB_CERT}"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_ca_certs "${MURANO_DB_CA}"
+
+
+echo "${OS_DISTRO}: messaging: config"
+################################################################################
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
+crudini --set ${MURANO_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
