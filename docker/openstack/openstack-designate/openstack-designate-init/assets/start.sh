@@ -20,11 +20,11 @@ echo "${OS_DISTRO}: Launching"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/murano/vars.sh
+. /opt/harbor/designate/vars.sh
 
 
 ################################################################################
-check_required_vars MURANO_CONFIG_FILE \
+check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN \
                     APP_COMPONENT
 
@@ -36,17 +36,17 @@ echo "${OS_DISTRO}: Testing service dependancies"
 
 echo "${OS_DISTRO}: Config Starting"
 ################################################################################
-/opt/harbor/config-murano.sh
+/opt/harbor/config-designate.sh
 
 
 echo "${OS_DISTRO}: Component specific config starting"
 ################################################################################
-/opt/harbor/murano/components/config-${APP_COMPONENT}.sh
+/opt/harbor/designate/components/config-${APP_COMPONENT}.sh
 
 
 echo "${OS_DISTRO}: Moving pod configs into place"
 ################################################################################
-cp -rfav $(dirname ${MURANO_CONFIG_FILE})/* /pod$(dirname ${MURANO_CONFIG_FILE})/
+cp -rfav $(dirname ${DESIGNATE_CONFIG_FILE})/* /pod$(dirname ${DESIGNATE_CONFIG_FILE})/
 
 
 echo "${OS_DISTRO}: Pod init finished"
