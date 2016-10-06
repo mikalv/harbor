@@ -1152,6 +1152,9 @@ spec:
             - name: pod-etc-pdns
               mountPath: /etc/pdns
               readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
             - name: pod-shared
               mountPath: /var/pod
               readOnly: false
@@ -1161,13 +1164,16 @@ spec:
         - name: pod-etc-pdns
           emptyDir: {}
         - name: pod-shared
-          emptyDir: /var/pod
+          emptyDir: {}
         - name: os-config-db
           secret:
             secretName: designate-db
         - name: os-config-db-pool
           secret:
             secretName: designate-db-pool
+        - name: os-config-db-pdns
+          secret:
+            secretName: designate-db-pdns
         - name: os-config-keystone
           secret:
             secretName: designate-keystone
