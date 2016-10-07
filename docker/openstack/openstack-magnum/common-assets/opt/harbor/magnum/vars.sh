@@ -1,7 +1,7 @@
 #!/bin/bash
 : ${MAGNUM_CONFIG_FILE:="/etc/magnum/magnum.conf"}
 
-: ${MAGNUM_MARIADB_SERVICE_PORT:="3314"}
+: ${MAGNUM_MARIADB_SERVICE_PORT:="3317"}
 : ${MAGNUM_MARIADB_SERVICE_HOST_SVC:="${MAGNUM_API_SERVICE_HOSTNAME}-db.${MAGNUM_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}
 : ${MAGNUM_DB_CA:="/run/harbor/auth/user/tls.ca"}
 : ${MAGNUM_DB_KEY:="/run/harbor/auth/user/tls.key"}

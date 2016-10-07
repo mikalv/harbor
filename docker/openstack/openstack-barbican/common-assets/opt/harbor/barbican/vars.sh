@@ -1,7 +1,7 @@
 #!/bin/bash
 : ${BARBICAN_CONFIG_FILE:="/etc/barbican/barbican.conf"}
 
-: ${BARBICAN_MARIADB_SERVICE_PORT:="3314"}
+: ${BARBICAN_MARIADB_SERVICE_PORT:="3318"}
 : ${BARBICAN_MARIADB_SERVICE_HOST_SVC:="${BARBICAN_API_SERVICE_HOSTNAME}-db.${BARBICAN_SERVICE_NAMESPACE}.svc.$OS_DOMAIN"}
 : ${BARBICAN_DB_CA:="/run/harbor/auth/user/tls.ca"}
 : ${BARBICAN_DB_KEY:="/run/harbor/auth/user/tls.key"}
