@@ -48,6 +48,6 @@ echo "${OS_DISTRO}: Moving pod configs into place"
 ################################################################################
 cp -rfav $(dirname ${DESIGNATE_CONFIG_FILE})/* /pod$(dirname ${DESIGNATE_CONFIG_FILE})/
 
-
+tail -f /dev/null
 echo "${OS_DISTRO}: Pod init finished"
 ################################################################################

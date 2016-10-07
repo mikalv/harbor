@@ -6,6 +6,7 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    pip --no-cache-dir install python-openstackclient && \
     cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

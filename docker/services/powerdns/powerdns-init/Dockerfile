@@ -1,12 +1,9 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%powerdns-base:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-designate-alpine:%%DOCKER_TAG%%
 
 COPY ./assets /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
-    yum install -y \
-        mariadb && \
-    yum clean all && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

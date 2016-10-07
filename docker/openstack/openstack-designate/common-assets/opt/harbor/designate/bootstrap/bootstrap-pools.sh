@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Bootstrapping apps"
+echo "${OS_DISTRO}: Bootstrapping pools"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -27,15 +27,9 @@ echo "${OS_DISTRO}: Bootstrapping apps"
 check_required_vars DESIGNATE_CONFIG_FILE
 
 
-echo "${OS_DISTRO}: Imporing base package metadata"
 ################################################################################
-su -s /bin/sh -c "designate-manage --config-file ${DESIGNATE_CONFIG_FILE} import-package /opt/stack/designate/meta/io.designate" designate
+su -s /bin/sh -c "/usr/bin/designate-manage --config-file ${DESIGNATE_CONFIG_FILE} pool update" designate
 
-APPS_ROOT_DIR="/opt/designate-apps"
-echo "${OS_DISTRO}: Imporing packages"
+
 ################################################################################
-for APP in $(ls ${APPS_ROOT_DIR}); do
-  echo "${OS_DISTRO}: Imporing ${APP} package"
-  ##############################################################################
-  su -s /bin/sh -c "designate-manage --config-file ${DESIGNATE_CONFIG_FILE} import-package ${APPS_ROOT_DIR}/${APP}" designate
-done
+su -s /bin/sh -c "/usr/bin/designate-manage --config-file ${DESIGNATE_CONFIG_FILE} pool show_config" designate

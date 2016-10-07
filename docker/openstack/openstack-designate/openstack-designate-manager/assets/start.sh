@@ -49,6 +49,11 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   /opt/harbor/designate/manage/manage-keystone-service.sh
 
 
+  echo "${OS_DISTRO}: Managing Domain"
+  ##############################################################################
+  /opt/harbor/designate/manage/bootstrap-designate-domain.sh
+
+
   echo "${OS_DISTRO}: Finished management"
   ##############################################################################
   tail -f /dev/null

@@ -41,6 +41,7 @@ echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-insecure-test
 
+tail -f /dev/null
 
 echo "${OS_DISTRO}: Setting up pdns conf"
 ################################################################################
