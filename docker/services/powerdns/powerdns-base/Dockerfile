@@ -1,6 +1,7 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 
-ENV HARBOR_COMPONENT="powerdns"
+ENV OS_COMP="designate" \
+    HARBOR_COMPONENT="powerdns"
 
 COPY ./assets /opt/harbor/assets
 

@@ -41,7 +41,7 @@ check_required_vars OS_DOMAIN \
                     DB_PORT
 
 server_cnf=/etc/mysql/my.cnf
-if [ -z "${!DB_TLS}" ]; then
+if ! [ -z "${DB_TLS}" ]; then
   echo "${OS_DISTRO}: This database supports and requires TLS auth"
   MARIADB_X509="REQUIRE X509"
   sed -i "/\[mysqld\]/a ssl-cipher = TLSv1.2" $server_cnf
@@ -49,6 +49,7 @@ if [ -z "${!DB_TLS}" ]; then
   sed -i "/\[mysqld\]/a ssl-key = ${DB_TLS}/tls.key" $server_cnf
   sed -i "/\[mysqld\]/a ssl-cert = ${DB_TLS}/tls.crt " $server_cnf
 else
+  echo "${OS_DISTRO}: This database does not use TLS auth"
   MARIADB_X509=""
 fi
 

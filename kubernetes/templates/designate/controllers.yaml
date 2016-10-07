@@ -26,6 +26,34 @@ spec:
     requests:
       storage: 20Gi
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: designate-db-pdns
+  name: os-designate-db-pdns
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/designate/mysql-pdns
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: designate-db-pdns
+  name: os-designate-db-pdns
+  namespace: os-designate
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: extensions/v1beta1
 kind: Job
 metadata:
@@ -261,12 +289,6 @@ spec:
               value: AUTH_DESIGNATE_POOL_DB_USER
             - name: DB_PASSWORD_1
               value: AUTH_DESIGNATE_POOL_DB_PASSWORD
-            - name: DB_NAME_2
-              value: AUTH_DESIGNATE_PDNS_DB_NAME
-            - name: DB_USER_2
-              value: AUTH_DESIGNATE_PDNS_DB_USER
-            - name: DB_PASSWORD_2
-              value: AUTH_DESIGNATE_PDNS_DB_PASSWORD
           volumeMounts:
             - name: os-config-db-root
               mountPath: /var/run/harbor/secrets/config-db-root
@@ -276,9 +298,6 @@ spec:
               readOnly: true
             - name: os-config-db-pool
               mountPath: /var/run/harbor/secrets/config-db-pool
-              readOnly: true
-            - name: os-config-db-pdns
-              mountPath: /var/run/harbor/secrets/config-db-pdns
               readOnly: true
             - name: os-config-db-ssl-secret
               mountPath: /run/harbor/auth/db
@@ -296,15 +315,82 @@ spec:
         - name: os-config-db-pool
           secret:
             secretName: designate-db-pool
-        - name: os-config-db-pdns
-          secret:
-            secretName: designate-db-pdns
         - name: os-config-db-ssl-secret
           secret:
             secretName: designate-db-ssl-secret
         - name: os-designate-db
           persistentVolumeClaim:
             claimName: os-designate-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: designate-db-pdns
+    version: v0.1.0
+  name: designate-db-pdns
+  namespace: os-designate
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: designate-db-pdns
+        version: v0.1.0
+      name: designate-db-pdns
+      namespace: os-designate
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: designate-db-pdns
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3316
+              hostPort: 3316
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3316'
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_DESIGNATE_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_DESIGNATE_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_DESIGNATE_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_DESIGNATE_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_DESIGNATE_PDNS_DB_NAME
+            - name: DB_USER
+              value: AUTH_DESIGNATE_PDNS_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_DESIGNATE_PDNS_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db-pdns
+              mountPath: /var/run/harbor/secrets/config-db-pdns
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-designate-db-pdns
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: designate-db-root
+        - name: os-config-db-pdns
+          secret:
+            secretName: designate-db-pdns
+        - name: os-designate-db-pdns
+          persistentVolumeClaim:
+            claimName: os-designate-db-pdns
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -1073,6 +1159,11 @@ spec:
                 "name": "pod-etc-designate",
                 "mountPath": "/pod/etc/designate",
                 "readOnly": false
+              },
+              {
+                "name": "pod-shared",
+                "mountPath": "/var/pod",
+                "readOnly": false
               }
             ],
             "securityContext": {
@@ -1081,20 +1172,12 @@ spec:
           },
           {
             "name": "powerdns-init",
-            "image": "{{ IMAGE_DESIGNATE_INIT }}",
+            "image": "{{ IMAGE_DESIGNATE_POWERDNS_INIT }}",
             "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
             "env": [
               {
                 "name": "OS_DOMAIN",
                 "value": "{{ OS_DOMAIN }}"
-              },
-              {
-                "name": "APP_COMPONENT",
-                "value": "powerdns"
-              },
-              {
-                "name": "APP_USER",
-                "value": "powerdns"
               }
             ],
             "volumeMounts": [
@@ -1104,8 +1187,18 @@ spec:
                 "readOnly": true
               },
               {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
                 "name": "pod-etc-pdns",
                 "mountPath": "/pod/etc/pdns",
+                "readOnly": false
+              },
+              {
+                "name": "pod-shared",
+                "mountPath": "/var/pod",
                 "readOnly": false
               }
             ],
@@ -1142,18 +1235,15 @@ spec:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
           ports:
-            - containerPort: 5354
+            - containerPort: 533
               name: mdns-tcp
               protocol: TCP
-            - containerPort: 5354
+            - containerPort: 533
               name: mdns-udp
               protocol: UDP
           volumeMounts:
             - name: pod-etc-pdns
               mountPath: /etc/pdns
-              readOnly: true
-            - name: os-config-ssl-user-secret
-              mountPath: /run/harbor/auth/user
               readOnly: true
             - name: pod-shared
               mountPath: /var/pod
