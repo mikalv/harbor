@@ -24,8 +24,21 @@ echo "${OS_DISTRO}: Configuring mdns"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN \
                     MY_IP \
-                    API_WORKERS
+                    API_WORKERS \
+                    DESIGNATE_MDNS_ALL_TCP
+
+
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns workers "${API_WORKERS}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns threads "1000"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns listen "${MY_IP}:5354"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns tcp_backlog "100"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns tcp_recv_timeout "0.5"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns query_enforce_tsig "False"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns all_tcp "${DESIGNATE_MDNS_ALL_TCP}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:mdns max_message_size "65535"

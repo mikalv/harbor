@@ -24,8 +24,19 @@ echo "${OS_DISTRO}: Configuring central"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN \
                     MY_IP \
-                    API_WORKERS
+                    API_WORKERS \
+                    DESIGNATE_POOL_ID
+
+
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central workers "${API_WORKERS}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central threads "1000"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central max_zone_name_len "255"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central max_recordset_name_len "255"
+#crudini --set ${DESIGNATE_CONFIG_FILE} service:central min_ttl "None"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central default_pool_id "${DESIGNATE_POOL_ID}"

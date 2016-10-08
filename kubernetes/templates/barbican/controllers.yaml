@@ -1,0 +1,424 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: barbican-db
+  name: os-barbican-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/barbican/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: barbican-db
+  name: os-barbican-db
+  namespace: os-barbican
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: barbican-manager
+    version: v0.1.0
+  name: barbican-manager
+  namespace: os-barbican
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: barbican-manager
+        version: v0.1.0
+      name: barbican-manager
+      namespace: os-barbican
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: barbican-manager
+          image: {{ IMAGE_BARBICAN_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: barbican-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: barbican-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: barbican-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: barbican-db-root
+        - name: os-config-db
+          secret:
+            secretName: barbican-db
+        - name: os-config-keystone
+          secret:
+            secretName: barbican-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: barbican-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: barbican-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: barbican-db
+    version: v0.1.0
+  name: barbican-db
+  namespace: os-barbican
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: barbican-db
+        version: v0.1.0
+      name: barbican-db
+      namespace: os-barbican
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: barbican-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3313
+              hostPort: 3313
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3313'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_BARBICAN_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_BARBICAN_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_BARBICAN_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_BARBICAN_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_BARBICAN_DB_NAME
+            - name: DB_USER
+              value: AUTH_BARBICAN_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_BARBICAN_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-barbican-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: barbican-db-root
+        - name: os-config-db
+          secret:
+            secretName: barbican-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: barbican-db-ssl-secret
+        - name: os-barbican-db
+          persistentVolumeClaim:
+            claimName: os-barbican-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: barbican
+    version: v0.1.0
+  name: barbican-api-master
+  namespace: os-barbican
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: barbican
+        version: v0.1.0
+      name: barbican-api-master
+      namespace: os-barbican
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "barbican-api-init",
+          	"image": "{{ IMAGE_BARBICAN_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "barbican"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-barbican",
+          			"mountPath": "/pod/etc/barbican",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: barbican-api
+          image: {{ IMAGE_BARBICAN_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8004
+              hostPort: 8004
+              protocol: TCP
+              name: b-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-barbican
+              mountPath: /etc/barbican
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-barbican
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: barbican-db
+        - name: os-config-keystone
+          secret:
+            secretName: barbican-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: barbican-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: barbican-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: barbican-engine
+    version: v0.1.0
+  name: barbican-engine-master
+  namespace: os-barbican
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: barbican-engine
+        version: v0.1.0
+      name: barbican-engine-master
+      namespace: os-barbican
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "barbican-engine-init",
+          	"image": "{{ IMAGE_BARBICAN_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "engine"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "barbican"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-barbican",
+          			"mountPath": "/pod/etc/barbican",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: barbican-engine
+          image: {{ IMAGE_BARBICAN_ENGINE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: pod-etc-barbican
+              mountPath: /etc/barbican
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-barbican
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: barbican-db
+        - name: os-config-keystone
+          secret:
+            secretName: barbican-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: barbican-user-ssl-secret

@@ -24,8 +24,16 @@ echo "${OS_DISTRO}: Configuring zone-manager"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN \
                     MY_IP \
                     API_WORKERS
+
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:producer workers "${API_WORKERS}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:producer threads "1000"
+# List of Zone Manager tasks to enable, a value of None will enable all tasks.
+crudini --set ${DESIGNATE_CONFIG_FILE} service:producer enabled_tasks "None"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:producer export_synchronous "True"

@@ -58,10 +58,14 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   ##############################################################################
   tail -f /dev/null
 else
-  tail -f /dev/null
-  echo "${OS_DISTRO}: Bootrapping apps"
+  echo "${OS_DISTRO}: Bootrapping pools"
   ##############################################################################
-  /opt/harbor/designate/bootstrap/bootstrap-apps.sh
+  /opt/harbor/designate/bootstrap/bootstrap-pools.sh
+
+
+  echo "${OS_DISTRO}: Bootrapping powerdns"
+  ##############################################################################
+  /opt/harbor/designate/bootstrap/bootstrap-pdns.sh
 
 
   echo "${OS_DISTRO}: Finished management"

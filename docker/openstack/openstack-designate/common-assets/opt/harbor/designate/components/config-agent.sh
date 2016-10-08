@@ -24,8 +24,23 @@ echo "${OS_DISTRO}: Configuring zone-manager"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars DESIGNATE_CONFIG_FILE \
                     OS_DOMAIN \
                     MY_IP \
                     API_WORKERS
+
+
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent workers "${API_WORKERS}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent listen "${MY_IP}:5358"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent tcp_backlog "100"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent allow_notify "127.0.0.1"
+
+
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent masters "${MY_IP}:5354"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent backend_driver "fake"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent transfer_source "None"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:agent notify_delay "0"

@@ -202,14 +202,26 @@ spec:
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
               readOnly: true
+            - name: os-config-db-pool
+              mountPath: /var/run/harbor/secrets/config-db-pool
+              readOnly: true
+            - name: os-config-db-pdns
+              mountPath: /var/run/harbor/secrets/config-db-pdns
+              readOnly: true
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
               readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
               readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
               readOnly: true
       restartPolicy: OnFailure
       volumes:
@@ -228,15 +240,27 @@ spec:
         - name: os-config-db
           secret:
             secretName: designate-db
+        - name: os-config-db-pool
+          secret:
+            secretName: designate-db-pool
+        - name: os-config-db-pdns
+          secret:
+            secretName: designate-db-pdns
         - name: os-config-keystone
           secret:
             secretName: designate-keystone
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: designate-ssl-secret
         - name: os-config-ssl-user-secret
           secret:
             secretName: designate-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -1271,8 +1295,8 @@ spec:
       nodeSelector:
         harbor-role: master
       containers:
-        - name: designate-sink
-          image: {{ IMAGE_DESIGNATE_SINK }}
+        - name: designate-agent
+          image: {{ IMAGE_DESIGNATE_AGENT }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           env:
             - name: OS_DOMAIN

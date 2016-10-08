@@ -49,8 +49,8 @@ check_required_vars DESIGNATE_CONFIG_FILE \
 
 
 ################################################################################
-DESIGNATE_DNS_SERVICE_SVC_IP=172.16.0.1
-DESIGNATE_MDNS_SERVICE_SVC_IP=172.16.0.1
+DESIGNATE_DNS_SERVICE_SVC_IP=$MY_IP
+DESIGNATE_MDNS_SERVICE_SVC_IP=$MY_IP
 check_required_vars DESIGNATE_DNS_SERVICE_SVC_IP DESIGNATE_MDNS_SERVICE_SVC_IP
 
 
@@ -87,7 +87,7 @@ crudini --set ${DESIGNATE_CONFIG_FILE} pool_nameserver:${DESIGNATE_POOL_NAMESERV
 
 
 ################################################################################
-crudini --set ${DESIGNATE_CONFIG_FILE} pool_target:${DESIGNATE_POOL_TARGETS_ID} options "connection: mysql://${AUTH_DESIGNATE_PDNS_DB_USER}:${AUTH_DESIGNATE_PDNS_DB_PASSWORD}@${DESIGNATE_DNS_MARIADB_SERVICE_HOST_SVC}:${DESIGNATE_DNS_MARIADB_SERVICE_PORT}/${AUTH_DESIGNATE_PDNS_DB_NAME}?charset=utf8"
+crudini --set ${DESIGNATE_CONFIG_FILE} pool_target:${DESIGNATE_POOL_TARGETS_ID} options "connection: mysql+pymysql://${AUTH_DESIGNATE_PDNS_DB_USER}:${AUTH_DESIGNATE_PDNS_DB_PASSWORD}@${DESIGNATE_DNS_MARIADB_SERVICE_HOST_SVC}:${DESIGNATE_DNS_MARIADB_SERVICE_PORT}/${AUTH_DESIGNATE_PDNS_DB_NAME}?charset=utf8"
 crudini --set ${DESIGNATE_CONFIG_FILE} pool_target:${DESIGNATE_POOL_TARGETS_ID} masters "${DESIGNATE_MDNS_SERVICE_SVC_IP}:5354"
 crudini --set ${DESIGNATE_CONFIG_FILE} pool_target:${DESIGNATE_POOL_TARGETS_ID} "type" "powerdns"
 
@@ -117,6 +117,6 @@ cat > /etc/designate/pools.yaml <<EOF
       options:
         host: ${DESIGNATE_DNS_SERVICE_SVC_IP}
         port: 553
-        connection: mysql://${AUTH_DESIGNATE_PDNS_DB_USER}:${AUTH_DESIGNATE_PDNS_DB_PASSWORD}@${MARIADB_SERVICE_HOST}/${AUTH_DESIGNATE_PDNS_DB_NAME}?charset=utf8
+        connection: mysql+pymysql://${AUTH_DESIGNATE_PDNS_DB_USER}:${AUTH_DESIGNATE_PDNS_DB_PASSWORD}@${DESIGNATE_DNS_MARIADB_SERVICE_HOST_SVC}:${DESIGNATE_DNS_MARIADB_SERVICE_PORT}/${AUTH_DESIGNATE_PDNS_DB_NAME}?charset=utf8
 EOF
 chown designate:designate /etc/designate/pools.yaml

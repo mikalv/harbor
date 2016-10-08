@@ -41,10 +41,21 @@ echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
 /usr/bin/mysql-insecure-test
 
-tail -f /dev/null
+
+# (mysql \
+#   -h ${DESIGNATE_DNS_MARIADB_SERVICE_HOST_SVC} \
+#   -P ${DESIGNATE_DNS_MARIADB_SERVICE_PORT} \
+#   -u ${AUTH_DESIGNATE_PDNS_DB_USER} \
+#   -p"${AUTH_DESIGNATE_PDNS_DB_PASSWORD}" \
+#   -e "select 1" ${AUTH_DESIGNATE_PDNS_DB_NAME} > /dev/null && \
+#   echo "${OS_DISTRO}: Mysql Connection OK" ) || ( \
+#     echo "${OS_DISTRO}: Connection failed"
+#     exit 1)
+
 
 echo "${OS_DISTRO}: Setting up pdns conf"
 ################################################################################
+mkdir -p $( dirname ${PDNS_CONFIG_FILE})
 cat > ${PDNS_CONFIG_FILE} <<EOF
 # General Config
 setgid=pdns

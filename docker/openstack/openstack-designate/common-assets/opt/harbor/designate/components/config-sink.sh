@@ -21,8 +21,11 @@ echo "${OS_DISTRO}: Configuring sink"
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/designate/vars.sh
+. /opt/harbor/designate/manage/env-keystone-auth.sh
+unset OS_DOMAIN_NAME
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
+
 
 ################################################################################
 check_required_vars DESIGNATE_CONFIG_FILE \
@@ -32,36 +35,44 @@ check_required_vars DESIGNATE_CONFIG_FILE \
                     API_WORKERS
 
 
+echo "${OS_DISTRO}: configuring notification handlers"
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} service:sink enabled_notification_handlers "nova_fixed, neutron_floatingip"
+
+
 echo "${OS_DISTRO}: Getting DESIGNATE_MANAGED_DNS_DOMAIN_ID"
 ################################################################################
-
-
-tail -f /dev/null
-#DESIGNATE_ADMIN_DOMAIN_ID="$(etcdctl --endpoint ${ETCDCTL_ENDPOINT} get /${OS_DISTRO}/${OPENSTACK_COMPONENT}/designate_admin_domain_id)"
-DESIGNATE_MANAGED_DNS_DOMAIN_ID=$(etcdctl --endpoint ${ETCDCTL_ENDPOINT} get /${OS_DISTRO}/${OPENSTACK_COMPONENT}/designate_managed_dns_domain_id)
+DESIGNATE_MANAGED_DNS_DOMAIN_ID=$(designate domain-get ex.${OS_DOMAIN}. -f value -c id)
 check_required_vars DESIGNATE_MANAGED_DNS_DOMAIN_ID
+
+
+echo "${OS_DISTRO}: configuring neutron sink"
+################################################################################
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip zone_id "${DESIGNATE_MANAGED_DNS_DOMAIN_ID}"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip domain_id "${DESIGNATE_MANAGED_DNS_DOMAIN_ID}"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip notification_topics "notifications_dns"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip control_exchange "neutron"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip formatv4 "%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip formatv4 "%(hostname)s.%(project)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip formatv4 "%(hostname)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip formatv6 "%(hostname)s.%(project)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:neutron_floatingip formatv6 "%(hostname)s.%(domain)s"
 
 
 echo "${OS_DISTRO}: Getting DESIGNATE_INTERNAL_DNS_DOMAIN_ID"
 ################################################################################
-#DESIGNATE_ADMIN_DOMAIN_ID="$(etcdctl --endpoint ${ETCDCTL_ENDPOINT} get /${OS_DISTRO}/${OPENSTACK_COMPONENT}/designate_admin_domain_id)"
-DESIGNATE_INTERNAL_DNS_DOMAIN_ID=$(etcdctl --endpoint ${ETCDCTL_ENDPOINT} get /${OS_DISTRO}/${OPENSTACK_COMPONENT}/designate_internal_dns_domain_id)
+DESIGNATE_INTERNAL_DNS_DOMAIN_ID=$(designate domain-get in.${OS_DOMAIN}. -f value -c id)
 check_required_vars DESIGNATE_INTERNAL_DNS_DOMAIN_ID
 
 
-echo "${OS_DISTRO}: SINK CONFIG"
+echo "${OS_DISTRO}: configuring nova sink"
 ################################################################################
-crudini --set $cfg service:sink enabled_notification_handlers "nova_fixed, neutron_floatingip"
-
-crudini --set $cfg handler:neutron_floatingip zone_id "${DESIGNATE_MANAGED_DNS_DOMAIN_ID}"
-crudini --set $cfg handler:neutron_floatingip domain_id "${DESIGNATE_MANAGED_DNS_DOMAIN_ID}"
-crudini --set $cfg handler:neutron_floatingip notification_topics "notifications_dns"
-crudini --set $cfg handler:neutron_floatingip control_exchange "neutron"
-crudini --set $cfg handler:neutron_floatingip format "%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(zone)s"
-
-
-crudini --set $cfg handler:nova_fixed zone_id "${DESIGNATE_INTERNAL_DNS_DOMAIN_ID}"
-crudini --set $cfg handler:nova_fixed domain_id "${DESIGNATE_INTERNAL_DNS_DOMAIN_ID}"
-crudini --set $cfg handler:nova_fixed notification_topics "notifications_dns"
-crudini --set $cfg handler:nova_fixed control_exchange "nova"
-crudini --set $cfg handler:nova_fixed format '%(hostname)s.%(project)s.%(zone)s'
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed zone_id "${DESIGNATE_INTERNAL_DNS_DOMAIN_ID}"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed domain_id "${DESIGNATE_INTERNAL_DNS_DOMAIN_ID}"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed notification_topics "notifications_dns"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed control_exchange "nova"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed formatv4 "%(octet0)s-%(octet1)s-%(octet2)s-%(octet3)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed formatv4 "%(hostname)s.%(project)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed formatv4 "%(hostname)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed formatv6 "%(hostname)s.%(domain)s"
+crudini --set ${DESIGNATE_CONFIG_FILE} handler:nova_fixed formatv6 "%(hostname)s.%(project)s.%(domain)s"

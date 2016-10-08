@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: barbican-db
+  name: barbican-db
+  namespace: os-barbican
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3317
+    protocol: TCP
+    targetPort: 3317
+  selector:
+    openstack-app: barbican-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: barbican
+  name: barbican
+  namespace: os-barbican
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 8004
+    protocol: TCP
+    targetPort: 8004
+  selector:
+    openstack-app: barbican
