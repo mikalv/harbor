@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: barbican
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: barbican
+  namespace: os-barbican
+spec:
+  tls:
+    - hosts:
+        - barbican.build.harboros.net
+      secretName: barbican-ssl-secret
+    - hosts:
+        - barbican.os-barbican.svc.build.harboros.net
+      secretName: barbican-ssl-secret
+  rules:
+  - host: barbican.build.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: barbican
+          servicePort: 9311
+  - host: barbican.os-barbican.svc.build.harboros.net
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: barbican
+          servicePort: 9311

@@ -26,8 +26,8 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 8004
+  - port: 9311
     protocol: TCP
-    targetPort: 8004
+    targetPort: 9311
   selector:
     openstack-app: barbican

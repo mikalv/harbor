@@ -50,3 +50,13 @@ echo "${OS_DISTRO}: Starting messaging config"
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
 /opt/harbor/barbican/config-keystone.sh
+
+
+echo "${OS_DISTRO}: Starting policy config"
+################################################################################
+/opt/harbor/barbican/config-policy.sh
+
+
+echo "${OS_DISTRO}: Starting api config"
+################################################################################
+/opt/harbor/barbican/config-api.sh

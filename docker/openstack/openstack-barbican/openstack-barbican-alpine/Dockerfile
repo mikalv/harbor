@@ -6,19 +6,17 @@ ENV OS_COMP="barbican" \
 
 COPY ./common-assets /opt/harbor/common-assets
 
-COPY ./assets/ /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
     cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rfav /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     apk add --no-cache --virtual run-deps  \
         libxml2 \
         libxslt \
         libcurl \
-        openssl && \
+        openssl \
+        nss \
+        uwsgi-python && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \
@@ -34,7 +32,8 @@ RUN set -e && \
         cmake \
         pkgconf \
         unzip \
-        build-base && \
+        build-base \
+        nss-dev && \
     /opt/harbor/build/dockerfile.sh && \
     apk del build-deps
 

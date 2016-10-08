@@ -37,5 +37,7 @@ check_required_vars BARBICAN_CONFIG_FILE \
 
 
 ################################################################################
-crudini --set ${BARBICAN_CONFIG_FILE} database connection \
+crudini --set ${BARBICAN_CONFIG_FILE} DEFAULT sql_connection \
 "mysql+pymysql://${AUTH_BARBICAN_DB_USER}:${AUTH_BARBICAN_DB_PASSWORD}@${BARBICAN_MARIADB_SERVICE_HOST_SVC}:${BARBICAN_MARIADB_SERVICE_PORT}/${AUTH_BARBICAN_DB_NAME}?charset=utf8&ssl_ca=${BARBICAN_DB_CA}&ssl_key=${BARBICAN_DB_KEY}&ssl_cert=${BARBICAN_DB_CERT}&ssl_verify_cert"
+
+crudini --set ${BARBICAN_CONFIG_FILE} DEFAULT db_auto_create "False"
