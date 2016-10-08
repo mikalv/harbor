@@ -15,27 +15,28 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Bootstrapping apps"
+echo "${OS_DISTRO}: Configuring central"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/designate/vars.sh
+PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
+: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
 
 ################################################################################
-check_required_vars DESIGNATE_CONFIG_FILE
+check_required_vars DESIGNATE_CONFIG_FILE \
+                    OS_DOMAIN \
+                    MY_IP \
+                    API_WORKERS \
+                    DESIGNATE_POOL_ID
 
 
-echo "${OS_DISTRO}: Imporing base package metadata"
 ################################################################################
-su -s /bin/sh -c "designate-manage --config-file ${DESIGNATE_CONFIG_FILE} import-package /opt/stack/designate/meta/io.designate" designate
-
-APPS_ROOT_DIR="/opt/designate-apps"
-echo "${OS_DISTRO}: Imporing packages"
-################################################################################
-for APP in $(ls ${APPS_ROOT_DIR}); do
-  echo "${OS_DISTRO}: Imporing ${APP} package"
-  ##############################################################################
-  su -s /bin/sh -c "designate-manage --config-file ${DESIGNATE_CONFIG_FILE} import-package ${APPS_ROOT_DIR}/${APP}" designate
-done
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central workers "${API_WORKERS}"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central threads "1000"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central max_zone_name_len "255"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central max_recordset_name_len "255"
+#crudini --set ${DESIGNATE_CONFIG_FILE} service:central min_ttl "None"
+crudini --set ${DESIGNATE_CONFIG_FILE} service:central default_pool_id "${DESIGNATE_POOL_ID}"

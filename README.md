@@ -15,6 +15,22 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
  This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the Linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/marina) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
 
 
+## Components
+| Function      | OpenStack Component | Harbor Notes                     | Status      |
+|---------------|---------------------|----------------------------------|-------------|
+| Identity      | Keystone            | With FreeIPA & Ipsilon           | Active      |
+| Block Storage | Cinder              | LVM Driver                       | Active      |
+| Networking    | Neutron             | OVN                              | Active      |
+|               | Designate (DNS)     |                                  | Active      |
+|               | Neutron LBaaS       | HAProxy                          | Active      |
+|               | Kuryr               | Libnetwork Driver                | Active      |
+|               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
+| Compute       | Nova (docker)       | Native Cinder Support            | Active      |
+|               | Nova (KVM)          | Spice, NoVNC and Serial Consoles |             |
+| Orchestration | Heat                | Docker 1.12 support              | Active      |
+|               | Murano              |                                  | Active      |
+|               |                     |                                  |             |
+
 ## Screenshots
  * Cockpit
  <div align="center">

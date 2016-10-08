@@ -65,9 +65,9 @@ done
 )
 
 
-
 systemctl enable iscsid.socket iscsiuio.socket
 systemctl start iscsid.socket iscsiuio.socket
+
 
 DOCKER_DEV_MTU=$(ip -f inet -o link show ${HOST_PRIMARY_NETWORK_DEV}|cut -d\  -f 5 | cut -d/ -f 1)
 DOCKER_MTU=$(expr $DOCKER_DEV_MTU - $DOCKER_MTU_OVERHEAD)

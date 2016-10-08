@@ -19,6 +19,23 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    openstack-app: designate-db-pdns
+  name: designate-db-pdns
+  namespace: os-designate
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3316
+    protocol: TCP
+    targetPort: 3316
+  selector:
+    openstack-app: designate-db-pdns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
     openstack-app: designate
   name: designate
   namespace: os-designate
@@ -53,3 +70,25 @@ spec:
     name: dns-udp
   selector:
     openstack-app: designate-dns
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: designate-mdns
+  name: designate-mdns
+  namespace: os-designate
+spec:
+  clusterIP: 'None'
+  sessionAffinity: 'ClientIP'
+  ports:
+  - port: 5354
+    targetPort: 5354
+    protocol: TCP
+    name: mdns-tcp
+  - port: 5354
+    targetPort: 5354
+    protocol: UDP
+    name: mdns-udp
+  selector:
+    openstack-app: designate-mdns

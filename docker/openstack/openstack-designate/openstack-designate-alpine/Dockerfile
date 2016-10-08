@@ -14,7 +14,8 @@ RUN set -e && \
         libxml2 \
         libxslt \
         libcurl \
-        openssl && \
+        openssl \
+        py-mysqldb && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

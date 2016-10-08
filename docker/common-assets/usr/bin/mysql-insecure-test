@@ -1,0 +1,79 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+echo "${OS_DISTRO}: Testing mysql server connection"
+################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+check_required_vars OS_DOMAIN \
+                    OS_COMP
+if [ -f /opt/harbor/${OS_COMP}/vars.sh ]; then
+  . /opt/harbor/${OS_COMP}/vars.sh
+fi
+
+
+echo "${OS_DISTRO}: Loading mysql config"
+################################################################################
+MARIADB_TEST_USER_ENV="AUTH_${OS_COMP^^}_MARIADB_USER"
+MARIADB_TEST_USER_VAL=${!MARIADB_TEST_USER_ENV}
+: ${MARIADB_TEST_USER:="$MARIADB_TEST_USER_VAL"}
+
+MARIADB_TEST_PASSWORD_ENV="AUTH_${OS_COMP^^}_MARIADB_PASSWORD"
+MARIADB_TEST_PASSWORD_VAL=${!MARIADB_TEST_PASSWORD_ENV}
+: ${MARIADB_TEST_PASSWORD:="$MARIADB_TEST_PASSWORD_VAL"}
+
+MARIADB_TEST_DATABASE_ENV="AUTH_${OS_COMP^^}_MARIADB_DATABASE"
+MARIADB_TEST_DATABASE_VAL=${!MARIADB_TEST_DATABASE_ENV}
+: ${MARIADB_TEST_DATABASE:="$MARIADB_TEST_DATABASE_VAL"}
+
+MARIADB_TEST_SERVICE_NAMESPACE_ENV="${OS_COMP^^}_SERVICE_NAMESPACE"
+MARIADB_TEST_SERVICE_NAMESPACE_VAL=${!MARIADB_TEST_SERVICE_NAMESPACE_ENV}
+: ${MARIADB_TEST_SERVICE_NAMESPACE:="$MARIADB_TEST_SERVICE_NAMESPACE_VAL"}
+
+MARIADB_TEST_SERVICE_HOSTNAME_ENV="${OS_COMP^^}_API_SERVICE_HOSTNAME"
+MARIADB_TEST_SERVICE_HOSTNAME_VAL=${!MARIADB_TEST_SERVICE_HOSTNAME_ENV}
+: ${MARIADB_TEST_SERVICE_HOSTNAME:="$MARIADB_TEST_SERVICE_HOSTNAME_VAL"}
+
+MARIADB_TEST_PORT_ENV="${OS_COMP^^}_MARIADB_SERVICE_PORT"
+MARIADB_TEST_PORT_VAL=${!MARIADB_TEST_PORT_ENV}
+: ${MARIADB_TEST_PORT:="$MARIADB_TEST_PORT_VAL"}
+
+: ${MARIADB_TEST_HOST:="${MARIADB_TEST_SERVICE_HOSTNAME}-db.${MARIADB_TEST_SERVICE_NAMESPACE}.svc.${OS_DOMAIN}"}
+
+echo "${OS_DISTRO}: Server:   ${MARIADB_TEST_HOST}"
+echo "${OS_DISTRO}: Port:     ${MARIADB_TEST_PORT}"
+echo "${OS_DISTRO}: Database: ${MARIADB_TEST_DATABASE}"
+
+check_required_vars MARIADB_TEST_HOST \
+                    MARIADB_TEST_PORT \
+                    MARIADB_TEST_USER \
+                    MARIADB_TEST_PASSWORD \
+                    MARIADB_TEST_DATABASE
+
+
+echo "${OS_DISTRO}: Testing Connection"
+################################################################################
+(mysql \
+  -h ${MARIADB_TEST_HOST} \
+  -P ${MARIADB_TEST_PORT} \
+  -u ${MARIADB_TEST_USER} \
+  -p"${MARIADB_TEST_PASSWORD}" \
+  -e "select 1" ${MARIADB_TEST_DATABASE} > /dev/null && \
+  echo "${OS_DISTRO}: Mysql Connection OK" ) || ( \
+    echo "${OS_DISTRO}: Connection failed"
+    exit 1)

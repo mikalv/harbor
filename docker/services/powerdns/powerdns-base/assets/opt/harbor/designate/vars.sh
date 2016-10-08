@@ -1,0 +1,1 @@
+../../../../../../../openstack/openstack-designate/common-assets/opt/harbor/designate/vars.sh

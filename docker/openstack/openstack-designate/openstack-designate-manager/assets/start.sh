@@ -49,14 +49,23 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   /opt/harbor/designate/manage/manage-keystone-service.sh
 
 
+  echo "${OS_DISTRO}: Managing Domain"
+  ##############################################################################
+  /opt/harbor/designate/manage/bootstrap-designate-domain.sh
+
+
   echo "${OS_DISTRO}: Finished management"
   ##############################################################################
   tail -f /dev/null
 else
-  tail -f /dev/null
-  echo "${OS_DISTRO}: Bootrapping apps"
+  echo "${OS_DISTRO}: Bootrapping pools"
   ##############################################################################
-  /opt/harbor/designate/bootstrap/bootstrap-apps.sh
+  /opt/harbor/designate/bootstrap/bootstrap-pools.sh
+
+
+  echo "${OS_DISTRO}: Bootrapping powerdns"
+  ##############################################################################
+  /opt/harbor/designate/bootstrap/bootstrap-pdns.sh
 
 
   echo "${OS_DISTRO}: Finished management"

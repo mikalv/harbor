@@ -1,5 +1,5 @@
 [Unit]
-Description=Harbor Neutron, Raven & Kuryr
+Description=Harbor Neutron, Raven, Kuryr & Designate
 After=harbor-auth.service
 After=harbor-kubernetes.service
 After=harbor-etcd.service
@@ -20,6 +20,7 @@ TimeoutSec=0
 ExecStartPre=/usr/bin/harbor-service start neutron
 ExecStartPre=/usr/bin/harbor-service start raven
 ExecStartPre=/usr/bin/harbor-service start kuryr
+ExecStartPre=/usr/bin/harbor-service start designate
 ExecStart=/usr/bin/harbor-service check neutron
 ExecStop=/usr/bin/harbor-service stop neutron
 RemainAfterExit=true

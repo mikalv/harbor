@@ -1,1 +1,1 @@
-# port/openstack-nova*
+# port/openstack-designate*
