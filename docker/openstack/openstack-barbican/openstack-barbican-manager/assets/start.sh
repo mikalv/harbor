@@ -31,7 +31,10 @@ echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-barbican.sh
 
+
+: ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
+  tail -f /dev/null
   echo "${OS_DISTRO}: Managing database"
   ##############################################################################
   /opt/harbor/barbican/manage/bootstrap-database.sh
@@ -40,6 +43,11 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Managing User"
   ##############################################################################
   /opt/harbor/barbican/manage/manage-keystone-user.sh
+
+
+  echo "${OS_DISTRO}: Managing Service User"
+  ##############################################################################
+  /opt/harbor/barbican/manage/manage-keystone-service-user.sh
 
 
   echo "${OS_DISTRO}: Managing Service"

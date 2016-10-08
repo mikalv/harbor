@@ -26,10 +26,12 @@ echo "${OS_DISTRO}: Configuring messaging"
 ################################################################################
 check_required_vars BARBICAN_CONFIG_FILE \
                     OS_DOMAIN \
-                    AUTH_BARBICAN_RABBITMQ_USER \
-                    AUTH_BARBICAN_RABBITMQ_PASS \
-                    BARBICAN_RABBITMQ_SERVICE_HOST_SVC \
-                    BARBICAN_RABBITMQ_SERVICE_PORT
+                    AUTH_MESSAGING_PASS \
+                    AUTH_MESSAGING_USER \
+                    RABBITMQ_SERVICE_HOST_SVC \
+                    BARBICAN_DB_KEY \
+                    BARBICAN_DB_CERT \
+                    BARBICAN_DB_CA
 
 
 echo "${OS_DISTRO}: messaging: RPC backend"
@@ -42,11 +44,11 @@ echo "${OS_DISTRO}: messaging: connection"
 crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_use_ssl "True"
 
 crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
-crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "${BARBICAN_RABBITMQ_SERVICE_PORT}"
-crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:${BARBICAN_RABBITMQ_SERVICE_PORT}"
+crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "5672"
+crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:5672"
 
-crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_BARBICAN_RABBITMQ_USER}"
-crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_BARBICAN_RABBITMQ_PASS}"
+crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MESSAGING_USER}"
+crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MESSAGING_PASS}"
 
 
 echo "${OS_DISTRO}: messaging: TLS"
@@ -62,3 +64,38 @@ echo "${OS_DISTRO}: messaging: config"
 crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${BARBICAN_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+
+
+
+echo "${OS_DISTRO}: messaging: RPC backend"
+################################################################################
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rpc_backend "rabbit"
+
+
+echo "${OS_DISTRO}: messaging: connection"
+################################################################################
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_use_ssl "True"
+
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_port "5672"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:5672"
+
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_userid "${AUTH_MESSAGING_USER}"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_password "${AUTH_MESSAGING_PASS}"
+
+
+echo "${OS_DISTRO}: messaging: TLS"
+################################################################################
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' kombu_ssl_version "TLSv1_2"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' kombu_ssl_keyfile "${BARBICAN_DB_KEY}"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' kombu_ssl_certfile "${BARBICAN_DB_CERT}"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' kombu_ssl_ca_certs "${BARBICAN_DB_CA}"
+
+
+echo "${OS_DISTRO}: messaging: config"
+################################################################################
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_virtual_host "/"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' rabbit_ha_queues "False"
+crudini --set ${BARBICAN_CONFIG_FILE} 'secrets' amqp_durable_queues "False"

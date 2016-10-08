@@ -24,12 +24,14 @@ echo "${OS_DISTRO}: Configuring api"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars BARBICAN_CONFIG_FILE \
                     OS_DOMAIN \
                     BARBICAN_API_SVC_PORT \
                     MY_IP \
-                    API_WORKERS
+                    API_WORKERS \
+                    BARBICAN_VASSALS_CONFIG_FILE
 
 
 echo "${OS_DISTRO}: Configuring worker params"
@@ -39,4 +41,5 @@ echo "${OS_DISTRO}:    Port: ${BARBICAN_API_SVC_PORT}"
 echo "${OS_DISTRO}:    Listen: 127.0.0.1"
 crudini --set ${BARBICAN_CONFIG_FILE} DEFAULT bind_port "${BARBICAN_API_SVC_PORT}"
 crudini --set ${BARBICAN_CONFIG_FILE} barbican api_workers "${API_WORKERS}"
-crudini --set ${BARBICAN_CONFIG_FILE} DEFAULT bind_host "127.0.0.1"
+crudini --set ${BARBICAN_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
+crudini --set ${BARBICAN_VASSALS_CONFIG_FILE} uwsgi socket "127.0.0.1:${BARBICAN_API_SVC_PORT}"

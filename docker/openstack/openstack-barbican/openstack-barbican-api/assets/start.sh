@@ -22,4 +22,4 @@ echo "${OS_DISTRO}: Launching"
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec barbican-api --config-file=${BARBICAN_CONFIG_FILE} --debug
+exec uwsgi --master --emperor $(dirname ${BARBICAN_CONFIG_FILE})/vassals

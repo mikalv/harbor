@@ -19,14 +19,15 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 | Function      | OpenStack Component | Harbor Notes                     | Status      |
 |---------------|---------------------|----------------------------------|-------------|
 | Identity      | Keystone            | With FreeIPA & Ipsilon           | Active      |
+| Secrets       | Barbican            | Backed by FreeIPA                | WIP         |
 | Block Storage | Cinder              | LVM Driver                       | Active      |
 | Networking    | Neutron             | OVN                              | Active      |
-|               | Designate (DNS)     |                                  | Active      |
+|               | Designate (DNS)     | PowerDNS Backend                 | Active      |
 |               | Neutron LBaaS       | HAProxy                          | Active      |
 |               | Kuryr               | Libnetwork Driver                | Active      |
 |               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
 | Compute       | Nova (docker)       | Native Cinder Support            | Active      |
-|               | Nova (KVM)          | Spice, NoVNC and Serial Consoles |             |
+|               | Nova (KVM)          | Spice, NoVNC and Serial Consoles | To Process  |
 | Orchestration | Heat                | Docker 1.12 support              | Active      |
 |               | Murano              |                                  | Active      |
 |               |                     |                                  |             |

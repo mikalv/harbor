@@ -28,9 +28,9 @@ check_required_vars BARBICAN_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "barbican-db-manage --config-file ${BARBICAN_CONFIG_FILE} upgrade" barbican
+su -s /bin/sh -c "barbican-db-manage upgrade" barbican
 
 
 echo "${OS_DISTRO}: DB version:"
 ################################################################################
-su -s /bin/sh -c "barbican-db-manage version" barbican
+su -s /bin/sh -c "barbican-db-manage current" barbican

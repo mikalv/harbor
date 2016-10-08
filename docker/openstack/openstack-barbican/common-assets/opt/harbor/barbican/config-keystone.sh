@@ -24,7 +24,7 @@ echo "${OS_DISTRO}: Configuring keystone"
 
 
 ################################################################################
-check_required_vars BARBICAN_CONFIG_FILE \
+check_required_vars BARBICAN_PASTE_CONFIG_FILE \
                     OS_DOMAIN \
                     AUTH_BARBICAN_KEYSTONE_REGION \
                     AUTH_BARBICAN_KEYSTONE_DOMAIN \
@@ -38,17 +38,20 @@ check_required_vars BARBICAN_CONFIG_FILE \
 
 
 ################################################################################
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken memcached_servers "memcached.os-memcached.svc.${OS_DOMAIN}:11211"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken project_domain_name "${AUTH_BARBICAN_KEYSTONE_PROJECT_DOMAIN}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken project_name "${AUTH_BARBICAN_KEYSTONE_PROJECT}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken user_domain_name "${AUTH_BARBICAN_KEYSTONE_DOMAIN}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken region_name "${AUTH_BARBICAN_KEYSTONE_REGION}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken password "${AUTH_BARBICAN_KEYSTONE_PASSWORD}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken username "${AUTH_BARBICAN_KEYSTONE_USER}"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken auth_type "password"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken auth_version "v3"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/barbican"
-crudini --set ${BARBICAN_CONFIG_FILE} keystone_authtoken cafile "${BARBICAN_DB_CA}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'pipeline:barbican_api' pipeline "barbican-api-keystone"
+
+
+################################################################################
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' project_domain_name "${AUTH_BARBICAN_KEYSTONE_PROJECT_DOMAIN}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' project_name "${AUTH_BARBICAN_KEYSTONE_PROJECT}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' user_domain_name "${AUTH_BARBICAN_KEYSTONE_DOMAIN}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' region_name "${AUTH_BARBICAN_KEYSTONE_REGION}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' password "${AUTH_BARBICAN_KEYSTONE_PASSWORD}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' username "${AUTH_BARBICAN_KEYSTONE_USER}"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' auth_type "password"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' auth_version "v3"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' signing_dir "/var/cache/barbican"
+crudini --set ${BARBICAN_PASTE_CONFIG_FILE} 'filter:authtoken' cafile "${BARBICAN_DB_CA}"

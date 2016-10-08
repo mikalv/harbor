@@ -1,5 +1,5 @@
 [Unit]
-Description=Harbor Keystone
+Description=Harbor Keystone & Barbican
 After=harbor-auth.service
 After=harbor-kubernetes.service
 After=harbor-etcd.service
@@ -16,6 +16,7 @@ Restart=always
 RestartSec=20
 TimeoutSec=0
 ExecStartPre=/usr/bin/harbor-service start keystone
+ExecStartPre=/usr/bin/harbor-service start barbican
 ExecStart=/usr/bin/harbor-service check keystone
 ExecStop=/usr/bin/harbor-service stop keystone
 RemainAfterExit=true
