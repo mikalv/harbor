@@ -39,7 +39,12 @@ RUN set -e && \
     pip --no-cache-dir install numpy && \
     apk del build-deps1 && \
     apk del build-deps2 && \
-    cat /etc/apk/repositories.bak > /etc/apk/repositories
+    cat /etc/apk/repositories.bak > /etc/apk/repositories && \
+    apk add --no-cache --virtual openstack-common-deps  \
+        libxml2 \
+        libxslt \
+        libcurl \
+        openssl
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

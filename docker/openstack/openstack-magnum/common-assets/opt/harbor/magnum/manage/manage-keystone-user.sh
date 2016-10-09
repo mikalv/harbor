@@ -23,6 +23,7 @@ echo "${OS_DISTRO}: Managing keystone users"
 . /opt/harbor/magnum/vars.sh
 . /opt/harbor/magnum/manage/env-keystone-admin-auth.sh
 
+
 ################################################################################
 check_required_vars OS_DOMAIN \
                     AUTH_MAGNUM_KEYSTONE_REGION \

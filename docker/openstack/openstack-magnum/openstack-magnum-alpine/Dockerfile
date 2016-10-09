@@ -6,14 +6,10 @@ ENV OS_COMP="magnum" \
 
 COPY ./common-assets /opt/harbor/common-assets
 
-COPY ./assets/ /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
     cp -rfav /opt/harbor/common-assets/* / && \
     rm -rf /opt/harbor/common-assets && \
-    cp -rfav /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     apk add --no-cache --virtual run-deps  \
         libxml2 \
         libxslt \

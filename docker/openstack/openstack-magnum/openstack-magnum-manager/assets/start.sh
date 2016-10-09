@@ -31,15 +31,18 @@ echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-magnum.sh
 
+
+: ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Managing database"
   ##############################################################################
   /opt/harbor/magnum/manage/bootstrap-database.sh
 
 
-  echo "${OS_DISTRO}: Managing User"
+  echo "${OS_DISTRO}: Managing Users"
   ##############################################################################
   /opt/harbor/magnum/manage/manage-keystone-user.sh
+  /opt/harbor/magnum/manage/manage-keystone-trustee-user.sh
 
 
   echo "${OS_DISTRO}: Managing Service"
