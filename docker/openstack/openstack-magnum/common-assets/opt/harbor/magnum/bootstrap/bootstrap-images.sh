@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Bootstrapping apps"
+echo "${OS_DISTRO}: Bootstrapping image metadata"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -27,15 +27,5 @@ echo "${OS_DISTRO}: Bootstrapping apps"
 check_required_vars MAGNUM_CONFIG_FILE
 
 
-echo "${OS_DISTRO}: Imporing base package metadata"
 ################################################################################
-su -s /bin/sh -c "magnum-manage --config-file ${MAGNUM_CONFIG_FILE} import-package /opt/stack/magnum/meta/io.magnum" magnum
-
-APPS_ROOT_DIR="/opt/magnum-apps"
-echo "${OS_DISTRO}: Imporing packages"
-################################################################################
-for APP in $(ls ${APPS_ROOT_DIR}); do
-  echo "${OS_DISTRO}: Imporing ${APP} package"
-  ##############################################################################
-  su -s /bin/sh -c "magnum-manage --config-file ${MAGNUM_CONFIG_FILE} import-package ${APPS_ROOT_DIR}/${APP}" magnum
-done
+tail -f /dev/null

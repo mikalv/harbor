@@ -209,7 +209,7 @@ metadata:
   labels:
     openstack-app: magnum
     version: v0.1.0
-  name: magnum-engine-master
+  name: magnum-api-master
   namespace: os-magnum
 spec:
   replicas: 1
@@ -218,12 +218,12 @@ spec:
       labels:
         openstack-app: magnum
         version: v0.1.0
-      name: magnum-engine-master
+      name: magnum-api-master
       namespace: os-magnum
       annotations:
         pod.alpha.kubernetes.io/init-containers: '[
           {
-          	"name": "magnum-engine-init",
+          	"name": "magnum-api-init",
           	"image": "{{ IMAGE_MAGNUM_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
@@ -233,7 +233,149 @@ spec:
           		},
           		{
           			"name": "APP_COMPONENT",
-          			"value": "engine"
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "magnum"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-magnum",
+          			"mountPath": "/pod/etc/magnum",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: magnum-api
+          image: {{ IMAGE_MAGNUM_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-magnum
+              mountPath: /etc/magnum
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: magnum-api-tls
+          image: {{ IMAGE_HAPROXY_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9511
+              hostPort: 9511
+              protocol: TCP
+              name: m-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '9511'
+            - name: PORT_LOCAL
+              value: '9511'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-magnum
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: magnum-db
+        - name: os-config-keystone
+          secret:
+            secretName: magnum-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: magnum-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: magnum-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: magnum-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: magnum-conductor
+    version: v0.1.0
+  name: magnum-conductor-master
+  namespace: os-magnum
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: magnum-conductor
+        version: v0.1.0
+      name: magnum-conductor-master
+      namespace: os-magnum
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "magnum-conductor-init",
+          	"image": "{{ IMAGE_MAGNUM_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "conductor"
           		},
           		{
           			"name": "APP_USER",
@@ -282,8 +424,8 @@ spec:
       nodeSelector:
         harbor-role: master
       containers:
-        - name: magnum-engine
-          image: {{ IMAGE_MAGNUM_ENGINE }}
+        - name: magnum-conductor
+          image: {{ IMAGE_MAGNUM_CONDUCTOR }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           env:
             - name: OS_DOMAIN

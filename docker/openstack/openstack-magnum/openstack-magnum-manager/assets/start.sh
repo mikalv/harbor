@@ -53,9 +53,9 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Finished management"
   ##############################################################################
 else
-  echo "${OS_DISTRO}: Bootrapping apps"
+  echo "${OS_DISTRO}: Bootrapping images"
   ##############################################################################
-  /opt/harbor/magnum/bootstrap/bootstrap-apps.sh
+  /opt/harbor/magnum/bootstrap/bootstrap-images.sh
 
 
   echo "${OS_DISTRO}: Finished management"
