@@ -1,0 +1,572 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: mistral-db
+  name: os-mistral-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/mistral/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: mistral-db
+  name: os-mistral-db
+  namespace: os-mistral
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: mistral-manager
+    version: v0.1.0
+  name: mistral-manager
+  namespace: os-mistral
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral-manager
+        version: v0.1.0
+      name: mistral-manager
+      namespace: os-mistral
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-manager
+          image: {{ IMAGE_MISTRAL_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-keystone-trustee
+              mountPath: /var/run/harbor/secrets/config-keystone-trustee
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: mistral-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: mistral-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: mistral-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: mistral-db-root
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-keystone
+          secret:
+            secretName: mistral-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: mistral-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: mistral-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: mistral-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: mistral-db
+    version: v0.1.0
+  name: mistral-db
+  namespace: os-mistral
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral-db
+        version: v0.1.0
+      name: mistral-db
+      namespace: os-mistral
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3319
+              hostPort: 3319
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3319'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_MISTRAL_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_MISTRAL_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_MISTRAL_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_MISTRAL_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_MISTRAL_DB_NAME
+            - name: DB_USER
+              value: AUTH_MISTRAL_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_MISTRAL_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-mistral-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: mistral-db-root
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: mistral-db-ssl-secret
+        - name: os-mistral-db
+          persistentVolumeClaim:
+            claimName: os-mistral-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: mistral
+    version: v0.1.0
+  name: mistral-api-master
+  namespace: os-mistral
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral
+        version: v0.1.0
+      name: mistral-api-master
+      namespace: os-mistral
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "mistral-api-init",
+          	"image": "{{ IMAGE_MISTRAL_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "mistral"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-mistral",
+          			"mountPath": "/pod/etc/mistral",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-api
+          image: {{ IMAGE_MISTRAL_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-mistral
+              mountPath: /etc/mistral
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: mistral-api-tls
+          image: {{ IMAGE_HAPROXY_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8008
+              hostPort: 8008
+              protocol: TCP
+              name: m-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '8008'
+            - name: PORT_LOCAL
+              value: '8008'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-mistral
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-keystone
+          secret:
+            secretName: mistral-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: mistral-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: mistral-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: mistral-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: mistral-engine
+    version: v0.1.0
+  name: mistral-engine-master
+  namespace: os-mistral
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral-engine
+        version: v0.1.0
+      name: mistral-engine-master
+      namespace: os-mistral
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "mistral-engine-init",
+          	"image": "{{ IMAGE_MISTRAL_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "engine"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "mistral"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-mistral",
+          			"mountPath": "/pod/etc/mistral",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-engine
+          image: {{ IMAGE_MISTRAL_ENGINE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-mistral
+              mountPath: /etc/mistral
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-mistral
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-keystone
+          secret:
+            secretName: mistral-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: mistral-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: mistral-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: mistral-executor
+    version: v0.1.0
+  name: mistral-executor-master
+  namespace: os-mistral
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral-executor
+        version: v0.1.0
+      name: mistral-executor-master
+      namespace: os-mistral
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "mistral-executor-init",
+          	"image": "{{ IMAGE_MISTRAL_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "executor"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "mistral"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-mistral",
+          			"mountPath": "/pod/etc/mistral",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-executor
+          image: {{ IMAGE_MISTRAL_EXECUTOR }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-mistral
+              mountPath: /etc/mistral
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-mistral
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-keystone
+          secret:
+            secretName: mistral-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: mistral-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: mistral-user-ssl-secret

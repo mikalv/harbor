@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring conductor"
+echo "${OS_DISTRO}: Configuring engine"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
