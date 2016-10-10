@@ -22,7 +22,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 | Secrets       | Barbican            | Backed by FreeIPA                | WIP         |
 | Block Storage | Cinder              | LVM Driver                       | Active      |
 | Networking    | Neutron             | OVN                              | Active      |
-|               | Designate (DNS)     | PowerDNS Backend                 | Active      |
+|               | Designate (DNS)     | PowerDNS Backend                 | WIP      |
 |               | Neutron LBaaS       | HAProxy                          | Active      |
 |               | Kuryr               | Libnetwork Driver                | Active      |
 |               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
@@ -31,6 +31,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 | Orchestration | Heat                | Docker 1.12 support              | Active      |
 |               | Murano              |                                  | Active      |
 |               | Mistral             |                                  | Active      |
+|               | Magnum              |                                  | WIP         |
 
 ## Screenshots
  * Cockpit
