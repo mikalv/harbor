@@ -30,7 +30,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 |               | Nova (KVM)          | Spice, NoVNC and Serial Consoles | To Process  |
 | Orchestration | Heat                | Docker 1.12 support              | Active      |
 |               | Murano              |                                  | Active      |
-|               |                     |                                  |             |
+|               | Mistral             |                                  | Active      |
 
 ## Screenshots
  * Cockpit

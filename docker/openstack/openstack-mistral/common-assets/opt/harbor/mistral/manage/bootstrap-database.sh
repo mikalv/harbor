@@ -28,9 +28,4 @@ check_required_vars MISTRAL_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "mistral-db-manage --config-file ${MISTRAL_CONFIG_FILE} upgrade" mistral
-
-
-echo "${OS_DISTRO}: DB version:"
-################################################################################
-su -s /bin/sh -c "mistral-db-manage version" mistral
+su -s /bin/sh -c "python  /opt/stack/${OS_COMP}/tools/sync_db.py --config-file ${MISTRAL_CONFIG_FILE}" mistral

@@ -24,9 +24,16 @@ echo "${OS_DISTRO}: Configuring event-engine"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars MISTRAL_CONFIG_FILE \
                     OS_DOMAIN \
                     MISTRAL_API_SVC_PORT \
                     MY_IP \
                     API_WORKERS
+
+
+echo "${OS_DISTRO}: Configuring worker params"
+################################################################################
+echo "${OS_DISTRO}:    Listen: ${MY_IP}"
+crudini --set ${MISTRAL_CONFIG_FILE} event_engine host "${MY_IP}"

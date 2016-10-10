@@ -57,12 +57,6 @@ spec:
             - name: os-config-kubecfg
               mountPath: /var/run/harbor/secrets/config-kubecfg
               readOnly: true
-            - name: os-config-user-ipa
-              mountPath: /var/run/harbor/secrets/config-user-ipa
-              readOnly: true
-            - name: os-config-host-ipa
-              mountPath: /var/run/harbor/secrets/config-host-ipa
-              readOnly: true
             - name: os-config-db-root
               mountPath: /var/run/harbor/secrets/config-db-root
               readOnly: true
@@ -71,9 +65,6 @@ spec:
               readOnly: true
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
-              readOnly: true
-            - name: os-config-keystone-trustee
-              mountPath: /var/run/harbor/secrets/config-keystone-trustee
               readOnly: true
             - name: os-config-messaging-auth
               mountPath: /var/run/harbor/secrets/config-messaging-auth
@@ -94,12 +85,6 @@ spec:
         - name: os-config-kubecfg
           secret:
             secretName: mistral-kubecfg
-        - name: os-config-user-ipa
-          secret:
-            secretName: mistral-user-ipa
-        - name: os-config-host-ipa
-          secret:
-            secretName: mistral-host-ipa
         - name: os-config-db-root
           secret:
             secretName: mistral-db-root
@@ -109,9 +94,6 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: mistral-keystone
-        - name: os-config-keystone-trustee
-          secret:
-            secretName: mistral-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -252,11 +234,6 @@ spec:
           			"readOnly": true
           		},
           		{
-          			"name": "os-config-keystone-trustee",
-          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
-          			"readOnly": true
-          		},
-          		{
           			"name": "os-config-messaging-auth",
           			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
           			"readOnly": true
@@ -332,9 +309,6 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: mistral-keystone
-        - name: os-config-keystone-trustee
-          secret:
-            secretName: mistral-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -394,11 +368,6 @@ spec:
           			"readOnly": true
           		},
           		{
-          			"name": "os-config-keystone-trustee",
-          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
-          			"readOnly": true
-          		},
-          		{
           			"name": "os-config-messaging-auth",
           			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
           			"readOnly": true
@@ -448,9 +417,6 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: mistral-keystone
-        - name: os-config-keystone-trustee
-          secret:
-            secretName: mistral-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -507,11 +473,6 @@ spec:
           			"readOnly": true
           		},
           		{
-          			"name": "os-config-keystone-trustee",
-          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
-          			"readOnly": true
-          		},
-          		{
           			"name": "os-config-messaging-auth",
           			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
           			"readOnly": true
@@ -561,9 +522,6 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: mistral-keystone
-        - name: os-config-keystone-trustee
-          secret:
-            secretName: mistral-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
@@ -620,11 +578,6 @@ spec:
           			"readOnly": true
           		},
           		{
-          			"name": "os-config-keystone-trustee",
-          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
-          			"readOnly": true
-          		},
-          		{
           			"name": "os-config-messaging-auth",
           			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
           			"readOnly": true
@@ -674,9 +627,6 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: mistral-keystone
-        - name: os-config-keystone-trustee
-          secret:
-            secretName: mistral-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth

@@ -24,6 +24,7 @@ echo "${OS_DISTRO}: Configuring api"
 PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
 : ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
 ################################################################################
 check_required_vars MISTRAL_CONFIG_FILE \
                     OS_DOMAIN \
@@ -37,6 +38,7 @@ echo "${OS_DISTRO}: Configuring worker params"
 echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
 echo "${OS_DISTRO}:    Port: ${MISTRAL_API_SVC_PORT}"
 echo "${OS_DISTRO}:    Listen: 127.0.0.1"
-crudini --set ${MISTRAL_CONFIG_FILE} DEFAULT bind_port "${MISTRAL_API_SVC_PORT}"
-crudini --set ${MISTRAL_CONFIG_FILE} mistral api_workers "${API_WORKERS}"
-crudini --set ${MISTRAL_CONFIG_FILE} DEFAULT bind_host "127.0.0.1"
+crudini --set ${MISTRAL_CONFIG_FILE} api port "${MISTRAL_API_SVC_PORT}"
+crudini --set ${MISTRAL_CONFIG_FILE} api api_workers "${API_WORKERS}"
+crudini --set ${MISTRAL_CONFIG_FILE} api host "127.0.0.1"
+crudini --set ${MISTRAL_CONFIG_FILE} api enable_ssl_api "False"

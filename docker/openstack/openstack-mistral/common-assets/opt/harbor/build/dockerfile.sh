@@ -29,6 +29,8 @@ git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
 echo "${OS_DISTRO}: Installing ${OS_COMP}"
 ################################################################################
 pip --no-cache-dir install /opt/stack/${OS_COMP}
+pip --no-cache-dir install oauthlib
+
 
 mkdir -p /etc/${OS_COMP}/
 cp -rfav /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/
