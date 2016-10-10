@@ -21,7 +21,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 |---------------|---------------------|----------------------------------|-------------|
 | Storage       | flexvolume          | baremetal cinder driver          | Active      |
 | Networking    | driver              | Kuryr CNI Driver                 | Active      |
-|               | kube-proxyfunctions | Netron LBaaSv2                   | Active      |
+|               | kube-proxy          | Neutron LBaaSv2                  | Active      |
 
 
 | Function      | OpenStack Component | Harbor Notes                     | Status      |
