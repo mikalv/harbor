@@ -15,18 +15,11 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring conductor"
+echo "${OS_DISTRO}: Launching"
 ################################################################################
-. /etc/os-container.env
-. /opt/harbor/service-hosts.sh
-. /opt/harbor/harbor-common.sh
 . /opt/harbor/mistral/vars.sh
-PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
-: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
+
+echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-check_required_vars MISTRAL_CONFIG_FILE \
-                    OS_DOMAIN \
-                    MISTRAL_API_SVC_PORT \
-                    MY_IP \
-                    API_WORKERS
+exec mistral-conductor --config-file=${MISTRAL_CONFIG_FILE} --debug
