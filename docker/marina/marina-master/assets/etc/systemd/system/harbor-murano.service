@@ -15,6 +15,7 @@ After=harbor-glance.service
 After=harbor-cinder.service
 After=harbor-nova.service
 After=harbor-heat.service
+After=harbor-mistral.service
 
 
 [Service]

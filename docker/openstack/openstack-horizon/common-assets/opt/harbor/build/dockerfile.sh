@@ -33,6 +33,7 @@ git clone ${OS_REPO_URL_6} -b ${OS_REPO_BRANCH_6} --depth 1 /opt/stack/${OS_COMP
 git clone ${OS_REPO_URL_7} -b ${OS_REPO_BRANCH_7} --depth 1 /opt/stack/${OS_COMP_7}
 git clone ${OS_REPO_URL_8} -b ${OS_REPO_BRANCH_8} --depth 1 /opt/stack/${OS_COMP_8}
 git clone ${OS_REPO_URL_9} -b ${OS_REPO_BRANCH_9} --depth 1 /opt/stack/${OS_COMP_9}
+git clone ${OS_REPO_URL_10} -b ${OS_REPO_BRANCH_10} --depth 1 /opt/stack/${OS_COMP_10}
 
 
 echo "${OS_DISTRO}: Sutting up source files ${OS_COMP}"
@@ -68,6 +69,7 @@ pip --no-cache-dir install /opt/stack/${OS_COMP_6}
 pip --no-cache-dir install /opt/stack/${OS_COMP_7}
 pip --no-cache-dir install /opt/stack/${OS_COMP_8}
 pip --no-cache-dir install /opt/stack/${OS_COMP_9}
+pip --no-cache-dir install /opt/stack/${OS_COMP_10}
 
 
 echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"

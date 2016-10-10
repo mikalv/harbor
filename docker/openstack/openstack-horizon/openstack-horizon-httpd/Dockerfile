@@ -29,7 +29,10 @@ ENV OS_COMP="horizon" \
     OS_REPO_BRANCH_8="master" \
     OS_COMP_9="manila-ui" \
     OS_REPO_URL_9="https://github.com/openstack/manila-ui.git" \
-    OS_REPO_BRANCH_9="master"
+    OS_REPO_BRANCH_9="master" \
+    OS_COMP_10="python-magnumclient" \
+    OS_REPO_URL_10="https://github.com/portdirect/python-magnumclient.git" \
+    OS_REPO_BRANCH_10="master"
 
 RUN set -e && \
     set -x && \

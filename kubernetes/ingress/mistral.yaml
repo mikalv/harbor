@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: mistral
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: mistral
+  namespace: os-mistral
+spec:
+  tls:
+    - hosts:
+        - mistral.{{ OS_DOMAIN }}
+      secretName: mistral-ssl-secret
+    - hosts:
+        - mistral.os-mistral.svc.{{ OS_DOMAIN }}
+      secretName: mistral-ssl-secret
+  rules:
+  - host: mistral.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: mistral
+          servicePort: 8989
+  - host: mistral.os-mistral.svc.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: mistral
+          servicePort: 8989

@@ -344,3 +344,124 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: barbican-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: barbican-retry
+    version: v0.1.0
+  name: barbican-retry-master
+  namespace: os-barbican
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: barbican-retry
+        version: v0.1.0
+      name: barbican-retry-master
+      namespace: os-barbican
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "barbican-retry-init",
+          	"image": "{{ IMAGE_BARBICAN_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "retry"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "barbican"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-service",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-service",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-barbican",
+          			"mountPath": "/pod/etc/barbican",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: barbican-retry
+          image: {{ IMAGE_BARBICAN_RETRY }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-barbican
+              mountPath: /etc/barbican
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-barbican
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: barbican-db
+        - name: os-config-keystone
+          secret:
+            secretName: barbican-keystone
+        - name: os-config-keystone-service
+          secret:
+            secretName: barbican-keystone-service
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: barbican-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: barbican-user-ssl-secret

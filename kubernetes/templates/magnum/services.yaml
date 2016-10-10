@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: magnum-db
+  name: magnum-db
+  namespace: os-magnum
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3318
+    protocol: TCP
+    targetPort: 3318
+  selector:
+    openstack-app: magnum-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: magnum
+  name: magnum
+  namespace: os-magnum
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 9511
+    protocol: TCP
+    targetPort: 9511
+  selector:
+    openstack-app: magnum

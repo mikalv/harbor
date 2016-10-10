@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: magnum
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: magnum
+  namespace: os-magnum
+spec:
+  tls:
+    - hosts:
+        - magnum.{{ OS_DOMAIN }}
+      secretName: magnum-ssl-secret
+    - hosts:
+        - magnum.os-magnum.svc.{{ OS_DOMAIN }}
+      secretName: magnum-ssl-secret
+  rules:
+  - host: magnum.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: magnum
+          servicePort: 9511
+  - host: magnum.os-magnum.svc.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: magnum
+          servicePort: 9511

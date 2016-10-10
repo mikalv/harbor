@@ -1,0 +1,32 @@
+[Unit]
+Description=Harbor Murano
+After=harbor-auth.service
+After=harbor-kubernetes.service
+After=harbor-etcd.service
+After=harbor-loadbalancer.service
+After=harbor-ovn.service
+After=harbor-memcached.service
+After=harbor-messaging.service
+After=harbor-ipsilon.service
+After=harbor-keystone.service
+After=harbor-api.service
+After=harbor-neutron.service
+After=harbor-glance.service
+After=harbor-cinder.service
+After=harbor-nova.service
+After=harbor-heat.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start mistral
+ExecStart=/usr/bin/harbor-service check mistral
+ExecStop=/usr/bin/harbor-service stop mistral
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target
