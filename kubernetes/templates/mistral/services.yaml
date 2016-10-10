@@ -26,8 +26,8 @@ spec:
   clusterIP: None
   sessionAffinity: ClientIP
   ports:
-  - port: 8008
+  - port: 8989
     protocol: TCP
-    targetPort: 8008
+    targetPort: 8989
   selector:
     openstack-app: mistral

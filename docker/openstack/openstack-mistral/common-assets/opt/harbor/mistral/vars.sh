@@ -7,7 +7,7 @@
 : ${MISTRAL_DB_KEY:="/run/harbor/auth/user/tls.key"}
 : ${MISTRAL_DB_CERT:="/run/harbor/auth/user/tls.crt"}
 
-: ${MISTRAL_API_SVC_PORT:="8008"}
+: ${MISTRAL_API_SVC_PORT:="8989"}
 : ${MISTRAL_API_TLS_CA:="/run/harbor/auth/ssl/tls.ca"}
 : ${MISTRAL_API_TLS_KEY:="/run/harbor/auth/ssl/tls.key"}
 : ${MISTRAL_API_TLS_CERT:="/run/harbor/auth/ssl/tls.crt"}

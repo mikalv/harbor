@@ -306,17 +306,17 @@ spec:
           image: {{ IMAGE_HAPROXY_SERVER }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           ports:
-            - containerPort: 8008
-              hostPort: 8008
+            - containerPort: 8989
+              hostPort: 8989
               protocol: TCP
               name: m-api
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
             - name: PORT_EXPOSE
-              value: '8008'
+              value: '8989'
             - name: PORT_LOCAL
-              value: '8008'
+              value: '8989'
           volumeMounts:
             - name: os-config-ssl-secret
               mountPath: /run/harbor/auth/ssl
