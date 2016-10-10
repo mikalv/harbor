@@ -15,7 +15,7 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Cinder Config Starting"
+echo "${OS_DISTRO}: Magnum Config Starting"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
@@ -50,3 +50,23 @@ echo "${OS_DISTRO}: Starting messaging config"
 echo "${OS_DISTRO}: Starting keystone config"
 ################################################################################
 /opt/harbor/magnum/config-keystone.sh
+
+
+echo "${OS_DISTRO}: Starting certs config"
+################################################################################
+/opt/harbor/magnum/config-certs.sh
+
+
+echo "${OS_DISTRO}: Starting clients config"
+################################################################################
+/opt/harbor/magnum/config-clients.sh
+
+
+echo "${OS_DISTRO}: Starting trusts config"
+################################################################################
+/opt/harbor/magnum/config-trusts.sh
+
+
+echo "${OS_DISTRO}: Starting docker config"
+################################################################################
+/opt/harbor/magnum/config-docker.sh
