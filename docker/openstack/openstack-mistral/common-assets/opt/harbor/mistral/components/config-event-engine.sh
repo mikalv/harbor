@@ -15,11 +15,18 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
+echo "${OS_DISTRO}: Configuring event-engine"
 ################################################################################
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
 . /opt/harbor/mistral/vars.sh
+PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
+: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
-
-echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec mistral-server --server api --config-file=${MISTRAL_CONFIG_FILE} --debug
+check_required_vars MISTRAL_CONFIG_FILE \
+                    OS_DOMAIN \
+                    MISTRAL_API_SVC_PORT \
+                    MY_IP \
+                    API_WORKERS

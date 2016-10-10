@@ -39,3 +39,5 @@ check_required_vars MISTRAL_CONFIG_FILE \
 ################################################################################
 crudini --set ${MISTRAL_CONFIG_FILE} database connection \
 "mysql+pymysql://${AUTH_MISTRAL_DB_USER}:${AUTH_MISTRAL_DB_PASSWORD}@${MISTRAL_MARIADB_SERVICE_HOST_SVC}:${MISTRAL_MARIADB_SERVICE_PORT}/${AUTH_MISTRAL_DB_NAME}?charset=utf8&ssl_ca=${MISTRAL_DB_CA}&ssl_key=${MISTRAL_DB_KEY}&ssl_cert=${MISTRAL_DB_CERT}&ssl_verify_cert"
+crudini --set ${MISTRAL_CONFIG_FILE} database max_overflow "-1"
+crudini --set ${MISTRAL_CONFIG_FILE} database max_pool_size "1000"

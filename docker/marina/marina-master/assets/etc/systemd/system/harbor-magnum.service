@@ -16,6 +16,7 @@ After=harbor-cinder.service
 After=harbor-nova.service
 After=harbor-heat.service
 After=harbor-mistral.service
+After=harbor-murano.service
 
 
 [Service]
@@ -23,9 +24,9 @@ Type=simple
 Restart=always
 RestartSec=20
 TimeoutSec=0
-ExecStartPre=/usr/bin/harbor-service start murano
-ExecStart=/usr/bin/harbor-service check murano
-ExecStop=/usr/bin/harbor-service stop murano
+ExecStartPre=/usr/bin/harbor-service start magnum
+ExecStart=/usr/bin/harbor-service check magnum
+ExecStop=/usr/bin/harbor-service stop magnum
 RemainAfterExit=true
 
 

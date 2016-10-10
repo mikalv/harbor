@@ -15,7 +15,6 @@ After=harbor-glance.service
 After=harbor-cinder.service
 After=harbor-nova.service
 After=harbor-heat.service
-After=harbor-mistral.service
 
 
 [Service]
@@ -23,9 +22,9 @@ Type=simple
 Restart=always
 RestartSec=20
 TimeoutSec=0
-ExecStartPre=/usr/bin/harbor-service start murano
-ExecStart=/usr/bin/harbor-service check murano
-ExecStop=/usr/bin/harbor-service stop murano
+ExecStartPre=/usr/bin/harbor-service start mistral
+ExecStart=/usr/bin/harbor-service check mistral
+ExecStop=/usr/bin/harbor-service stop mistral
 RemainAfterExit=true
 
 

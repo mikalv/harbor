@@ -22,4 +22,4 @@ echo "${OS_DISTRO}: Launching"
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec mistral-server --server api --config-file=${MISTRAL_CONFIG_FILE} --debug
+exec mistral-server --server event-engine --config-file=${MISTRAL_CONFIG_FILE} --debug

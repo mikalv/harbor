@@ -22,4 +22,4 @@ echo "${OS_DISTRO}: Launching"
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec mistral-conductor --config-file=${MISTRAL_CONFIG_FILE} --debug
+exec mistral-server --server engine --config-file=${MISTRAL_CONFIG_FILE} --debug

@@ -1,6 +1,6 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-mistral-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="mistral-conductor"
+ENV OPENSTACK_COMPONENT="mistral-executor"
 
 COPY ./assets/ /opt/harbor/assets
 

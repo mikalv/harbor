@@ -570,3 +570,116 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: mistral-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: mistral-event-engine
+    version: v0.1.0
+  name: mistral-event-engine-master
+  namespace: os-mistral
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: mistral-event-engine
+        version: v0.1.0
+      name: mistral-event-engine-master
+      namespace: os-mistral
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "mistral-event-engine-init",
+          	"image": "{{ IMAGE_MISTRAL_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "event-engine"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "mistral"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-mistral",
+          			"mountPath": "/pod/etc/mistral",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: mistral-event-engine
+          image: {{ IMAGE_MISTRAL_EVENT_ENGINE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-mistral
+              mountPath: /etc/mistral
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-mistral
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: mistral-db
+        - name: os-config-keystone
+          secret:
+            secretName: mistral-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: mistral-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: mistral-user-ssl-secret
