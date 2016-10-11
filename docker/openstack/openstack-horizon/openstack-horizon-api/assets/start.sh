@@ -37,7 +37,7 @@ cat /run/harbor/auth/ssl/tls.ca >> /etc/ssl/cert.pem
 cat /run/harbor/auth/ssl/tls.ca >> /etc/ssl/ca-bundle.pem
 cat /run/harbor/auth/ssl/tls.ca >> /usr/lib/python2.7/site-packages/requests/cacert.pem
 
-tail -f /dev/null
+
 echo "${OS_DISTRO}: Launching Container Application"
 ################################################################################
 exec /usr/sbin/httpd -D FOREGROUND
