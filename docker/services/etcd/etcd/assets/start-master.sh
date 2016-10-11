@@ -22,13 +22,20 @@ echo "${OS_DISTRO}: Container starting"
 . /opt/harbor/harbor-vars.sh
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
+: ${ETCD_PEERS_PORT:="7001"}
+: ${ETCD_PORT:="4001"}
+: ${ETCD_HOSTNAME_VAR:="ETCD_SERVICE_HOST_SVC"}
+: ${ETCD_HOSTNAME:="${!ETCD_HOSTNAME_VAR}"}
+
 
 
 echo "${OS_DISTRO}: Container application launch"
 ################################################################################
 check_required_vars OS_DOMAIN \
                     POD_IP \
-                    ETCD_SERVICE_HOST_SVC
+                    ETCD_HOSTNAME \
+                    ETCD_PEERS_PORT \
+                    ETCD_PORT
 
 
 echo "${OS_DISTRO}: Container application launch"
@@ -36,11 +43,11 @@ echo "${OS_DISTRO}: Container application launch"
 echo "$POD_IP $ETCD_SERVICE_HOST_SVC" >> /etc/hosts
 exec etcd \
       --name=default \
-      --listen-peer-urls="https://${ETCD_SERVICE_HOST_SVC}:7001" \
-      --initial-advertise-peer-urls="https://${ETCD_SERVICE_HOST_SVC}:7001" \
-      --initial-cluster="default=https://${ETCD_SERVICE_HOST_SVC}:7001" \
-      --listen-client-urls="https://${ETCD_SERVICE_HOST_SVC}:4001" \
-      --advertise-client-urls="https://${ETCD_SERVICE_HOST_SVC}:4001" \
+      --listen-peer-urls="https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
+      --initial-advertise-peer-urls="https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
+      --initial-cluster="default=https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
+      --listen-client-urls="https://${ETCD_HOSTNAME}:${ETCD_PORT}" \
+      --advertise-client-urls="https://${ETCD_HOSTNAME}:${ETCD_PORT}" \
       --initial-cluster-token="os-etcd" \
       --data-dir=/data \
       --client-cert-auth \

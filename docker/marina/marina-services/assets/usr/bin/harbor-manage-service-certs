@@ -64,6 +64,8 @@ elif [ "$MARINA_SERVICE" = "murano" ]; then
   SERVICE_SERVICES="HTTP AMQP mysql"
 elif [ "$MARINA_SERVICE" = "portal" ]; then
   SERVICE_SERVICES="HTTP"
+elif [ "$MARINA_SERVICE" = "gnocchi" ]; then
+  SERVICE_SERVICES="HTTP HTTP-etcd"
 else
   SERVICE_SERVICES="HTTP mysql"
 fi;
@@ -143,6 +145,15 @@ for SERVICE in $SERVICE_SERVICES; do
       HOSTNAME_VAR_MIDFIX="_API_SERVICE"
     elif [ "$SERVICE" = "AMQP" ]; then
       HOSTNAME_VAR_MIDFIX="_MESSAGING_SERVICE"
+    elif [ "$SERVICE" = "mysql" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    fi;
+  elif [ "$MARINA_SERVICE" = "gnocchi" ]; then
+    if [ "$SERVICE" = "HTTP" ]; then
+      HOSTNAME_VAR_MIDFIX="_API_SERVICE"
+    elif [ "$SERVICE" = "HTTP-etcd" ]; then
+      HOSTNAME_VAR_MIDFIX="_ETCD_SERVICE"
+      SERVICE=HTTP
     elif [ "$SERVICE" = "mysql" ]; then
       HOSTNAME_VAR_MIDFIX="_API_SERVICE"
     fi;

@@ -22,21 +22,27 @@ echo "${OS_DISTRO}: Container starting"
 . /opt/harbor/harbor-vars.sh
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
+: ${ETCD_PEERS_PORT:="7001"}
+: ${ETCD_PORT:="4001"}
+: ${ETCD_HOSTNAME_VAR:="ETCD_SERVICE_HOST_SVC"}
+: ${ETCD_HOSTNAME:="${!ETCD_HOSTNAME_VAR}"}
 
-tail -f /dev/null
+
+
 echo "${OS_DISTRO}: Container application launch"
 ################################################################################
 check_required_vars OS_DOMAIN \
-                    POD_IP \
-                    ETCD_SERVICE_HOST_SVC
+                    ETCD_HOSTNAME \
+                    ETCD_PEERS_PORT \
+                    ETCD_PORT
 
 
 echo "${OS_DISTRO}: Container application launch"
 ################################################################################
 exec etcd \
       --proxy=on \
-      --listen-client-urls="http://127.0.0.1:4001" \
-      --initial-cluster="default=https://${ETCD_SERVICE_HOST_SVC}:7001" \
+      --listen-client-urls="http://127.0.0.1:${ETCD_PORT}" \
+      --initial-cluster="default=https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
       --client-cert-auth \
       --key-file /run/harbor/auth/user/tls.key \
       --cert-file /run/harbor/auth/user/tls.crt \
@@ -45,15 +51,3 @@ exec etcd \
       --peer-key-file /run/harbor/auth/user/tls.key \
       --peer-cert-file /run/harbor/auth/user/tls.crt \
       --peer-trusted-ca-file /run/harbor/auth/user/tls.ca
-
-
-
-etcdctl --debug --no-sync  --endpoints "https://${ETCD_SERVICE_HOST_SVC}:4001" --ca-file=/run/harbor/auth/user/tls.ca --cert-file=/run/harbor/auth/user/tls.crt --key-file=/run/harbor/auth/user/tls.key ls
-         --cert-file value                identify HTTPS client using this SSL certificate file
-         --key-file value                 identify HTTPS client using this SSL key file
-         --ca-file value                  verify certificates of HTTPS-enabled servers using this CA bundle
-         --username value, -u value       provide username[:password] and prompt if password is not supplied.
-         --timeout value                  connection timeout per request (default: 1s)
-         --total-timeout value            timeout for the command execution (except watch) (default: 5s)
-         --help, -h                       show help
-         --version, -v
