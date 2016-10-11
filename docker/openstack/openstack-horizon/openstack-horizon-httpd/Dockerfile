@@ -32,7 +32,13 @@ ENV OS_COMP="horizon" \
     OS_REPO_BRANCH_9="master" \
     OS_COMP_10="python-magnumclient" \
     OS_REPO_URL_10="https://github.com/portdirect/python-magnumclient.git" \
-    OS_REPO_BRANCH_10="master"
+    OS_REPO_BRANCH_10="master" \
+    OS_COMP_11="mistral-dashboard" \
+    OS_REPO_URL_11="https://github.com/openstack/mistral-dashboard.git" \
+    OS_REPO_BRANCH_11="master" \
+    OS_COMP_12="python-mistralclient" \
+    OS_REPO_URL_12="https://github.com/openstack/python-mistralclient.git" \
+    OS_REPO_BRANCH_12="master"
 
 RUN set -e && \
     set -x && \

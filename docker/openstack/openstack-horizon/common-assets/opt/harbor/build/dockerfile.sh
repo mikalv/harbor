@@ -34,6 +34,8 @@ git clone ${OS_REPO_URL_7} -b ${OS_REPO_BRANCH_7} --depth 1 /opt/stack/${OS_COMP
 git clone ${OS_REPO_URL_8} -b ${OS_REPO_BRANCH_8} --depth 1 /opt/stack/${OS_COMP_8}
 git clone ${OS_REPO_URL_9} -b ${OS_REPO_BRANCH_9} --depth 1 /opt/stack/${OS_COMP_9}
 git clone ${OS_REPO_URL_10} -b ${OS_REPO_BRANCH_10} --depth 1 /opt/stack/${OS_COMP_10}
+git clone ${OS_REPO_URL_11} -b ${OS_REPO_BRANCH_11} --depth 1 /opt/stack/${OS_COMP_11}
+git clone ${OS_REPO_URL_12} -b ${OS_REPO_BRANCH_12} --depth 1 /opt/stack/${OS_COMP_12}
 
 
 echo "${OS_DISTRO}: Sutting up source files ${OS_COMP}"
@@ -58,6 +60,9 @@ rm -f /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/__init__.py
 cp -a /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/*.py ${ENABLED_DIR}/
 
 
+cp -a /opt/stack/${OS_COMP_11}/_50_mistral.py.example ${ENABLED_DIR}/_50_mistral.py
+
+
 echo "${OS_DISTRO}: Installing ${OS_COMP}"
 ################################################################################
 pip --no-cache-dir install /opt/stack/${OS_COMP}
@@ -70,6 +75,8 @@ pip --no-cache-dir install /opt/stack/${OS_COMP_7}
 pip --no-cache-dir install /opt/stack/${OS_COMP_8}
 pip --no-cache-dir install /opt/stack/${OS_COMP_9}
 pip --no-cache-dir install /opt/stack/${OS_COMP_10}
+pip --no-cache-dir install /opt/stack/${OS_COMP_11}
+pip --no-cache-dir install /opt/stack/${OS_COMP_12}
 
 
 echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"
