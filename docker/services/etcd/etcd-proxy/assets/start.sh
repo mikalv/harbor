@@ -24,11 +24,11 @@ echo "${OS_DISTRO}: Container starting"
 . /opt/harbor/harbor-common.sh
 : ${ETCD_PEERS_PORT:="7001"}
 : ${ETCD_PORT:="4001"}
+: ${ETCD_LOCAL_PORT:="${ETCD_PORT}"}
 : ${ETCD_HOSTNAME_VAR:="ETCD_SERVICE_HOST_SVC"}
 : ${ETCD_HOSTNAME:="${!ETCD_HOSTNAME_VAR}"}
 : ${ETCD_PROXY_POD_TYPE:="normal"}
 : ${ETCD_PROXY_POD_EXIT_FILE:="/pod/etcd/terminate-proxy"}
-
 
 
 echo "${OS_DISTRO}: Container application launch"
@@ -37,6 +37,7 @@ check_required_vars OS_DOMAIN \
                     ETCD_HOSTNAME \
                     ETCD_PEERS_PORT \
                     ETCD_PORT \
+                    ETCD_LOCAL_PORT \
                     ETCD_PROXY_POD_EXIT_FILE
 
 
@@ -46,7 +47,7 @@ if [ "${ETCD_PROXY_POD_TYPE}" == "Job" ] ; then
   /job-control.sh &
   etcd \
   --proxy=on \
-  --listen-client-urls="http://127.0.0.1:${ETCD_PORT}" \
+  --listen-client-urls="http://127.0.0.1:${ETCD_LOCAL_PORT}" \
   --initial-cluster="default=https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
   --client-cert-auth \
   --key-file /run/harbor/auth/user/tls.key \
@@ -59,7 +60,7 @@ if [ "${ETCD_PROXY_POD_TYPE}" == "Job" ] ; then
 else
   exec etcd \
         --proxy=on \
-        --listen-client-urls="http://127.0.0.1:${ETCD_PORT}" \
+        --listen-client-urls="http://127.0.0.1:${ETCD_LOCAL_PORT}" \
         --initial-cluster="default=https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
         --client-cert-auth \
         --key-file /run/harbor/auth/user/tls.key \

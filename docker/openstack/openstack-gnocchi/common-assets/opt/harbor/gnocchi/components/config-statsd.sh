@@ -15,25 +15,33 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Configuring storage backend"
+echo "${OS_DISTRO}: Configuring statsd"
 ################################################################################
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
 . /opt/harbor/gnocchi/vars.sh
+PROC_CORES=$(grep -c ^processor /proc/cpuinfo)
+: ${API_WORKERS:="$(( ( $PROC_CORES + 1 ) / 2))"}
 
 
 ################################################################################
 check_required_vars GNOCCHI_CONFIG_FILE \
                     OS_DOMAIN \
-                    ETCD_LOCAL_PORT \
-                    ETCD_LOCAL_URI
+                    MY_IP \
+                    API_WORKERS \
+                    AUTH_GNOCCHI_STATSD_RESOURCE_ID \
+                    AUTH_GNOCCHI_STATSD_PROJECT_ID \
+                    AUTH_GNOCCHI_STATSD_USER_ID \
+                    GNOCCHI_STATSD_SVC_PORT
 
 
 ################################################################################
-crudini --set ${GNOCCHI_CONFIG_FILE} storage driver "file"
+crudini --set ${GNOCCHI_CONFIG_FILE} statsd host "${MY_IP}"
+crudini --set ${GNOCCHI_CONFIG_FILE} statsd port "${GNOCCHI_STATSD_SVC_PORT}"
 
 
-echo "${OS_DISTRO}: This pod will communicate with etcd via: ${ETCD_LOCAL_URI}"
 ################################################################################
-crudini --set ${GNOCCHI_CONFIG_FILE} storage coordination_url "${ETCD_LOCAL_URI}"
+crudini --set ${GNOCCHI_CONFIG_FILE} statsd resource_id "${AUTH_GNOCCHI_STATSD_RESOURCE_ID}"
+crudini --set ${GNOCCHI_CONFIG_FILE} statsd project_id "${AUTH_GNOCCHI_STATSD_PROJECT_ID}"
+crudini --set ${GNOCCHI_CONFIG_FILE} statsd user_id "${AUTH_GNOCCHI_STATSD_USER_ID}"

@@ -2,6 +2,34 @@ kind: PersistentVolume
 apiVersion: v1
 metadata:
   labels:
+    openstack-app: gnocchi-data
+  name: os-gnocchi-data
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/gnocchi/data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: gnocchi-data
+  name: os-gnocchi-data
+  namespace: os-gnocchi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
     openstack-app: gnocchi-db
   name: os-gnocchi-db
 spec:
@@ -81,6 +109,8 @@ spec:
           env:
             - name: OS_DOMAIN
               value: {{ OS_DOMAIN }}
+            - name: ETCD_LOCAL_PORT
+              value: '4003'
           volumeMounts:
             - name: os-config-kubecfg
               mountPath: /var/run/harbor/secrets/config-kubecfg
@@ -120,6 +150,8 @@ spec:
               value: '4002'
             - name: ETCD_HOSTNAME_VAR
               value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+            - name: ETCD_LOCAL_PORT
+              value: '4003'
             - name: ETCD_PROXY_POD_TYPE
               value: Job
           volumeMounts:
@@ -368,6 +400,10 @@ spec:
           		{
           			"name": "APP_USER",
           			"value": "gnocchi"
+          		},
+          		{
+          			"name": "ETCD_LOCAL_PORT",
+          			"value": "4004"
           		}
           	],
           	"volumeMounts": [
@@ -455,6 +491,8 @@ spec:
               value: '4002'
             - name: ETCD_HOSTNAME_VAR
               value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+            - name: ETCD_LOCAL_PORT
+              value: '4004'
           volumeMounts:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
@@ -482,6 +520,274 @@ spec:
         - name: os-config-ssl-secret
           secret:
             secretName: gnocchi-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: gnocchi-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: gnocchi-statsd
+    version: v0.1.0
+  name: gnocchi-statsd-master
+  namespace: os-gnocchi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: gnocchi-statsd
+        version: v0.1.0
+      name: gnocchi-statsd-master
+      namespace: os-gnocchi
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "gnocchi-statsd-init",
+          	"image": "{{ IMAGE_GNOCCHI_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "statsd"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "gnocchi"
+          		},
+          		{
+          			"name": "ETCD_LOCAL_PORT",
+          			"value": "4005"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-statsd",
+          			"mountPath": "/var/run/harbor/secrets/config-statsd",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-gnocchi",
+          			"mountPath": "/pod/etc/gnocchi",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: gnocchi-statsd
+          image: {{ IMAGE_GNOCCHI_STATSD }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-gnocchi
+              mountPath: /etc/gnocchi
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: gnocchi-etcd-proxy
+          image: {{ IMAGE_ETCD_PROXY }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: ETCD_PEERS_PORT
+              value: '7002'
+            - name: ETCD_PORT
+              value: '4002'
+            - name: ETCD_HOSTNAME_VAR
+              value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+            - name: ETCD_LOCAL_PORT
+              value: '4005'
+          volumeMounts:
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-etcd-data
+          emptyDir: {}
+        - name: pod-etc-gnocchi
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: gnocchi-db
+        - name: os-config-keystone
+          secret:
+            secretName: gnocchi-keystone
+        - name: os-config-statsd
+          secret:
+            secretName: gnocchi-statsd
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: gnocchi-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: gnocchi-metricd
+    version: v0.1.0
+  name: gnocchi-metricd-master
+  namespace: os-gnocchi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: gnocchi-metricd
+        version: v0.1.0
+      name: gnocchi-metricd-master
+      namespace: os-gnocchi
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "gnocchi-metricd-init",
+          	"image": "{{ IMAGE_GNOCCHI_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "metricd"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "gnocchi"
+          		},
+          		{
+          			"name": "ETCD_LOCAL_PORT",
+          			"value": "4006"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-gnocchi",
+          			"mountPath": "/pod/etc/gnocchi",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: gnocchi-metricd
+          image: {{ IMAGE_GNOCCHI_METRICD }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-gnocchi
+              mountPath: /etc/gnocchi
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: gnocchi-etcd-proxy
+          image: {{ IMAGE_ETCD_PROXY }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: ETCD_PEERS_PORT
+              value: '7002'
+            - name: ETCD_PORT
+              value: '4002'
+            - name: ETCD_HOSTNAME_VAR
+              value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+            - name: ETCD_LOCAL_PORT
+              value: '4006'
+          volumeMounts:
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      volumes:
+        - name: os-etcd-data
+          emptyDir: {}
+        - name: pod-etc-gnocchi
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: gnocchi-db
+        - name: os-config-keystone
+          secret:
+            secretName: gnocchi-keystone
         - name: os-config-ssl-user-secret
           secret:
             secretName: gnocchi-user-ssl-secret

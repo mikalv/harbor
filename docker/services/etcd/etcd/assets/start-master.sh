@@ -40,7 +40,7 @@ check_required_vars OS_DOMAIN \
 
 echo "${OS_DISTRO}: Container application launch"
 ################################################################################
-echo "$POD_IP $ETCD_SERVICE_HOST_SVC" >> /etc/hosts
+echo "$POD_IP $ETCD_HOSTNAME" >> /etc/hosts
 exec etcd \
       --name=default \
       --listen-peer-urls="https://${ETCD_HOSTNAME}:${ETCD_PEERS_PORT}" \
