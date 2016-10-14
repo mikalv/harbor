@@ -21,7 +21,7 @@ kind: Service
 metadata:
   labels:
     openstack-app: ipsilon-db
-  name: ipsilon-db
+  name: ipsilon-pgsql
   namespace: os-ipsilon
 spec:
   clusterIP: None

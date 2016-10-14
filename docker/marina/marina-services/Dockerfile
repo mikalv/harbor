@@ -1,7 +1,5 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%marina-base:%%DOCKER_TAG%%
 
-ADD ./assets /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
     sed -i '/\[fedora\]/a exclude=ipsilon*' /etc/yum.repos.d/fedora.repo && \
@@ -11,6 +9,12 @@ RUN set -e && \
         expect && \
     dnf clean all  && \
     sed -i "s|/login/form|/login/ldap|g" /usr/bin/ipsilon-client-install && \
+    container-base-systemd-reset.sh
+
+ADD ./assets /opt/harbor/assets
+
+RUN set -e && \
+    set -x && \
     /bin/cp -rf /opt/harbor/assets/* / && \
     /bin/rm -rf /opt/harbor/assets && \
     container-base-systemd-reset.sh

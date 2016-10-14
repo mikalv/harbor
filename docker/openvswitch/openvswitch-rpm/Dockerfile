@@ -3,6 +3,8 @@ FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%centos:%%DOCKER_TAG%%
 ENV HARBOR_COMPONENT="ovs" \
     HARBOR_SUBCOMPONENT="rpm-repo"
 
+LABEL build-date="%%DOCKER_BUILD_DATE%%"
+
 RUN set -e && \
     set -x && \
     yum install -y \

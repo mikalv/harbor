@@ -59,8 +59,16 @@ crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_certfile "${NO
 crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_ca_certs "${NOVA_DB_CA}"
 
 
-echo "${OS_DISTRO}: Config"
+echo "${OS_DISTRO}: Rabbit Config"
 ################################################################################
 crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+echo "${OS_DISTRO}: Config"
+################################################################################
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT instance_usage_audit "True"
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT instance_usage_audit_period "hour"
+crudini --set ${NOVA_CONFIG_FILE} DEFAULT notify_on_state_change "vm_and_task_state"
+crudini --set ${NOVA_CONFIG_FILE} oslo_messaging_notifications driver "messagingv2"

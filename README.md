@@ -140,6 +140,9 @@ ${HARBOR_HOST_IP} murano.${OS_DOMAIN}
 ${HARBOR_HOST_IP} freeipa.${OS_DOMAIN}
 ${HARBOR_HOST_IP} ipa-crl.${OS_DOMAIN}
 ${HARBOR_HOST_IP} portal.${OS_DOMAIN}
+${HARBOR_HOST_IP} gnocchi.${OS_DOMAIN}
+${HARBOR_HOST_IP} grafana.${OS_DOMAIN}
+${HARBOR_HOST_IP} ceilometer.${OS_DOMAIN}
 
 ${HARBOR_HOST_IP} ipsilon.os-ipsilon.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} api.os-api.svc.${OS_DOMAIN}
@@ -157,6 +160,9 @@ ${HARBOR_HOST_IP} heat-cfn.os-heat.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} heat-cloudwatch.os-heat.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} murano.os-murano.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} portal.os-portal.svc.${OS_DOMAIN}
+${HARBOR_HOST_IP} gnocchi.os-gnocchi.svc.${OS_DOMAIN}
+${HARBOR_HOST_IP} grafana.os-gnocchi.svc.${OS_DOMAIN}
+${HARBOR_HOST_IP} ceilometer.os-ceilometer.svc.${OS_DOMAIN}
 EOF
 ```
 After the "marina-master" pod is running, you can log into the cockpit dashboard @ https://$HARBOR_HOST_IP:9090, or you can enter it using:

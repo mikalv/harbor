@@ -1,0 +1,200 @@
+#!/bin/bash
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+: ${OS_DISTRO:="HarborOS: Grafana Federation Manager"}
+echo "${OS_DISTRO}: Starting Grafana <-> Ipsilon management"
+################################################################################
+source /etc/os-container.env
+export OS_DOMAIN=$(hostname -d)
+source /etc/os-container.env
+source /opt/harbor/harbor-common.sh
+source /opt/harbor/service-hosts.sh
+source /opt/harbor/freeipa-login-helper.sh
+source /opt/harbor/marina/load-config-helper.sh
+KUBE_AUTH_ROOT=/var/lib/harbor/kube
+KUBE_ADMIN_USER=admin
+KUBE_ADMIN_TOKEN=$(cat ${KUBE_AUTH_ROOT}/known_tokens.csv | grep ",$KUBE_ADMIN_USER$" | awk -F ',' '{ print $1 }')
+LOCAL_AUTH_DATA=/root/.harbor
+mkdir -p ${LOCAL_AUTH_DATA}
+
+
+echo "${OS_DISTRO}: Defining user defaults"
+################################################################################
+IPA_USER=${MARINA_SERVICE}
+
+
+echo "${OS_DISTRO}: Getting FreeIPA user admin creds"
+################################################################################
+AUTH_FREEIPA_USER_ADMIN_USER=$(crudini --get /etc/harbor/harbor-auth.conf freeipa user_admin_user)
+AUTH_FREEIPA_USER_ADMIN_PASSWORD=$(crudini --get /etc/harbor/harbor-auth.conf freeipa user_admin_password)
+
+
+echo "${OS_DISTRO}: Getting user vault auth params"
+################################################################################
+SERVICE_VAULT_PASSWORD_FILE=${LOCAL_AUTH_DATA}/$(uuidgen)
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > /dev/null || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password $(harbor-gen-password 64 96)) >> /dev/null
+crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_password > $SERVICE_VAULT_PASSWORD_FILE
+(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user || \
+crudini --set /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user ${IPA_USER}) >> /dev/null
+IPA_VAULT_USER=$(crudini --get /etc/harbor/harbor-auth.conf $MARINA_SERVICE harbor_auth_vault_user_cert_user)
+
+
+echo "${OS_DISTRO}: Logging into FreeIPA"
+################################################################################
+freeipa_login
+
+
+################################################################################
+generate_user_cert () {
+  echo "${OS_DISTRO}: Logging into ipsilon"
+  ##############################################################################
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_USER}" > ${LOCAL_AUTH_DATA}/idp_username.txt
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" > ${LOCAL_AUTH_DATA}/idp_password.txt
+  curl --data-urlencode login_name@${LOCAL_AUTH_DATA}/idp_username.txt \
+       --data-urlencode login_password@${LOCAL_AUTH_DATA}/idp_password.txt \
+       -b ${LOCAL_AUTH_DATA}/cookies -c ${LOCAL_AUTH_DATA}/cookies \
+       --fail \
+       https://${IPSILON_SERVICE_HOST}/idp/login/ldap
+  rm -f ${LOCAL_AUTH_DATA}/idp_password.txt
+  rm -f ${LOCAL_AUTH_DATA}/idp_username.txt
+
+  echo "${OS_DISTRO}: Deleteing any existing sp"
+  ##############################################################################
+  curl -b ${LOCAL_AUTH_DATA}/cookies \
+      -c ${LOCAL_AUTH_DATA}/cookies \
+      --fail \
+      https://${IPSILON_SERVICE_HOST}/idp/admin/providers/saml2/admin/sp/grafana/delete > /dev/null || true
+
+  echo "${OS_DISTRO}: Creating our SP"
+  ##############################################################################
+  mkdir -p  /etc/httpd/mellon
+  cd /etc/httpd/mellon
+  ipsilon-client-install --uninstall || true
+  # echo ${AUTH_FREEIPA_USER_ADMIN_PASSWORD} | ipsilon-client-install \
+  # --hostname ${GNOCCHI_GRAFANA_SERVICE_HOST} \
+  # --admin-user ${AUTH_FREEIPA_USER_ADMIN_USER} \
+  # --admin-password - \
+  # --openidc \
+  # --openidc-idp-url https://${IPSILON_SERVICE_HOST}/idp \
+  # --openidc-response-type "id_token" \
+  # --openidc-subject-type "public" \
+  # --debug
+  echo ${AUTH_FREEIPA_USER_ADMIN_PASSWORD} | ipsilon-client-install \
+  --hostname ${GNOCCHI_GRAFANA_SERVICE_HOST} \
+  --admin-user ${AUTH_FREEIPA_USER_ADMIN_USER} \
+  --admin-password - \
+  --saml \
+  --saml-no-httpd \
+  --saml-idp-url https://${IPSILON_SERVICE_HOST}/idp \
+  --saml-auth "/grafana" \
+  --saml-sp-name "grafana" \
+  --saml-sp-description "${OS_DOMAIN}: ${GNOCCHI_GRAFANA_SERVICE_HOST}" \
+  --debug
+  # Make sure we are using the public hostname for the idp
+  curl -L https://${IPSILON_SERVICE_HOST}/idp/saml2/metadata | sed "s|${IPSILON_SERVICE_HOST_SVC}|${IPSILON_SERVICE_HOST}|g" > /etc/httpd/mellon/idp_metadata.xml
+
+  echo "${OS_DISTRO}: Creating Kube Secret"
+  ##############################################################################
+  cat > ${LOCAL_AUTH_DATA}/grafana-federation-saml2-secret.yaml <<EOF
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-federation-saml2-secret
+  namespace: os-gnocchi
+type: Opaque
+data:
+  sp-metadata.xml: $( cat /etc/httpd/mellon/metadata.xml | base64 --wrap=0 )
+  tls.crt: $( cat /etc/httpd/mellon/certificate.pem | base64 --wrap=0 )
+  tls.key: $( cat /etc/httpd/mellon/certificate.key | base64 --wrap=0 )
+  idp-metadata.xml: $( cat /etc/httpd/mellon/idp_metadata.xml | base64 --wrap=0 )
+EOF
+
+  echo "${OS_DISTRO}: Archiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in grafana-federation-saml2-secret
+  do
+    ipa vault-show --user ${IPA_VAULT_USER} ${VAULT_NAME} &> /dev/null || \
+    ipa vault-add ${VAULT_NAME} --user ${IPA_VAULT_USER} --type symmetric --password-file ${SERVICE_VAULT_PASSWORD_FILE}
+
+    ipa vault-archive --user ${IPA_VAULT_USER} \
+    ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --in ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+
+    rm -f ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+  done
+
+}
+
+
+check_sp_exists () {
+  echo "${OS_DISTRO}: Cheking if SP exists"
+  ##############################################################################
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_USER}" > ${LOCAL_AUTH_DATA}/idp_username.txt
+  echo -n "${AUTH_FREEIPA_USER_ADMIN_PASSWORD}" > ${LOCAL_AUTH_DATA}/idp_password.txt
+  curl --data-urlencode login_name@${LOCAL_AUTH_DATA}/idp_username.txt \
+       --data-urlencode login_password@${LOCAL_AUTH_DATA}/idp_password.txt \
+       -b ${LOCAL_AUTH_DATA}/cookies -c ${LOCAL_AUTH_DATA}/cookies \
+       --fail \
+       https://${IPSILON_SERVICE_HOST}/idp/login/ldap
+  rm -f ${LOCAL_AUTH_DATA}/idp_password.txt
+  rm -f ${LOCAL_AUTH_DATA}/idp_username.txt
+
+  curl -b ${LOCAL_AUTH_DATA}/cookies \
+      -c ${LOCAL_AUTH_DATA}/cookies \
+      --fail \
+      https://${IPSILON_SERVICE_HOST}/idp/admin/providers/saml2/admin/sp/grafana > /dev/null
+}
+
+retreive_user_cert () {
+  echo "${OS_DISTRO}: Retreiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in grafana-federation-saml2-secret
+  do
+    ipa vault-retrieve --user ${IPA_VAULT_USER} ${VAULT_NAME} \
+    --password-file ${SERVICE_VAULT_PASSWORD_FILE} \
+    --out ${LOCAL_AUTH_DATA}/${VAULT_NAME}.yaml
+  done
+}
+
+delete_user_cert () {
+  echo "${OS_DISTRO}: Retreiving Kube Secret"
+  ##############################################################################
+  for VAULT_NAME in grafana-federation-saml2-secret
+  do
+    ipa vault-del --user ${IPA_VAULT_USER} ${VAULT_NAME}
+  done
+}
+
+
+upload_cert () {
+  echo "${OS_DISTRO}: Uploading Kube Secret"
+  ##############################################################################
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} delete -f ${LOCAL_AUTH_DATA}/grafana-federation-saml2-secret.yaml || true
+  kubectl --server https://${KUBERNETES_SERVICE_HOST}:6443 --user=${KUBE_ADMIN_USER} --token=${KUBE_ADMIN_TOKEN} create -f ${LOCAL_AUTH_DATA}/grafana-federation-saml2-secret.yaml
+}
+
+
+##############################################################################
+(check_sp_exists && retreive_user_cert ) || (generate_user_cert && check_sp_exists && retreive_user_cert )
+upload_cert
+
+
+echo "${OS_DISTRO}: Cleaning up"
+################################################################################
+rm -rf ${LOCAL_AUTH_DATA}

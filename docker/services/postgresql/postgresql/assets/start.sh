@@ -32,11 +32,17 @@ source /opt/harbor/harbor-common.sh
 
 ################################################################################
 check_required_vars OS_DOMAIN \
-                    DB_PORT
+                    DB_PORT \
+                    MY_IP
 
 
 ################################################################################
 chown -R postgres "$DATADIR"
+echo "${OS_DISTRO}: Configuring connections"
+sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1${MY_IP}/" "$DATADIR"/postgresql.conf
+sed -ri "s/^#(port\s*=\s*)\S+/\1${DB_PORT}/" "$DATADIR"/postgresql.conf
+
+
 if [ -z "$(ls -A "$DATADIR")" ]; then
 
     check_required_vars ROOT_DB_USER \
@@ -46,9 +52,6 @@ if [ -z "$(ls -A "$DATADIR")" ]; then
     echo "${OS_DISTRO}: Bootstrapping Postgresql DB in ${DATADIR}"
     su -s /bin/sh -c "initdb" postgres
 
-
-    echo "${OS_DISTRO}: Configuring connections"
-    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$DATADIR"/postgresql.conf
 
 
     if [ "$ROOT_DB_NAME" != 'postgres' ]; then

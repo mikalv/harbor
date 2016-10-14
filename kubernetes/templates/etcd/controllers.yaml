@@ -66,6 +66,12 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: status.podIP
+            - name: ETCD_PEERS_PORT
+              value: '7001'
+            - name: ETCD_PORT
+              value: '4001'
+            - name: ETCD_HOSTNAME_VAR
+              value: ETCD_SERVICE_HOST_SVC
           ports:
             - containerPort: 4001
               name: etcd
