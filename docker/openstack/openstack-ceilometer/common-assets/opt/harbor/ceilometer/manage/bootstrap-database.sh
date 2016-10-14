@@ -28,4 +28,4 @@ check_required_vars CEILOMETER_CONFIG_FILE
 
 
 ################################################################################
-su -s /bin/sh -c "python  /opt/stack/${OS_COMP}/tools/sync_db.py --config-file ${CEILOMETER_CONFIG_FILE}" ceilometer
+su -s /bin/sh -c "ceilometer-upgrade --noskip-gnocchi-resource-type --noskip-metering-database --noskip-event-database --debug --config-file ${CEILOMETER_CONFIG_FILE}" ceilometer

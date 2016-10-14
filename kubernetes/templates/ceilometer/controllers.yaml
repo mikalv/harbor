@@ -1,0 +1,1049 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-db
+  name: os-ceilometer-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ceilometer/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-db
+  name: os-ceilometer-db
+  namespace: os-ceilometer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-els
+  name: os-ceilometer-els
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ceilometer/elasticsearch
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-els
+  name: os-ceilometer-els
+  namespace: os-ceilometer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-etcd
+  name: os-ceilometer-etcd
+spec:
+  capacity:
+    storage: 1Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/ceilometer/etcd
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: ceilometer-etcd
+  name: os-ceilometer-etcd
+  namespace: os-ceilometer
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: ceilometer-manager
+    version: v0.1.0
+  name: ceilometer-manager
+  namespace: os-ceilometer
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-manager
+        version: v0.1.0
+      name: ceilometer-manager
+      namespace: os-ceilometer
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-manager
+          image: {{ IMAGE_CEILOMETER_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-els-root
+              mountPath: /var/run/harbor/secrets/config-els-root
+              readOnly: true
+            - name: os-config-els
+              mountPath: /var/run/harbor/secrets/config-els
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: ceilometer-kubecfg
+        - name: os-config-els-root
+          secret:
+            secretName: ceilometer-els-root
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ceilometer-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-etcd
+    version: v0.1.0
+  name: ceilometer-etcd
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-etcd
+        version: v0.1.0
+      name: ceilometer-etcd
+      namespace: os-ceilometer
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-etcd
+          image: {{ IMAGE_ETCD_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 4003
+              name: etcd
+              protocol: TCP
+            - containerPort: 7003
+              name: etcd-peers
+              protocol: TCP
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: ETCD_PEERS_PORT
+              value: '7003'
+            - name: ETCD_PORT
+              value: '4003'
+            - name: ETCD_HOSTNAME_VAR
+              value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+          command:
+            - /start-master.sh
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: os-etcd-data
+          persistentVolumeClaim:
+            claimName: os-ceilometer-etcd
+        - name: os-config-kubecfg
+          secret:
+            secretName: ceilometer-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ceilometer-etcd-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-els
+    version: v0.1.0
+  name: ceilometer-els
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-els
+        version: v0.1.0
+      name: ceilometer-els
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "ceilometer-els-init",
+          	"image": "{{ IMAGE_CEILOMETER_ELS_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "els"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "elasticsearch"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-els-root",
+          			"mountPath": "/var/run/harbor/secrets/config-els-root",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-els",
+          			"mountPath": "/var/run/harbor/secrets/config-els",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-els-ssl-secret",
+          			"mountPath": "/run/harbor/auth/els",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-usr-share-elasticsearch-config",
+          			"mountPath": "/pod/usr/share/elasticsearch/config",
+          			"readOnly": false
+          		},
+          		{
+          			"name": "os-ceilometer-els",
+          			"mountPath": "/usr/share/elasticsearch/data",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-els
+          image: {{ IMAGE_CEILOMETER_ELS_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9200
+              hostPort: 9200
+              protocol: TCP
+              name: els
+            - containerPort: 9300
+              hostPort: 9300
+              protocol: TCP
+              name: els-r
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: ES_JAVA_OPTS
+              value: "-Xms1024m -Xmx1024m"
+          volumeMounts:
+            - name: pod-usr-share-elasticsearch-config
+              mountPath: /usr/share/elasticsearch/config
+              readOnly: false
+            - name: os-config-els-ssl-secret
+              mountPath: /run/harbor/auth/els
+              readOnly: true
+            - mountPath: /usr/share/elasticsearch/data
+              name: os-ceilometer-els
+              readOnly: false
+      volumes:
+        - name: pod-usr-share-elasticsearch-config
+          emptyDir: {}
+        - name: os-config-els-root
+          secret:
+            secretName: ceilometer-els-root
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-els-ssl-secret
+          secret:
+            secretName: ceilometer-els-ssl-secret
+        - name: os-ceilometer-els
+          persistentVolumeClaim:
+            claimName: os-ceilometer-els
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-db
+    version: v0.1.0
+  name: ceilometer-db
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-db
+        version: v0.1.0
+      name: ceilometer-db
+      namespace: os-ceilometer
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3321
+              hostPort: 3321
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3321'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_CEILOMETER_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_CEILOMETER_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_CEILOMETER_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_CEILOMETER_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_CEILOMETER_DB_NAME
+            - name: DB_USER
+              value: AUTH_CEILOMETER_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_CEILOMETER_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-ceilometer-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: ceilometer-db-root
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: ceilometer-db-ssl-secret
+        - name: os-ceilometer-db
+          persistentVolumeClaim:
+            claimName: os-ceilometer-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer
+    version: v0.1.0
+  name: ceilometer-api-master
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer
+        version: v0.1.0
+      name: ceilometer-api-master
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "ceilometer-api-init",
+            "image": "{{ IMAGE_CEILOMETER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "api"
+              },
+              {
+                "name": "APP_USER",
+                "value": "ceilometer"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-els",
+                "mountPath": "/var/run/harbor/secrets/config-els",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-secret",
+                "mountPath": "/run/harbor/auth/ssl",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-ceilometer",
+                "mountPath": "/pod/etc/ceilometer",
+                "readOnly": false
+              },
+              {
+                "name": "pod-etc-httpd-conf-d",
+                "mountPath": "/pod/etc/httpd/conf.d",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-api
+          image: {{ IMAGE_CEILOMETER_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 8777
+              hostPort: 8777
+              protocol: TCP
+              name: c-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-ceilometer
+              mountPath: /etc/ceilometer
+              readOnly: true
+            - name: pod-etc-httpd-conf-d
+              mountPath: /etc/httpd/conf.d
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-ceilometer
+          emptyDir: {}
+        - name: pod-etc-httpd-conf-d
+          emptyDir: {}
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: ceilometer-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-polling-central
+    version: v0.1.0
+  name: ceilometer-polling-central-master
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-polling-central
+        version: v0.1.0
+      name: ceilometer-polling-central-master
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "ceilometer-polling-central-init",
+            "image": "{{ IMAGE_CEILOMETER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "polling"
+              },
+              {
+                "name": "APP_USER",
+                "value": "ceilometer"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-els",
+                "mountPath": "/var/run/harbor/secrets/config-els",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-ceilometer",
+                "mountPath": "/pod/etc/ceilometer",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-polling-central
+          image: {{ IMAGE_CEILOMETER_POLLING }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: APP_COMPONENT
+              value: central
+          volumeMounts:
+            - name: pod-etc-ceilometer
+              mountPath: /etc/ceilometer
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-ceilometer
+          emptyDir: {}
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-ipmi-central
+    version: v0.1.0
+  name: ceilometer-ipmi-central-master
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-ipmi-central
+        version: v0.1.0
+      name: ceilometer-ipmi-central-master
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "ceilometer-ipmi-central-init",
+            "image": "{{ IMAGE_CEILOMETER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "ipmi"
+              },
+              {
+                "name": "APP_USER",
+                "value": "ceilometer"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-els",
+                "mountPath": "/var/run/harbor/secrets/config-els",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-ceilometer",
+                "mountPath": "/pod/etc/ceilometer",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-ipmi-central
+          image: {{ IMAGE_CEILOMETER_POLLING }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: APP_COMPONENT
+              value: ipmi
+          volumeMounts:
+            - name: pod-etc-ceilometer
+              mountPath: /etc/ceilometer
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-ceilometer
+          emptyDir: {}
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-agent-notification
+    version: v0.1.0
+  name: ceilometer-agent-notification-master
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-agent-notification
+        version: v0.1.0
+      name: ceilometer-agent-notification-master
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "ceilometer-agent-notification-init",
+            "image": "{{ IMAGE_CEILOMETER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "agent-notification"
+              },
+              {
+                "name": "APP_USER",
+                "value": "ceilometer"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-els",
+                "mountPath": "/var/run/harbor/secrets/config-els",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-ceilometer",
+                "mountPath": "/pod/etc/ceilometer",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-agent-notification
+          image: {{ IMAGE_CEILOMETER_AGENT_NOTIFICATION }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-ceilometer
+              mountPath: /etc/ceilometer
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-ceilometer
+          emptyDir: {}
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: ceilometer-collector
+    version: v0.1.0
+  name: ceilometer-collector-master
+  namespace: os-ceilometer
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: ceilometer-collector
+        version: v0.1.0
+      name: ceilometer-collector-master
+      namespace: os-ceilometer
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "ceilometer-agent-notification-init",
+            "image": "{{ IMAGE_CEILOMETER_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "collector"
+              },
+              {
+                "name": "APP_USER",
+                "value": "ceilometer"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-els",
+                "mountPath": "/var/run/harbor/secrets/config-els",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-db",
+                "mountPath": "/var/run/harbor/secrets/config-db",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-keystone",
+                "mountPath": "/var/run/harbor/secrets/config-keystone",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-messaging-auth",
+                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-ceilometer",
+                "mountPath": "/pod/etc/ceilometer",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: ceilometer-collector
+          image: {{ IMAGE_CEILOMETER_COLLECTOR }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-ceilometer
+              mountPath: /etc/ceilometer
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-ceilometer
+          emptyDir: {}
+        - name: os-config-els
+          secret:
+            secretName: ceilometer-els
+        - name: os-config-db
+          secret:
+            secretName: ceilometer-db
+        - name: os-config-keystone
+          secret:
+            secretName: ceilometer-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: ceilometer-user-ssl-secret

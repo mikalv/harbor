@@ -82,6 +82,34 @@ spec:
     requests:
       storage: 1Gi
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: gnocchi-pgsql
+  name: os-gnocchi-pgsql
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/gnocchi/psql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: gnocchi-pgsql
+  name: os-gnocchi-pgsql
+  namespace: os-gnocchi
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: extensions/v1beta1
 kind: Job
 metadata:
@@ -120,6 +148,12 @@ spec:
               readOnly: true
             - name: os-config-db
               mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-root-grafana
+              mountPath: /var/run/harbor/secrets/config-db-root-grafana
+              readOnly: true
+            - name: os-config-db-grafana
+              mountPath: /var/run/harbor/secrets/config-db-grafana
               readOnly: true
             - name: os-config-keystone
               mountPath: /var/run/harbor/secrets/config-keystone
@@ -183,6 +217,12 @@ spec:
         - name: os-config-db
           secret:
             secretName: gnocchi-db
+        - name: os-config-db-root-grafana
+          secret:
+            secretName: gnocchi-db-grafana-root
+        - name: os-config-db-grafana
+          secret:
+            secretName: gnocchi-db-grafana
         - name: os-config-keystone
           secret:
             secretName: gnocchi-keystone
@@ -791,3 +831,211 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: gnocchi-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: gnocchi-pgsql
+    version: v0.1.0
+  name: gnocchi-pgsql
+  namespace: os-gnocchi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: gnocchi-pgsql
+        version: v0.1.0
+      name: gnocchi-pgsql
+      namespace: os-gnocchi
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: os-gnocchi
+          image: {{ IMAGE_GNOCCHI_GRAFANA_DB }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 5433
+              protocol: TCP
+              name: psql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '5433'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: ROOT_DB_NAME
+              value: AUTH_GNOCCHI_GRAFANA_DB_ROOT_NAME
+            - name: ROOT_DB_USER
+              value: AUTH_GNOCCHI_GRAFANA_DB_ROOT_USER
+            - name: ROOT_DB_PASSWORD
+              value: AUTH_GNOCCHI_GRAFANA_DB_ROOT_PASSWORD
+          volumeMounts:
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-psql-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - name: data
+              mountPath: /var/lib/postgresql/data
+              readOnly: false
+      volumes:
+        - name: os-config-db
+          secret:
+            secretName: gnocchi-db-grafana-root
+        - name: os-config-psql-ssl-secret
+          secret:
+            secretName: gnocchi-pgsql-ssl-secret
+        - name: data
+          persistentVolumeClaim:
+            claimName: os-gnocchi-pgsql
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: gnocchi-grafana
+    version: v0.1.0
+  name: gnocchi-grafana-master
+  namespace: os-gnocchi
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: gnocchi-grafana
+        version: v0.1.0
+      name: gnocchi-grafana-master
+      namespace: os-gnocchi
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+            "name": "gnocchi-grafana-init",
+            "image": "{{ IMAGE_GNOCCHI_INIT }}",
+            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+            "env": [
+              {
+                "name": "OS_DOMAIN",
+                "value": "{{ OS_DOMAIN }}"
+              },
+              {
+                "name": "APP_COMPONENT",
+                "value": "grafana"
+              },
+              {
+                "name": "APP_USER",
+                "value": "grafana"
+              }
+            ],
+            "volumeMounts": [
+              {
+                "name": "os-config-db-grafana",
+                "mountPath": "/var/run/harbor/secrets/config-db-grafana",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ldap",
+                "mountPath": "/var/run/harbor/secrets/config-ldap",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-grafana-secret-key",
+                "mountPath": "/var/run/harbor/secrets/config-grafana-secret-key",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-secret",
+                "mountPath": "/run/harbor/auth/ssl",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-ssl-user-secret",
+                "mountPath": "/run/harbor/auth/user",
+                "readOnly": true
+              },
+              {
+                "name": "os-config-federation-saml2-secret",
+                "mountPath": "/run/harbor/auth/mellon",
+                "readOnly": true
+              },
+              {
+                "name": "pod-etc-grafana",
+                "mountPath": "/pod/etc/grafana",
+                "readOnly": false
+              }
+            ],
+            "securityContext": {
+              "privileged": false
+            }
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: gnocchi-grafana
+          image: {{ IMAGE_GNOCCHI_GRAFANA }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-grafana
+              mountPath: /etc/grafana
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+        - name: gnocchi-grafana-auth
+          image: {{ IMAGE_GNOCCHI_GRAFANA_AUTH }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3000
+              hostPort: 3000
+              protocol: TCP
+              name: graf
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: PORT_EXPOSE
+              value: '3000'
+            - name: PORT_LOCAL
+              value: '3000'
+          volumeMounts:
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-federation-saml2-secret
+              mountPath: /run/harbor/auth/mellon
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-grafana
+          emptyDir: {}
+        - name: os-config-db-grafana
+          secret:
+            secretName: gnocchi-db-grafana
+        - name: os-config-grafana-secret-key
+          secret:
+            secretName: gnocchi-grafana-secret-key
+        - name: os-config-ssl-secret
+          secret:
+            secretName: grafana-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: gnocchi-user-ssl-secret
+        - name: os-config-ldap
+          secret:
+            secretName: gnocchi-ldap
+        - name: os-config-federation-saml2-secret
+          secret:
+            secretName: grafana-federation-saml2-secret

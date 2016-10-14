@@ -29,24 +29,35 @@ check_required_vars GNOCCHI_CONFIG_FILE \
                     APP_COMPONENT
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
+: ${APP_COMPONENT:="null"}
+if ! [ $APP_COMPONENT == "grafana" ]; then
+  echo "${OS_DISTRO}: Testing service dependancies"
+  ################################################################################
+  /usr/bin/mysql-test
+
+  echo "${OS_DISTRO}: Config Starting"
+  ################################################################################
+  /opt/harbor/config-gnocchi.sh
 
 
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-gnocchi.sh
+  echo "${OS_DISTRO}: Component specific config starting"
+  ################################################################################
+  /opt/harbor/gnocchi/components/config-${APP_COMPONENT}.sh
 
 
-echo "${OS_DISTRO}: Component specific config starting"
-################################################################################
-/opt/harbor/gnocchi/components/config-${APP_COMPONENT}.sh
+  echo "${OS_DISTRO}: Moving pod configs into place"
+  ################################################################################
+  cp -rfav $(dirname ${GNOCCHI_CONFIG_FILE})/* /pod$(dirname ${GNOCCHI_CONFIG_FILE})/
+else
+  echo "${OS_DISTRO}: Component specific config starting"
+  ################################################################################
+  /opt/harbor/gnocchi/components/config-${APP_COMPONENT}.sh
 
 
-echo "${OS_DISTRO}: Moving pod configs into place"
-################################################################################
-cp -rfav $(dirname ${GNOCCHI_CONFIG_FILE})/* /pod$(dirname ${GNOCCHI_CONFIG_FILE})/
+  echo "${OS_DISTRO}: Moving pod configs into place"
+  ################################################################################
+  cp -rfav $(dirname ${GRAFANA_CONFIG_FILE})/* /pod$(dirname ${GRAFANA_CONFIG_FILE})/
+fi
 
 
 echo "${OS_DISTRO}: Pod init finished"

@@ -33,3 +33,39 @@ spec:
         backend:
           serviceName: gnocchi
           servicePort: 8041
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: gnocchi-grafana
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: grafana
+  namespace: os-gnocchi
+spec:
+  tls:
+    - hosts:
+        - grafana.{{ OS_DOMAIN }}
+      secretName: grafana-ssl-secret
+    - hosts:
+        - grafana.os-gnocchi.svc.{{ OS_DOMAIN }}
+      secretName: grafana-ssl-secret
+  rules:
+  - host: grafana.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: grafana
+          servicePort: 3000
+  - host: grafana.os-gnocchi.svc.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: grafana
+          servicePort: 3000

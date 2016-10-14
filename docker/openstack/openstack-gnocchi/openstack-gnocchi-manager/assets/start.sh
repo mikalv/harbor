@@ -31,6 +31,7 @@ echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-gnocchi.sh
 
+tail -f /dev/null
 
 : ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
@@ -52,6 +53,11 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Signaling ETCD proxy container to exit"
   ##############################################################################
   touch /pod/etcd/terminate-proxy
+
+
+  echo "${OS_DISTRO}: Managing grafana database"
+  ##############################################################################
+  /opt/harbor/gnocchi/manage/bootstrap-database-grafana.sh
 
 
   echo "${OS_DISTRO}: Finished management"

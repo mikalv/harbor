@@ -64,10 +64,29 @@ openstack role add \
           --project="${AUTH_CEILOMETER_KEYSTONE_PROJECT_ID}" \
           "${AUTH_CEILOMETER_KEYSTONE_PROJECT_USER_ROLE}"
 
+
 openstack role assignment list \
           --project-domain="${AUTH_CEILOMETER_KEYSTONE_PROJECT_DOMAIN}" \
           --project="${AUTH_CEILOMETER_KEYSTONE_PROJECT_ID}" \
           --role="${AUTH_CEILOMETER_KEYSTONE_PROJECT_USER_ROLE}" \
+          --user-domain="${AUTH_CEILOMETER_KEYSTONE_DOMAIN}" \
+          --user="${AUTH_CEILOMETER_KEYSTONE_USER_ID}"
+
+
+
+################################################################################
+openstack role add \
+          --user="${AUTH_CEILOMETER_KEYSTONE_USER_ID}" \
+          --user-domain="${AUTH_CEILOMETER_KEYSTONE_DOMAIN}" \
+          --project-domain="${AUTH_CEILOMETER_KEYSTONE_PROJECT_DOMAIN}" \
+          --project="${AUTH_CEILOMETER_KEYSTONE_PROJECT_ID}" \
+          "ResellerAdmin"
+
+
+openstack role assignment list \
+          --project-domain="${AUTH_CEILOMETER_KEYSTONE_PROJECT_DOMAIN}" \
+          --project="${AUTH_CEILOMETER_KEYSTONE_PROJECT_ID}" \
+          --role="ResellerAdmin" \
           --user-domain="${AUTH_CEILOMETER_KEYSTONE_DOMAIN}" \
           --user="${AUTH_CEILOMETER_KEYSTONE_USER_ID}"
 

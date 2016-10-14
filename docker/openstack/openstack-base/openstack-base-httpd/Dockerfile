@@ -10,6 +10,7 @@ RUN set -e && \
         mod_wsgi && \
     yum clean all && \
     sed -i 's/^Listen 80/#Listen 80/' /etc/httpd/conf/httpd.conf && \
+    sed -i 's/^Listen 443 https/#Listen 443 https/' /etc/httpd/conf.d/ssl.conf && \
     container-base-systemd-reset.sh
 
 LABEL license="Apache-2.0" \

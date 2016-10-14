@@ -24,15 +24,21 @@ mkdir -p /opt/stack
 echo "${OS_DISTRO}: Getting Sources for ${OS_COMP}"
 ################################################################################
 git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
+git clone ${OS_REPO_URL_1} -b ${OS_REPO_BRANCH_1} --depth 1 /opt/stack/${OS_COMP_1}
 
 
 echo "${OS_DISTRO}: Installing ${OS_COMP}"
 ################################################################################
 pip --no-cache-dir install /opt/stack/${OS_COMP}
-
+pip --no-cache-dir install /opt/stack/${OS_COMP_1}
+pip --no-cache-dir install oslo.cache
+pip --no-cache-dir install elasticsearch
 
 mkdir -p /etc/${OS_COMP}/
-cp -rfav /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/
+cp -rfav /opt/stack/${OS_COMP}/etc/${OS_COMP}/* /etc/${OS_COMP}/
+
+mkdir -p /var/www/ceilometer
+cp -rfav /opt/stack/${OS_COMP}/ceilometer/api/app.wsgi /var/www/ceilometer/app
 
 
 echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"

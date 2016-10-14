@@ -70,6 +70,22 @@ elif [ "$MARINA_SERVICE" == "portal" ]; then
   /usr/bin/harbor-manage-kube || true
 
 
+elif [ "$MARINA_SERVICE" == "gnocchi" ]; then
+  echo "${OS_DISTRO}: Launching keystone ldap management"
+  ##############################################################################
+  /usr/bin/harbor-manage-gnocchi-grafana-ldap
+
+
+  echo "${OS_DISTRO}: Launching keystone federation management"
+  ##############################################################################
+  /usr/bin/harbor-manage-gnocchi-grafana-federation
+
+
+  echo "${OS_DISTRO}: Launching kube management"
+  ##############################################################################
+  /usr/bin/harbor-manage-kube || true
+
+
 else
   echo "${OS_DISTRO}: Launching kube management"
   ##############################################################################

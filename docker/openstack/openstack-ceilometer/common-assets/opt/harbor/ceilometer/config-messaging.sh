@@ -31,7 +31,8 @@ check_required_vars CEILOMETER_CONFIG_FILE \
                     RABBITMQ_SERVICE_HOST_SVC \
                     CEILOMETER_DB_KEY \
                     CEILOMETER_DB_CERT \
-                    CEILOMETER_DB_CA
+                    CEILOMETER_DB_CA \
+                    CEILOMETER_NOTIFICATION_TOPICS
 
 
 echo "${OS_DISTRO}: RPC Backend"
@@ -64,3 +65,8 @@ echo "${OS_DISTRO}: Config"
 crudini --set ${CEILOMETER_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${CEILOMETER_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${CEILOMETER_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+echo "${OS_DISTRO}: Notification topics"
+################################################################################
+crudini --set ${CEILOMETER_CONFIG_FILE} oslo_messaging_notifications topics "${CEILOMETER_NOTIFICATION_TOPICS}"

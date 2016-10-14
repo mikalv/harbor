@@ -22,5 +22,4 @@ echo "${OS_DISTRO}: Launching"
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-tail -f /dev/null
-exec gnocchi-api --config-file=${GNOCCHI_CONFIG_FILE} --debug
+exec uwsgi ${GNOCCHI_UWSGI_CONFIG_FILE}

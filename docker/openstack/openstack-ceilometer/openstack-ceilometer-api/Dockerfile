@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-ceilometer-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-ceilometer-centos:%%DOCKER_TAG%%
 
 ENV OPENSTACK_COMPONENT="ceilometer-api"
 

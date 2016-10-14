@@ -6,6 +6,11 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    apk add --no-cache --virtual run-deps  \
+        util-linux && \
+    addgroup grafana -g 994 && \
+    adduser -u 995 -D -s /bin/false -G grafana grafana && \
+    mkdir -p /usr/share/grafana && \
     cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
 

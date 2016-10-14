@@ -30,15 +30,26 @@ check_required_vars CEILOMETER_CONFIG_FILE \
                     OS_DOMAIN \
                     CEILOMETER_API_SVC_PORT \
                     MY_IP \
-                    API_WORKERS
+                    API_WORKERS \
+                    CEILOMETER_HTTPD_CONFIG_FILE
 
 
 echo "${OS_DISTRO}: Configuring worker params"
 ################################################################################
-echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
-echo "${OS_DISTRO}:    Port: ${CEILOMETER_API_SVC_PORT}"
-echo "${OS_DISTRO}:    Listen: 127.0.0.1"
-crudini --set ${CEILOMETER_CONFIG_FILE} api port "${CEILOMETER_API_SVC_PORT}"
-crudini --set ${CEILOMETER_CONFIG_FILE} api api_workers "${API_WORKERS}"
-crudini --set ${CEILOMETER_CONFIG_FILE} api host "127.0.0.1"
-crudini --set ${CEILOMETER_CONFIG_FILE} api enable_ssl_api "False"
+crudini --set ${CEILOMETER_CONFIG_FILE} collector workers "${API_WORKERS}"
+
+
+
+echo "${OS_DISTRO}: Configuring apache params"
+################################################################################
+sed -i "s|{{ MY_IP }}|${MY_IP}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+sed -i "s|{{ CEILOMETER_API_SERVICE_HOST }}|${CEILOMETER_API_SERVICE_HOST}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+sed -i "s|{{ CEILOMETER_API_SVC_PORT }}|${CEILOMETER_API_SVC_PORT}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+sed -i "s|{{ CEILOMETER_API_TLS_CERT }}|${CEILOMETER_API_TLS_CERT}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+sed -i "s|{{ CEILOMETER_API_TLS_KEY }}|${CEILOMETER_API_TLS_KEY}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+sed -i "s|{{ CEILOMETER_API_TLS_CA }}|${CEILOMETER_API_TLS_CA}|g" ${CEILOMETER_HTTPD_CONFIG_FILE}
+
+
+echo "${OS_DISTRO}: Moving pod httpd config into place"
+################################################################################
+cp -rfav $(dirname ${CEILOMETER_HTTPD_CONFIG_FILE})/* /pod$(dirname ${CEILOMETER_HTTPD_CONFIG_FILE})/

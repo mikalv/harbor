@@ -98,7 +98,8 @@ generate_user_cert () {
   --saml-sp-name "keystone" \
   --saml-sp-description "${OS_DOMAIN}: ${KEYSTONE_API_SERVICE_HOST}" \
   --debug
-  curl -L https://${IPSILON_SERVICE_HOST_SVC}/idp/saml2/metadata > /etc/httpd/mellon/idp_metadata.xml
+  # Make sure we are using the public hostname for the idp
+  curl -L https://${IPSILON_SERVICE_HOST_SVC}/idp/saml2/metadata  | sed "s|${IPSILON_SERVICE_HOST_SVC}|${IPSILON_SERVICE_HOST}|g" > /etc/httpd/mellon/idp_metadata.xml
 
   echo "${OS_DISTRO}: Creating Kube Secret"
   ##############################################################################

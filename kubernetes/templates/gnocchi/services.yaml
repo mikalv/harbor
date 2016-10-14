@@ -53,3 +53,37 @@ spec:
     targetPort: 8041
   selector:
     openstack-app: gnocchi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: gnocchi-pgsql
+  name: gnocchi-pgsql
+  namespace: os-gnocchi
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 5433
+    protocol: TCP
+    targetPort: 5433
+  selector:
+    openstack-app: gnocchi-pgsql
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: gnocchi-grafana
+  name: grafana
+  namespace: os-gnocchi
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3000
+    protocol: TCP
+    targetPort: 3000
+  selector:
+    openstack-app: gnocchi-grafana

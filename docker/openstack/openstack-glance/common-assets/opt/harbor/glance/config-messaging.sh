@@ -64,3 +64,8 @@ echo "${OS_DISTRO}: messaging: config"
 crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+echo "${OS_DISTRO}: Notifications"
+################################################################################
+crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_notifications driver "messagingv2"

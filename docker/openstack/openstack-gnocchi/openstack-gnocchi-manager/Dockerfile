@@ -6,6 +6,8 @@ COPY ./assets/ /opt/harbor/assets
 
 RUN set -e && \
     set -x && \
+    apk add --no-cache --virtual run-deps \
+        postgresql-client && \
     apk add --no-cache --virtual build-deps \
         gcc \
         git \

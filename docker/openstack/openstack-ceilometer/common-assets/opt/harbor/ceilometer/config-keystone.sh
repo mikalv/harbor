@@ -39,7 +39,6 @@ check_required_vars CEILOMETER_CONFIG_FILE \
 
 ################################################################################
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
-crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken memcached_servers "memcached.os-memcached.svc.${OS_DOMAIN}:11211"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken project_domain_name "${AUTH_CEILOMETER_KEYSTONE_PROJECT_DOMAIN}"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken project_name "${AUTH_CEILOMETER_KEYSTONE_PROJECT}"
@@ -52,3 +51,19 @@ crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken auth_type "password"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken auth_version "v3"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/ceilometer"
 crudini --set ${CEILOMETER_CONFIG_FILE} keystone_authtoken cafile "${CEILOMETER_DB_CA}"
+
+
+################################################################################
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials project_domain_name "${AUTH_CEILOMETER_KEYSTONE_PROJECT_DOMAIN}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials project_name "${AUTH_CEILOMETER_KEYSTONE_PROJECT}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials user_domain_name "${AUTH_CEILOMETER_KEYSTONE_DOMAIN}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials region_name "${AUTH_CEILOMETER_KEYSTONE_REGION}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials password "${AUTH_CEILOMETER_KEYSTONE_PASSWORD}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials username "${AUTH_CEILOMETER_KEYSTONE_USER}"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials auth_type "password"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials auth_version "v3"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials signing_dir "/var/cache/ceilometer"
+crudini --set ${CEILOMETER_CONFIG_FILE} service_credentials cafile "${CEILOMETER_DB_CA}"

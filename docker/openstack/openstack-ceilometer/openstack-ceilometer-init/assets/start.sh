@@ -29,11 +29,6 @@ check_required_vars CEILOMETER_CONFIG_FILE \
                     APP_COMPONENT
 
 
-echo "${OS_DISTRO}: Testing service dependancies"
-################################################################################
-/usr/bin/mysql-test
-
-
 echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-ceilometer.sh

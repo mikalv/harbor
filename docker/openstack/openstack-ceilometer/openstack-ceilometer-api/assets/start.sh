@@ -22,4 +22,4 @@ echo "${OS_DISTRO}: Launching"
 
 echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec ceilometer-server --server api --config-file=${CEILOMETER_CONFIG_FILE} --debug
+exec httpd -DFOREGROUND
