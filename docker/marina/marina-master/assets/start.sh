@@ -43,6 +43,8 @@ HARBOR_SERVICE_LIST="harbor-auth.service \
                     harbor-mistral.service \
                     harbor-murano.service \
                     harbor-magnum.service"
+#                    harbor-metering.service \
+#                    harbor-portal.service"
 
 
 HOST_USER=harbor

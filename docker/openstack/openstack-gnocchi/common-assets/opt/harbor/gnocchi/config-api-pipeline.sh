@@ -15,12 +15,18 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
+echo "${OS_DISTRO}: Configuring API pipeline"
 ################################################################################
-cp -v /run/harbor/auth/user/tls.ca /etc/pki/ca-trust/source/anchors/grafana-db.pem
-update-ca-trust
+. /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+. /opt/harbor/gnocchi/vars.sh
 
 
-echo "${OS_DISTRO}: Starting container application"
 ################################################################################
-exec su -s /bin/sh -c "exec /usr/sbin/grafana-server --config=/etc/grafana/grafana.ini --homepath=/usr/share/grafana cfg:default.paths.plugins=/var/lib/grafana/plugins" grafana
+check_required_vars GNOCCHI_PASTE_CONFIG_FILE \
+                    OS_DOMAIN
+
+
+################################################################################
+crudini --set ${GNOCCHI_PASTE_CONFIG_FILE} pipeline:main pipeline "gnocchi+auth"

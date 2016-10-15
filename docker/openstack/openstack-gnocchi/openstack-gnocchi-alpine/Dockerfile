@@ -5,12 +5,10 @@ ENV OS_COMP="gnocchi" \
     OS_REPO_BRANCH="master" \
     GNOCCHI_STORAGE_BACKEND="file"
 
-COPY ./common-assets /opt/harbor/common-assets
+COPY ./common-assets/opt/harbor/build/dockerfile.sh /opt/harbor/build/dockerfile.sh
 
 RUN set -e && \
     set -x && \
-    cp -rfav /opt/harbor/common-assets/* / && \
-    rm -rf /opt/harbor/common-assets && \
     apk add --no-cache --virtual run-deps  \
         libxml2 \
         libxslt \
@@ -35,6 +33,12 @@ RUN set -e && \
     /opt/harbor/build/dockerfile.sh && \
     apk del build-deps
 
+COPY ./common-assets /opt/harbor/common-assets
+
+RUN set -e && \
+    set -x && \
+    cp -rfav /opt/harbor/common-assets/* / && \
+    rm -rf /opt/harbor/common-assets
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

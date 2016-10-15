@@ -38,9 +38,6 @@ check_required_vars OS_DOMAIN \
 
 ################################################################################
 chown -R postgres "$DATADIR"
-echo "${OS_DISTRO}: Configuring connections"
-sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1${MY_IP}/" "$DATADIR"/postgresql.conf
-sed -ri "s/^#(port\s*=\s*)\S+/\1${DB_PORT}/" "$DATADIR"/postgresql.conf
 
 
 if [ -z "$(ls -A "$DATADIR")" ]; then
@@ -52,7 +49,7 @@ if [ -z "$(ls -A "$DATADIR")" ]; then
     echo "${OS_DISTRO}: Bootstrapping Postgresql DB in ${DATADIR}"
     su -s /bin/sh -c "initdb" postgres
 
-
+    sed -ri "s/^#(listen_addresses\s*=\s*)\S+/\1'*'/" "$PGDATA"/postgresql.conf
 
     if [ "$ROOT_DB_NAME" != 'postgres' ]; then
       createSql="CREATE DATABASE $ROOT_DB_NAME;"
@@ -83,6 +80,12 @@ if [ -z "$(ls -A "$DATADIR")" ]; then
     echo "host all all 0.0.0.0/0 $authMethod" >> $DATADIR/pg_hba.conf
 fi
 
+
+echo "${OS_DISTRO}: DB listening on: ${MY_IP}:${DB_PORT}"
+################################################################################
+sed -ri "s/^#(port\s*=\s*)\S+/\1${DB_PORT}/" "$DATADIR"/postgresql.conf
+sed -ri "s/^(port\s*=\s*)\S+/\1${DB_PORT}/" "$DATADIR"/postgresql.conf
+sed -ri "s/^(listen_addresses\s*=\s*)\S+/\1'${MY_IP}'/" "$PGDATA"/postgresql.conf
 
 
 ################################################################################

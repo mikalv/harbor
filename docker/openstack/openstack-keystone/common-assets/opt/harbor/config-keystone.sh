@@ -65,3 +65,8 @@ echo "${OS_DISTRO}: Starting federation config"
 echo "${OS_DISTRO}: Starting apache config"
 ################################################################################
 /opt/harbor/keystone/config-apache.sh
+
+
+echo "${OS_DISTRO}: Starting cors config"
+################################################################################
+/opt/harbor/gnocchi/config-cors.sh

@@ -1,0 +1,38 @@
+[Unit]
+Description=Harbor Metering: Ceilometer, Gnocchi & Grafana
+After=harbor-auth.service
+After=harbor-kubernetes.service
+After=harbor-etcd.service
+After=harbor-loadbalancer.service
+After=harbor-ovn.service
+After=harbor-memcached.service
+After=harbor-messaging.service
+After=harbor-ipsilon.service
+After=harbor-keystone.service
+After=harbor-api.service
+After=harbor-neutron.service
+After=harbor-glance.service
+After=harbor-cinder.service
+After=harbor-nova.service
+After=harbor-heat.service
+After=harbor-mistral.service
+After=harbor-murano.service
+After=harbor-magnum.service
+
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=20
+TimeoutSec=0
+ExecStartPre=/usr/bin/harbor-service start gnocchi
+ExecStartPre=/usr/bin/harbor-service start ceilometer
+ExecStart=/usr/bin/harbor-service check gnocchi
+ExecStart=/usr/bin/harbor-service check ceilometer
+ExecStop=/usr/bin/harbor-service stop gnocchi
+ExecStop=/usr/bin/harbor-service stop ceilometer
+RemainAfterExit=true
+
+
+[Install]
+WantedBy=container-up.target

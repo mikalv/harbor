@@ -50,3 +50,13 @@ echo "${OS_DISTRO}: Starting keystone config"
 echo "${OS_DISTRO}: Starting storage config"
 ################################################################################
 /opt/harbor/gnocchi/config-storage.sh
+
+
+echo "${OS_DISTRO}: Starting cors config"
+################################################################################
+/opt/harbor/gnocchi/config-cors.sh
+
+
+echo "${OS_DISTRO}: Starting api-pipeline config"
+################################################################################
+/opt/harbor/gnocchi/config-api-pipeline.sh

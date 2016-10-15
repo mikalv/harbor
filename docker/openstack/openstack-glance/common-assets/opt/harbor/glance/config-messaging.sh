@@ -50,6 +50,8 @@ crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBIT
 crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MESSAGING_USER}"
 crudini --set ${GLANCE_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MESSAGING_PASS}"
 
+crudini --set ${GLANCE_CONFIG_FILE} DEFAULT transport_url "rabbit://${AUTH_MESSAGING_USER}:${AUTH_MESSAGING_PASS}@${RABBITMQ_SERVICE_HOST_SVC}:5672/"
+
 
 echo "${OS_DISTRO}: messaging: TLS"
 ################################################################################

@@ -236,7 +236,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-api-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -369,7 +369,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-conductor-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -486,7 +486,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-scheduler-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -603,7 +603,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-consoleauth-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -720,7 +720,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-consoleauth-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -856,7 +856,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-serialproxy-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{
@@ -983,7 +983,7 @@ spec:
         pod.alpha.kubernetes.io/init-containers: '[
           {
           	"name": "nova-compute-init",
-          	"image": "{{ IMAGE_HEAT_INIT }}",
+          	"image": "{{ IMAGE_NOVA_INIT }}",
           	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
           	"env": [
           		{

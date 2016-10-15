@@ -707,121 +707,121 @@ spec:
           secret:
             secretName: ceilometer-user-ssl-secret
 ---
-apiVersion: v1
-kind: ReplicationController
-metadata:
-  labels:
-    openstack-app: ceilometer-ipmi-central
-    version: v0.1.0
-  name: ceilometer-ipmi-central-master
-  namespace: os-ceilometer
-spec:
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        openstack-app: ceilometer-ipmi-central
-        version: v0.1.0
-      name: ceilometer-ipmi-central-master
-      namespace: os-ceilometer
-      annotations:
-        pod.alpha.kubernetes.io/init-containers: '[
-          {
-            "name": "ceilometer-ipmi-central-init",
-            "image": "{{ IMAGE_CEILOMETER_INIT }}",
-            "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
-            "env": [
-              {
-                "name": "OS_DOMAIN",
-                "value": "{{ OS_DOMAIN }}"
-              },
-              {
-                "name": "APP_COMPONENT",
-                "value": "ipmi"
-              },
-              {
-                "name": "APP_USER",
-                "value": "ceilometer"
-              }
-            ],
-            "volumeMounts": [
-              {
-                "name": "os-config-els",
-                "mountPath": "/var/run/harbor/secrets/config-els",
-                "readOnly": true
-              },
-              {
-                "name": "os-config-db",
-                "mountPath": "/var/run/harbor/secrets/config-db",
-                "readOnly": true
-              },
-              {
-                "name": "os-config-keystone",
-                "mountPath": "/var/run/harbor/secrets/config-keystone",
-                "readOnly": true
-              },
-              {
-                "name": "os-config-messaging-auth",
-                "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
-                "readOnly": true
-              },
-              {
-                "name": "os-config-ssl-user-secret",
-                "mountPath": "/run/harbor/auth/user",
-                "readOnly": true
-              },
-              {
-                "name": "pod-etc-ceilometer",
-                "mountPath": "/pod/etc/ceilometer",
-                "readOnly": false
-              }
-            ],
-            "securityContext": {
-              "privileged": false
-            }
-          }
-        ]'
-    spec:
-      hostNetwork: true
-      nodeSelector:
-        harbor-role: master
-      containers:
-        - name: ceilometer-ipmi-central
-          image: {{ IMAGE_CEILOMETER_POLLING }}
-          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
-          env:
-            - name: OS_DOMAIN
-              value: {{ OS_DOMAIN }}
-            - name: APP_COMPONENT
-              value: ipmi
-          volumeMounts:
-            - name: pod-etc-ceilometer
-              mountPath: /etc/ceilometer
-              readOnly: true
-            - name: os-config-ssl-user-secret
-              mountPath: /run/harbor/auth/user
-              readOnly: true
-          securityContext:
-            privileged: false
-      volumes:
-        - name: pod-etc-ceilometer
-          emptyDir: {}
-        - name: os-config-els
-          secret:
-            secretName: ceilometer-els
-        - name: os-config-db
-          secret:
-            secretName: ceilometer-db
-        - name: os-config-keystone
-          secret:
-            secretName: ceilometer-keystone
-        - name: os-config-messaging-auth
-          secret:
-            secretName: messaging-auth
-        - name: os-config-ssl-user-secret
-          secret:
-            secretName: ceilometer-user-ssl-secret
----
+# apiVersion: v1
+# kind: ReplicationController
+# metadata:
+#   labels:
+#     openstack-app: ceilometer-ipmi-central
+#     version: v0.1.0
+#   name: ceilometer-ipmi-central-master
+#   namespace: os-ceilometer
+# spec:
+#   replicas: 1
+#   template:
+#     metadata:
+#       labels:
+#         openstack-app: ceilometer-ipmi-central
+#         version: v0.1.0
+#       name: ceilometer-ipmi-central-master
+#       namespace: os-ceilometer
+#       annotations:
+#         pod.alpha.kubernetes.io/init-containers: '[
+#           {
+#             "name": "ceilometer-ipmi-central-init",
+#             "image": "{{ IMAGE_CEILOMETER_INIT }}",
+#             "imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+#             "env": [
+#               {
+#                 "name": "OS_DOMAIN",
+#                 "value": "{{ OS_DOMAIN }}"
+#               },
+#               {
+#                 "name": "APP_COMPONENT",
+#                 "value": "ipmi"
+#               },
+#               {
+#                 "name": "APP_USER",
+#                 "value": "ceilometer"
+#               }
+#             ],
+#             "volumeMounts": [
+#               {
+#                 "name": "os-config-els",
+#                 "mountPath": "/var/run/harbor/secrets/config-els",
+#                 "readOnly": true
+#               },
+#               {
+#                 "name": "os-config-db",
+#                 "mountPath": "/var/run/harbor/secrets/config-db",
+#                 "readOnly": true
+#               },
+#               {
+#                 "name": "os-config-keystone",
+#                 "mountPath": "/var/run/harbor/secrets/config-keystone",
+#                 "readOnly": true
+#               },
+#               {
+#                 "name": "os-config-messaging-auth",
+#                 "mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+#                 "readOnly": true
+#               },
+#               {
+#                 "name": "os-config-ssl-user-secret",
+#                 "mountPath": "/run/harbor/auth/user",
+#                 "readOnly": true
+#               },
+#               {
+#                 "name": "pod-etc-ceilometer",
+#                 "mountPath": "/pod/etc/ceilometer",
+#                 "readOnly": false
+#               }
+#             ],
+#             "securityContext": {
+#               "privileged": false
+#             }
+#           }
+#         ]'
+#     spec:
+#       hostNetwork: true
+#       nodeSelector:
+#         harbor-role: master
+#       containers:
+#         - name: ceilometer-ipmi-central
+#           image: {{ IMAGE_CEILOMETER_POLLING }}
+#           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+#           env:
+#             - name: OS_DOMAIN
+#               value: {{ OS_DOMAIN }}
+#             - name: APP_COMPONENT
+#               value: ipmi
+#           volumeMounts:
+#             - name: pod-etc-ceilometer
+#               mountPath: /etc/ceilometer
+#               readOnly: true
+#             - name: os-config-ssl-user-secret
+#               mountPath: /run/harbor/auth/user
+#               readOnly: true
+#           securityContext:
+#             privileged: false
+#       volumes:
+#         - name: pod-etc-ceilometer
+#           emptyDir: {}
+#         - name: os-config-els
+#           secret:
+#             secretName: ceilometer-els
+#         - name: os-config-db
+#           secret:
+#             secretName: ceilometer-db
+#         - name: os-config-keystone
+#           secret:
+#             secretName: ceilometer-keystone
+#         - name: os-config-messaging-auth
+#           secret:
+#             secretName: messaging-auth
+#         - name: os-config-ssl-user-secret
+#           secret:
+#             secretName: ceilometer-user-ssl-secret
+# ---
 apiVersion: v1
 kind: ReplicationController
 metadata:

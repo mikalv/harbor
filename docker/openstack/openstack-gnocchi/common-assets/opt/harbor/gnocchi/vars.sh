@@ -1,5 +1,6 @@
 #!/bin/bash
 : ${GNOCCHI_CONFIG_FILE:="/etc/gnocchi/gnocchi.conf"}
+: ${GNOCCHI_PASTE_CONFIG_FILE:="/etc/gnocchi/api-paste.ini"}
 : ${GNOCCHI_UWSGI_CONFIG_FILE:="/etc/gnocchi/uwsgi.ini"}
 
 : ${GNOCCHI_MARIADB_SERVICE_PORT:="3320"}

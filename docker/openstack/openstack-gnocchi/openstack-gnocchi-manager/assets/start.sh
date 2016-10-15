@@ -31,7 +31,6 @@ echo "${OS_DISTRO}: Config Starting"
 ################################################################################
 /opt/harbor/config-gnocchi.sh
 
-tail -f /dev/null
 
 : ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
