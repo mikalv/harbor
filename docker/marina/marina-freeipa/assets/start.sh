@@ -23,7 +23,12 @@ echo "${OS_DISTRO}: Marina Kube FreeIPA Pod Starting"
   echo "${OS_DISTRO}: Marina Kube FreeIPA Config Starting"
   ##############################################################################
   until /usr/bin/init-harbor-ipa; do
-    echo "${OS_DISTRO}: Config script failed, retrying in 120s"
+    echo "${OS_DISTRO}: Script: init-harbor-ipa failed, retrying in 120s"
+    ############################################################################
+    sleep 120s
+  done
+  until /usr/bin/init-harbor-barbican-kra-secret; do
+    echo "${OS_DISTRO}: Script: init-harbor-barbican-kra-secret failed, retrying in 120s"
     ############################################################################
     sleep 120s
   done

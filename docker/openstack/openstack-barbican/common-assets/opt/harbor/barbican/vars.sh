@@ -20,9 +20,15 @@
 : ${AUTH_BARBICAN_KEYSTONE_DOMAIN:="default"}
 : ${AUTH_BARBICAN_KEYSTONE_REGION:="RegionOne"}
 
-
 : ${AUTH_BARBICAN_KEYSTONE_SERVICE_PROJECT:="service"}
 : ${AUTH_BARBICAN_KEYSTONE_SERVICE_PROJECT_DOMAIN:="default"}
 : ${AUTH_BARBICAN_KEYSTONE_SERVICE_PROJECT_USER_ROLE:="key-manager:service-admin"}
 : ${AUTH_BARBICAN_KEYSTONE_SERVICE_DOMAIN:="default"}
 : ${AUTH_BARBICAN_KEYSTONE_SERVICE_REGION:="RegionOne"}
+
+: ${FREEIPA_DOGTAG_PORT:="8443"}
+: ${DOGTAG_PLUGIN_ROOT:="/var/lib/barbican/dogtag"}
+: ${DOGTAG_KRA_AGENT_PEM:="/run/harbor/auth/kra/kra-agent.pem"}
+
+
+: ${SNAKEOIL_PLUGIN_ROOT:="/var/lib/barbican/snakeoil"}

@@ -26,6 +26,34 @@ spec:
     requests:
       storage: 20Gi
 ---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: barbican-data
+  name: os-barbican-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteMany
+  hostPath:
+    path: /var/lib/harbor/barbican/data
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: barbican-data
+  name: os-barbican-data
+  namespace: os-barbican
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 20Gi
+---
 apiVersion: extensions/v1beta1
 kind: Job
 metadata:
@@ -87,6 +115,9 @@ spec:
             - name: os-config-keystone-admin-user
               mountPath: /var/run/harbor/secrets/config-keystone-admin-user
               readOnly: true
+            - name: os-barbican-data
+              mountPath: /var/lib/barbican
+              readOnly: false
           securityContext:
             privileged: false
       restartPolicy: OnFailure
@@ -124,6 +155,9 @@ spec:
         - name: os-config-keystone-admin-user
           secret:
             secretName: keystone-admin-user
+        - name: os-barbican-data
+          persistentVolumeClaim:
+            claimName: os-barbican-data
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -272,8 +306,18 @@ spec:
           			"readOnly": true
           		},
           		{
+          			"name": "os-config-kra-agent-secret",
+          			"mountPath": "/run/harbor/auth/kra",
+          			"readOnly": true
+          		},
+          		{
           			"name": "pod-etc-barbican",
           			"mountPath": "/pod/etc/barbican",
+          			"readOnly": false
+          		},
+          		{
+          			"name": "os-barbican-data",
+          			"mountPath": "/var/lib/barbican",
           			"readOnly": false
           		}
           	],
@@ -300,6 +344,12 @@ spec:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
+            - name: os-config-kra-agent-secret
+              mountPath: /run/harbor/auth/kra
+              readOnly: true
+            - name: os-barbican-data
+              mountPath: /var/lib/barbican
+              readOnly: false
           securityContext:
             privileged: false
         - name: barbican-api-tls
@@ -344,6 +394,12 @@ spec:
         - name: os-config-ssl-user-secret
           secret:
             secretName: barbican-user-ssl-secret
+        - name: os-config-kra-agent-secret
+          secret:
+            secretName: barbican-kra-agent-secret
+        - name: os-barbican-data
+          persistentVolumeClaim:
+            claimName: os-barbican-data
 ---
 apiVersion: v1
 kind: ReplicationController
@@ -404,18 +460,23 @@ spec:
           			"readOnly": true
           		},
           		{
-          			"name": "os-config-ssl-secret",
-          			"mountPath": "/run/harbor/auth/ssl",
-          			"readOnly": true
-          		},
-          		{
           			"name": "os-config-ssl-user-secret",
           			"mountPath": "/run/harbor/auth/user",
           			"readOnly": true
           		},
           		{
+          			"name": "os-config-kra-agent-secret",
+          			"mountPath": "/run/harbor/auth/kra",
+          			"readOnly": true
+          		},
+          		{
           			"name": "pod-etc-barbican",
           			"mountPath": "/pod/etc/barbican",
+          			"readOnly": false
+          		},
+          		{
+          			"name": "os-barbican-data",
+          			"mountPath": "/var/lib/barbican",
           			"readOnly": false
           		}
           	],
@@ -442,6 +503,12 @@ spec:
             - name: os-config-ssl-user-secret
               mountPath: /run/harbor/auth/user
               readOnly: true
+            - name: os-config-kra-agent-secret
+              mountPath: /run/harbor/auth/kra
+              readOnly: true
+            - name: os-barbican-data
+              mountPath: /var/lib/barbican
+              readOnly: false
           securityContext:
             privileged: false
       volumes:
@@ -459,9 +526,12 @@ spec:
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
-        - name: os-config-ssl-secret
+        - name: os-config-kra-agent-secret
           secret:
-            secretName: barbican-ssl-secret
+            secretName: barbican-kra-agent-secret
         - name: os-config-ssl-user-secret
           secret:
             secretName: barbican-user-ssl-secret
+        - name: os-barbican-data
+          persistentVolumeClaim:
+            claimName: os-barbican-data

@@ -16,6 +16,7 @@ RUN set -e && \
         libcurl \
         openssl \
         nss \
+        nss-tools \
         uwsgi-python && \
     apk add --no-cache --virtual build-deps \
         gcc \

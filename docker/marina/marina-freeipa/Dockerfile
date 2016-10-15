@@ -10,6 +10,8 @@ RUN set -e && \
         docker \
         pwgen \
         util-linux && \
+    curl -L https://storage.googleapis.com/kubernetes-release/release/${HARBOR_KUBE_RELEASE_VERSION}/bin/linux/amd64/kubectl > /usr/bin/kubectl && \
+    chmod +x /usr/bin/kubectl && \
     /bin/cp -rf /opt/harbor/common-assets/* / && \
     /bin/rm -rf /opt/harbor/common-assets && \
     /bin/cp -rf /opt/harbor/assets/* / && \

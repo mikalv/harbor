@@ -57,6 +57,11 @@ echo "${OS_DISTRO}: Starting policy config"
 /opt/harbor/barbican/config-policy.sh
 
 
+echo "${OS_DISTRO}: Starting secret-store config"
+################################################################################
+/opt/harbor/barbican/config-secret-store.sh
+
+
 echo "${OS_DISTRO}: Starting api config"
 ################################################################################
 /opt/harbor/barbican/config-api.sh

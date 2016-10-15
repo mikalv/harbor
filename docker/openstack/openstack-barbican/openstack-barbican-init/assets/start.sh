@@ -26,8 +26,10 @@ echo "${OS_DISTRO}: Launching"
 ################################################################################
 check_required_vars BARBICAN_CONFIG_FILE \
                     OS_DOMAIN \
-                    APP_COMPONENT
-
+                    APP_COMPONENT \
+                    DOGTAG_PLUGIN_ROOT \
+                    SNAKEOIL_PLUGIN_ROOT \
+                    APP_USER
 
 echo "${OS_DISTRO}: Testing service dependancies"
 ################################################################################
@@ -47,6 +49,16 @@ echo "${OS_DISTRO}: Component specific config starting"
 echo "${OS_DISTRO}: Moving pod configs into place"
 ################################################################################
 cp -rfav $(dirname ${BARBICAN_CONFIG_FILE})/* /pod$(dirname ${BARBICAN_CONFIG_FILE})/
+
+
+echo "${OS_DISTRO}: Creating File structure"
+################################################################################
+mkdir -p /var/lib/barbican
+chown -R ${APP_USER}:${APP_USER} /var/lib/barbican
+# mkdir -p ${DOGTAG_PLUGIN_ROOT}
+# chown -R ${APP_USER}:${APP_USER} ${DOGTAG_PLUGIN_ROOT}
+mkdir -p ${SNAKEOIL_PLUGIN_ROOT}
+chown -R ${APP_USER}:${APP_USER} ${SNAKEOIL_PLUGIN_ROOT}
 
 
 echo "${OS_DISTRO}: Pod init finished"
