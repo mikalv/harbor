@@ -27,10 +27,10 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 | Function      | OpenStack Component | Harbor Notes                     | Status      |
 |---------------|---------------------|----------------------------------|-------------|
 | Identity      | Keystone            | With FreeIPA & Ipsilon           | Active      |
-| Secrets       | Barbican            | Backed by FreeIPA                | WIP         |
+| Secrets       | Barbican            | Backed by FreeIPA                | Active      |
 | Block Storage | Cinder              | LVM Driver                       | Active      |
 | Networking    | Neutron             | OVN                              | Active      |
-|               | Designate (DNS)     | PowerDNS Backend                 | WIP      |
+|               | Designate (DNS)     | PowerDNS Backend                 | WIP         |
 |               | Neutron LBaaS       | HAProxy                          | Active      |
 |               | Kuryr               | Libnetwork Driver                | Active      |
 |               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
