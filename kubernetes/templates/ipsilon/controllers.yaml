@@ -226,7 +226,7 @@ spec:
             secretName: ipsilon-root-db
         - name: os-config-db-ssl-secret
           secret:
-            secretName: ipsilon-db-ssl-secret
+            secretName: ipsilon-pgsql-ssl-secret
         - name: data
           persistentVolumeClaim:
             claimName: os-ipsilon-db

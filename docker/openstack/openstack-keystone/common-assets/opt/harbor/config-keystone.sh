@@ -69,4 +69,4 @@ echo "${OS_DISTRO}: Starting apache config"
 
 echo "${OS_DISTRO}: Starting cors config"
 ################################################################################
-/opt/harbor/gnocchi/config-cors.sh
+/opt/harbor/keystone/config-cors.sh

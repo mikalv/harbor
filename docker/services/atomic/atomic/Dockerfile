@@ -24,6 +24,7 @@ RUN set -e && \
         libgcc \
         openssl-devel \
         python-devel \
+        python3-devel \
         libffi-devel \
         openldap-devel \
         redhat-rpm-config && \

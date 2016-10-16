@@ -20,7 +20,7 @@ echo "${OS_DISTRO}: Configuring CORS"
 . /etc/os-container.env
 . /opt/harbor/service-hosts.sh
 . /opt/harbor/harbor-common.sh
-. /opt/harbor/gnocchi/vars.sh
+. /opt/harbor/keystone/vars.sh
 
 
 ################################################################################
