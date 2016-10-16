@@ -24,27 +24,26 @@ cat /splash.txt || true
 echo ""
 echo ""
 export OS_DOMAIN=$(crudini --get /etc/harbor/network.conf DEFAULT os_domain)
-
 HARBOR_SERVICE_LIST="harbor-auth.service \
                     harbor-kubernetes.service \
                     harbor-etcd.service \
                     harbor-loadbalancer.service \
-                    harbor-ovn.service \
-                    harbor-memcached.service \
-                    harbor-messaging.service \
-                    harbor-ipsilon.service \
-                    harbor-keystone.service \
-                    harbor-api.service \
-                    harbor-neutron.service \
-                    harbor-glance.service \
-                    harbor-cinder.service \
-                    harbor-nova.service \
-                    harbor-heat.service \
-                    harbor-mistral.service \
-                    harbor-murano.service \
-                    harbor-magnum.service"
-#                    harbor-metering.service \
-#                    harbor-portal.service"
+                    harbor-ovn.service" \
+# HARBOR_SERVICE_LIST="harbor-memcached.service \
+#                     harbor-messaging.service \
+#                     harbor-ipsilon.service \
+#                     harbor-keystone.service \
+#                     harbor-api.service \
+#                     harbor-neutron.service \
+#                     harbor-glance.service \
+#                     harbor-cinder.service \
+#                     harbor-nova.service \
+#                     harbor-heat.service \
+#                     harbor-mistral.service \
+#                     harbor-murano.service \
+#                     harbor-magnum.service \
+#                     harbor-metering.service \
+#                     harbor-portal.service"
 
 
 HOST_USER=harbor

@@ -13,7 +13,8 @@ RUN set -e && \
     cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets && \
     apk add --no-cache --virtual run-deps \
-        docker && \
+        docker \
+        jq && \
     pip --no-cache-dir install docker-squash
 
 LABEL license="Apache-2.0" \

@@ -176,8 +176,35 @@ Commands of interest in this container are (using keystone as an example):
 
 * ```harbor-service-edit-auth keystone```, loads the keystone vars used to populate secrets from its vault into vi for editing, before saving it back to the vault.
 
-One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
+Now you are in the marina-master container you should start the Harbor OpenStack Services:
+```bash
+#!/bin/bash
+HARBOR_SERVICE_LIST="harbor-memcached.service \
+                    harbor-messaging.service \
+                    harbor-ipsilon.service \
+                    harbor-keystone.service \
+                    harbor-api.service \
+                    harbor-neutron.service \
+                    harbor-glance.service \
+                    harbor-cinder.service \
+                    harbor-nova.service \
+                    harbor-heat.service \
+                    harbor-mistral.service \
+                    harbor-murano.service \
+                    harbor-magnum.service \
+                    harbor-metering.service \
+                    harbor-portal.service"
+start_systemd_harbor_service () {
+  SYSTEMD_SERVICE=$1
+  systemctl enable ${SYSTEMD_SERVICE}
+  systemctl start ${SYSTEMD_SERVICE}
+}
+for HARBOR_SERVICE in ${HARBOR_SERVICE_LIST}; do
+  start_systemd_harbor_service ${HARBOR_SERVICE}
+done
+```
 
+One of the main consumers of time can be waiting for enough entropy for FreeIPA. Running a few noisy commands like "```ls -lahR / &```" a few times can speed things up quite a bit.
 It is also worth checking out what the master freeipa-server container is up to (currently, this is launched by a pod that binds to the docker socket, but will soon be a petset):
 
 ```bash

@@ -37,6 +37,11 @@ echo "${OS_DISTRO}: Starting logging config"
 /opt/harbor/magnum/config-logging.sh
 
 
+echo "${OS_DISTRO}: Starting logging config"
+################################################################################
+/opt/harbor/magnum/config-common.sh
+
+
 echo "${OS_DISTRO}: Starting database config"
 ################################################################################
 /opt/harbor/magnum/config-database.sh

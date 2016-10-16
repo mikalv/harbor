@@ -27,7 +27,9 @@ IMAGE="${IMAGE_REPO}/${IMAGE_NAMESPACE}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 exec docker run \
      --rm \
+     -it \
+     --pid=host \
      --net=${DOCKER_NETWORK} \
      -v /var/run:/var/run:rw \
      -v /var/lib/docker:/var/lib/docker:rw \
-     ${IMAGE} "$ARGS"
+     ${IMAGE} ${ARGS}

@@ -64,3 +64,8 @@ echo "${OS_DISTRO}: Config"
 crudini --set ${MAGNUM_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${MAGNUM_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${MAGNUM_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+echo "${OS_DISTRO}: Metering"
+################################################################################
+crudini --set ${MAGNUM_CONFIG_FILE} oslo_messaging_notifications driver "messaging"
