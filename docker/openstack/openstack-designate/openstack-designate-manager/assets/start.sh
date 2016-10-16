@@ -59,6 +59,11 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   ##############################################################################
   tail -f /dev/null
 else
+  echo "${OS_DISTRO}: Config Starting"
+  ################################################################################
+  /opt/harbor/config-designate.sh
+
+
   echo "${OS_DISTRO}: Bootrapping pools"
   ##############################################################################
   /opt/harbor/designate/bootstrap/bootstrap-pools.sh
