@@ -27,18 +27,8 @@ echo "${OS_DISTRO}: Testing service dependancies"
 /usr/bin/mysql-test
 
 
-echo "${OS_DISTRO}: Config Starting"
-################################################################################
-/opt/harbor/config-designate.sh
-
-
+: ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
-  echo "${OS_DISTRO}: Managing database"
-  ##############################################################################
-  /opt/harbor/designate/manage/bootstrap-database.sh
-  /opt/harbor/designate/manage/bootstrap-database-pools.sh
-
-
   echo "${OS_DISTRO}: Managing User"
   ##############################################################################
   /opt/harbor/designate/manage/manage-keystone-user.sh
@@ -52,6 +42,17 @@ if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
   echo "${OS_DISTRO}: Managing Domain"
   ##############################################################################
   /opt/harbor/designate/manage/bootstrap-designate-domain.sh
+
+
+  echo "${OS_DISTRO}: Config Starting"
+  ################################################################################
+  /opt/harbor/config-designate.sh
+
+
+  echo "${OS_DISTRO}: Managing database"
+  ##############################################################################
+  /opt/harbor/designate/manage/bootstrap-database.sh
+  /opt/harbor/designate/manage/bootstrap-database-pools.sh
 
 
   echo "${OS_DISTRO}: Finished management"
