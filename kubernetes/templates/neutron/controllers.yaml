@@ -123,24 +123,24 @@ apiVersion: extensions/v1beta1
 kind: Job
 metadata:
   labels:
-    openstack-app: neutron-manager
+    openstack-app: neutron-bootstrap
     version: v0.1.0
-  name: neutron-manager
+  name: neutron-bootstrap
   namespace: os-neutron
 spec:
   template:
     metadata:
       labels:
-        openstack-app: neutron-manager
+        openstack-app: neutron-bootstrap
         version: v0.1.0
-      name: neutron-manager
+      name: neutron-bootstrap
       namespace: os-neutron
     spec:
       hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
-        - name: neutron-manager
+        - name: neutron-bootstrap
           image: {{ IMAGE_NEUTRON_MANAGER }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           env:
