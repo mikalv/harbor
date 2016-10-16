@@ -1,0 +1,54 @@
+#!/bin/sh
+
+# Copyright 2016 Port Direct
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+set -e
+: ${IMAGE_PULL_POLICY:="Always"}
+
+brctl addbr br-lo || true
+ip addr add 172.16.0.1/32 dev br-lo || true
+ip link set br-lo up
+
+mkdir -p /var/lib/kublet
+mount --bind /var/lib/kublet /var/lib/kublet
+mount --make-shared /var/lib/kublet
+
+if [ "${IMAGE_PULL_POLICY}" == "Always" ] ; then
+  docker pull {{ IMAGE }} || true
+fi
+docker rm -v -f {{ NAME }} || true
+exec docker run \
+      --name {{ NAME }} \
+      -d \
+      --restart=always \
+      --volume=/sys/fs/cgroup:/sys/fs/cgroup:ro \
+      --volume=/:/rootfs:ro \
+      --volume=/dev/net:/dev/net:rw \
+      --volume=/var/run/netns:/var/run/netns:rw \
+      --volume=/var/run/openvswitch:/var/run/openvswitch:rw \
+      --volume=/sys:/sys:ro \
+      --volume=/etc/machine-id:/etc/machine-id:ro \
+      --volume=/var/lib/docker/:/var/lib/docker:rw \
+      --volume=/var/lib/kubelet/:/var/lib/kubelet:rshared \
+      --volume=/var/run:/var/run:rw \
+      --volume=/etc/harbor:/etc/harbor:rw \
+      --volume=/etc/kubernetes/manifests:/etc/kubernetes/manifests:rw \
+      --volume=/etc/hosts:/etc/hosts:rw \
+      --volume=/etc/resolv.conf:/etc/resolv.conf:rw \
+      --net=host \
+      --privileged=true \
+      --pid=host \
+      --ipc=host \
+      {{ IMAGE }}

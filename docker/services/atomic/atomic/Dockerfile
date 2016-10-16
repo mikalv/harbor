@@ -8,12 +8,8 @@ ENV HARBOR_COMPONENT="atomic" \
     OS_REPO_URL_1="https://github.com/projectatomic/commctl.git" \
     OS_REPO_BRANCH_1="master"
 
-ADD ./assets /opt/harbor/assets
-
 RUN set -e && \
     set -x && \
-    cp -rfav /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     dnf install -y \
         atomic && \
     dnf reinstall -y \
@@ -36,8 +32,6 @@ RUN set -e && \
     pip3 --no-cache-dir install /opt/stack/${OS_COMP_1} && \
     dnf history undo -y $(dnf history | head -3 | tail -1 | awk '{ print $1 }') && \
     dnf clean all && \
-    cp -rfav /opt/harbor/assets/* / && \
-    rm -rf /opt/harbor/assets && \
     container-base-systemd-reset.sh
 
-ENTRYPOINT ["/usr/bin/atomic"]
+CMD ["/usr/bin/atomic"]

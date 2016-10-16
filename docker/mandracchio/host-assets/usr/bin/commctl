@@ -30,7 +30,7 @@ exec docker run \
      -it \
      --pid=host \
      --net=${DOCKER_NETWORK} \
-     --entrypoint /usr/bin/atomic \
+     --entrypoint /usr/bin/commctl \
      -v /var/run:/var/run:rw \
      -v /var/lib/docker:/var/lib/docker:rw \
      ${IMAGE} ${ARGS}

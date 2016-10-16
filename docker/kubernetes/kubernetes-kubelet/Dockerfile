@@ -57,6 +57,21 @@ RUN set -e && \
     set -x && \
     /bin/cp -f /opt/kuryr/usr/libexec/kuryr/ovs /opt/kuryr/usr/libexec/kuryr/unbound
 
+LABEL INSTALL="docker run --rm --privileged -v /:/hostfs:rw \
+                  --entrypoint /opt/atomic/install.sh \
+                  -e HOST_FS=/hostfs \
+                  -e CONFDIR=/etc/harbor/\${NAME} \
+                  -e DATADIR=/var/lib/harbor/atomic/\${NAME} \
+                  -e IMAGE=\${IMAGE} \
+                  -e NAME=\${NAME} \
+                  \${IMAGE}"
+LABEL UNINSTALL="docker run --rm --privileged -v /:/hostfs:rw \
+                  --entrypoint /opt/atomic/uninstall.sh \
+                  -e HOST_FS=/hostfs \
+                  -e IMAGE=${IMAGE} \
+                  -e NAME=${NAME} \
+                  ${IMAGE}"
+
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
       url="https://port.direct/" \

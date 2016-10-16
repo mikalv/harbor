@@ -41,7 +41,9 @@ load_network_config
 echo "${OS_DISTRO}: Defining Services to manage"
 ################################################################################
 if [ "$MARINA_SERVICE" = "kubernetes" ]; then
-  SERVICE_SERVICES="HTTP"
+  SERVICE_SERVICES="HTTP etcd"
+if [ "$MARINA_SERVICE" = "commissaire" ]; then
+    SERVICE_SERVICES="HTTP etcd"
 elif [ "$MARINA_SERVICE" = "loadbalancer" ]; then
   SERVICE_SERVICES="HTTP"
 elif [ "$MARINA_SERVICE" = "etcd" ]; then
