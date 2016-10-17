@@ -42,8 +42,8 @@ echo "${OS_DISTRO}: Defining Services to manage"
 ################################################################################
 if [ "$MARINA_SERVICE" = "kubernetes" ]; then
   SERVICE_SERVICES="HTTP etcd"
-if [ "$MARINA_SERVICE" = "commissaire" ]; then
-    SERVICE_SERVICES="HTTP etcd"
+elif [ "$MARINA_SERVICE" = "commissaire" ]; then
+  SERVICE_SERVICES="HTTP etcd"
 elif [ "$MARINA_SERVICE" = "loadbalancer" ]; then
   SERVICE_SERVICES="HTTP"
 elif [ "$MARINA_SERVICE" = "etcd" ]; then
@@ -433,10 +433,20 @@ for SERVICE in $SERVICE_SERVICES; do
   ##############################################################################
   kube_load_service_certs () {
     openssl verify -CAfile ${CERT_FILE_ROOT}-ca.crt ${CERT_FILE_ROOT}.crt
-    cat ${CERT_FILE_ROOT}-ca.crt > ${KUBE_AUTH_ROOT}/ca.crt
-    cat ${CERT_FILE_ROOT}.crt > ${KUBE_AUTH_ROOT}/server.cert
-    cat ${CERT_FILE_ROOT}.key > ${KUBE_AUTH_ROOT}/server.key
-    openssl verify -CAfile ${KUBE_AUTH_ROOT}/ca.crt ${KUBE_AUTH_ROOT}/server.cert
+
+    if [ "${SERVICE_SERVICE_HOST}" = "kubernetes" ]; then
+      KUBE_AUTH_CA="${KUBE_AUTH_ROOT}/ca.crt"
+      KUBE_AUTH_CERT="${KUBE_AUTH_ROOT}/server.cert"
+      KUBE_AUTH_KEY="${KUBE_AUTH_ROOT}/server.key"
+    else
+      KUBE_AUTH_CA="${KUBE_AUTH_ROOT}/${SERVICE_SERVICE_HOST}-ca.crt"
+      KUBE_AUTH_CERT="${KUBE_AUTH_ROOT}/${SERVICE_SERVICE_HOST}-server.cert"
+      KUBE_AUTH_KEY="${KUBE_AUTH_ROOT}/${SERVICE_SERVICE_HOST}-server.key"
+    fi
+    cat ${CERT_FILE_ROOT}-ca.crt > ${KUBE_AUTH_CA}
+    cat ${CERT_FILE_ROOT}.crt > ${KUBE_AUTH_CERT}
+    cat ${CERT_FILE_ROOT}.key > ${KUBE_AUTH_KEY}
+    openssl verify -CAfile ${KUBE_AUTH_CA} ${KUBE_AUTH_CERT}
     #openssl x509 -in ${KUBE_AUTH_ROOT}/server.cert -noout -text
   }
 

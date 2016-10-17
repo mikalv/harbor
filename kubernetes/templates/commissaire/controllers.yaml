@@ -1,0 +1,458 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: commissaire-etcd
+  name: os-commissaire-etcd-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/commissaire/etcd
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: commissaire-etcd
+  name: os-commissaire-etcd-data
+  namespace: os-commissaire
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: commissaire-manager
+    version: v0.1.0
+  name: commissaire-manager
+  namespace: os-commissaire
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-manager
+        version: v0.1.0
+      name: commissaire-manager
+      namespace: os-commissaire
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-manager
+          image: {{ IMAGE_COMMISSAIRE_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: commissaire-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: commissaire-etcd
+    version: v0.1.0
+  name: commissaire-etcd
+  namespace: os-commissaire
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-etcd
+        version: v0.1.0
+      name: commissaire-etcd
+      namespace: os-commissaire
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-etcd
+          image: {{ IMAGE_ETCD_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: ETCD_PEERS_PORT
+              value: '2380'
+            - name: ETCD_PORT
+              value: '2379'
+            - name: ETCD_HOSTNAME
+              value: commissaire-etcd
+          ports:
+            - containerPort: 2379
+              name: etcd
+              protocol: TCP
+            - containerPort: 2380
+              name: etcd-peers
+              protocol: TCP
+          command:
+            - /start-master-incluster.sh
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: commissaire-etcd-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
+        - name: os-etcd-data
+          persistentVolumeClaim:
+            claimName: os-commissaire-etcd-data
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: commissaire-api
+    version: v0.1.0
+  name: commissaire-api
+  namespace: os-commissaire
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-api
+        version: v0.1.0
+      name: commissaire-api
+      namespace: os-commissaire
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "commissaire-api-init",
+          	"image": "{{ IMAGE_COMMISSAIRE_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "commissaire"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-commissaire",
+          			"mountPath": "/pod/etc/commissaire",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-api
+          image: {{ IMAGE_COMMISSAIRE_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          ports:
+            - containerPort: 8001
+              name: c-api
+              protocol: TCP
+          volumeMounts:
+            - name: pod-etc-commissaire
+              mountPath: /etc/commissaire
+              readOnly: true
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: pod-etc-commissaire
+          emptyDir: {}
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-secret
+          secret:
+            secretName: commissaire-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: commissaire-service
+    version: v0.1.0
+  name: commissaire-service
+  namespace: os-commissaire
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-service
+        version: v0.1.0
+      name: commissaire-service
+      namespace: os-commissaire
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "commissaire-service-init",
+          	"image": "{{ IMAGE_COMMISSAIRE_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "service"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "commissaire"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-commissaire",
+          			"mountPath": "/pod/etc/commissaire",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-service
+          image: {{ IMAGE_COMMISSAIRE_SERVICE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: pod-etc-commissaire
+              mountPath: /etc/commissaire
+              readOnly: true
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: pod-etc-commissaire
+          emptyDir: {}
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: commissaire-redis
+    version: v0.1.0
+  name: commissaire-redis
+  namespace: os-commissaire
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-redis
+        version: v0.1.0
+      name: commissaire-redis
+      namespace: os-commissaire
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-redis
+          image: {{ IMAGE_COMMISSAIRE_REDIS }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: REDIS_PORT
+              value: '6379'
+          ports:
+            - containerPort: 6379
+              name: redis
+              protocol: TCP
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
