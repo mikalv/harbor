@@ -25,11 +25,11 @@ spec:
       - path: /
         backend:
           serviceName: commissaire
-          servicePort: 8081
+          servicePort: 8001
   - host: commissaire.os-commissaire.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: commissaire
-          servicePort: 8081
+          servicePort: 8001
