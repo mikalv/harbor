@@ -2,7 +2,7 @@ apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
   labels:
-    openstack-app: commissaire
+    openstack-app: commissaire-api
     version: v0.1.0
   annotations:
     kubernetes.io/ingress.class: "nginx"

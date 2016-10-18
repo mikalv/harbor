@@ -320,6 +320,10 @@ spec:
           		{
           			"name": "APP_USER",
           			"value": "commissaire"
+          		},
+          		{
+          			"name": "ETCD_LOCAL_PORT",
+          			"value": "2379"
           		}
           	],
           	"volumeMounts": [
@@ -346,6 +350,141 @@ spec:
       containers:
         - name: commissaire-service
           image: {{ IMAGE_COMMISSAIRE_SERVICE }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: ETCD_LOCAL_PORT
+              value: '2379'
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+          volumeMounts:
+            - name: pod-etc-commissaire
+              mountPath: /etc/commissaire
+              readOnly: true
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+        - name: commissaire-etcd-proxy
+          image: {{ IMAGE_ETCD_PROXY }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: ETCD_PEERS_PORT
+              value: '2380'
+            - name: ETCD_PORT
+              value: '2379'
+            - name: ETCD_HOSTNAME_VAR
+              value: GNOCCHI_ETCD_SERVICE_HOST_SVC
+            - name: ETCD_LOCAL_PORT
+              value: '2379'
+          volumeMounts:
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-etcd-data
+              mountPath: /data
+              readOnly: false
+          resources:
+            limits:
+              cpu: 100m
+              memory: 50Mi
+          securityContext:
+            privileged: false
+      restartPolicy: Always
+      volumes:
+        - name: os-etcd-data
+          emptyDir: {}
+        - name: pod-etc-commissaire
+          emptyDir: {}
+        - name: os-config-kubecfg
+          secret:
+            secretName: commissaire-kubecfg
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: commissaire-user-ssl-secret
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: commissaire-investigator
+    version: v0.1.0
+  name: commissaire-investigator
+  namespace: os-commissaire
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: commissaire-investigator
+        version: v0.1.0
+      name: commissaire-investigator
+      namespace: os-commissaire
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "commissaire-investigator-init",
+          	"image": "{{ IMAGE_COMMISSAIRE_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "investigator"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "commissaire"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-commissaire",
+          			"mountPath": "/pod/etc/commissaire",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: commissaire-investigator
+          image: {{ IMAGE_COMMISSAIRE_INVESTIGATOR }}
           imagePullPolicy: {{ IMAGE_PULL_POLICY }}
           env:
             - name: OS_DOMAIN
