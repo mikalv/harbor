@@ -11,9 +11,11 @@ RUN set -e && \
         libffi-dev \
         openssl-dev && \
     mkdir -p /opt/stack && \
-    git clone ${COMMCTL_REPO_COMP} -b ${COMMCTL_REPO_BRANCH} --depth 1 /opt/stack/${COMMCTL_COMP} && \
-    pip3 install -r /opt/stack/${COMMCTL_COMP}/requirements.txt && \
-    pip3 install /opt/stack/${COMMCTL_COMP} && \
+    git clone ${COMMISSAIRE_HTTP_REPO_COMP} -b ${COMMISSAIRE_HTTP_REPO_BRANCH} --depth 1 /opt/stack/${COMMISSAIRE_HTTP_COMP} && \
+    pip3 install -r /opt/stack/${COMMISSAIRE_HTTP_COMP}/requirements.txt && \
+    pip3 install /opt/stack/${COMMISSAIRE_HTTP_COMP} && \
+    mkdir -p /etc/commissaire && \
+    cp -av /opt/stack/${COMMISSAIRE_HTTP_COMP}/conf/users.json /etc/commissaire/users.json && \
     apk del build-deps
 
 COPY ./assets /opt/harbor/assets
@@ -22,6 +24,8 @@ RUN set -e && \
     set -x && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+ENTRYPOINT ["/usr/bin/commissaire-server"]
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \

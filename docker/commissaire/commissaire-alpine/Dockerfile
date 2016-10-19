@@ -1,23 +1,24 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%alpine:%%DOCKER_TAG%%
 
 ENV HARBOR_COMPONENT="commissaire" \
-    OS_COMP="commissaire" \
-    OS_REPO_URL="https://github.com/portdirect/commissaire.git" \
-    OS_REPO_BRANCH="master" \
-    OS_COMP_1="commissaire-service" \
-    OS_REPO_URL_1="https://github.com/portdirect/commissaire-service.git" \
-    OS_REPO_BRANCH_1="ansible" \
-    OS_COMP_2="commissaire-http" \
-    OS_REPO_URL_2="https://github.com/portdirect/commissaire-http.git" \
-    OS_REPO_BRANCH_2="master" \
-    OS_COMP_3="commctl" \
-    OS_REPO_URL_3="https://github.com/projectatomic/commctl.git" \
-    OS_REPO_BRANCH_3="master"
+    COMMISSAIRE_COMP="commissaire" \
+    COMMISSAIRE_REPO_URL="https://github.com/portdirect/commissaire.git" \
+    COMMISSAIRE_REPO_BRANCH="oslo" \
+    COMMISSAIRE_SERVICE_COMP="commissaire-service" \
+    COMMISSAIRE_SERVICE_REPO_URL="https://github.com/portdirect/commissaire-service.git" \
+    COMMISSAIRE_SERVICE_REPO_BRANCH="ansible" \
+    COMMISSAIRE_HTTP_COMP="commissaire-http" \
+    COMMISSAIRE_HTTP_REPO_COMP="https://github.com/portdirect/commissaire-http.git" \
+    COMMISSAIRE_HTTP_REPO_BRANCH="master" \
+    COMMCTL_COMP="commctl" \
+    COMMCTL_REPO_COMP="https://github.com/projectatomic/commctl.git" \
+    COMMCTL_REPO_BRANCH="master"
 
 
 RUN set -e && \
     set -x && \
     apk add --no-cache --virtual run-deps \
+        openssl \
         python3 && \
     apk add --no-cache --virtual build-deps \
         gcc \
@@ -31,18 +32,9 @@ RUN set -e && \
     pip3 --no-cache-dir install --upgrade pip setuptools && \
     pip3 --no-cache-dir install pyopenssl && \
     mkdir -p /opt/stack && \
-    git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP} && \
-    git clone ${OS_REPO_URL_1} -b ${OS_REPO_BRANCH_1} --depth 1 /opt/stack/${OS_COMP_1} && \
-    git clone ${OS_REPO_URL_2} -b ${OS_REPO_BRANCH_2} --depth 1 /opt/stack/${OS_COMP_2} && \
-    git clone ${OS_REPO_URL_3} -b ${OS_REPO_BRANCH_3} --depth 1 /opt/stack/${OS_COMP_3} && \
-    cd /opt/stack/${OS_COMP} && \
-      pip3 install -e . && \
-    cd /opt/stack/${OS_COMP_1} && \
-      pip3 install -e . && \
-    cd /opt/stack/${OS_COMP_2} && \
-      pip3 install -e . && \
-    cd /opt/stack/${OS_COMP_3} && \
-      pip3 install -e . && \
+    git clone ${COMMISSAIRE_REPO_URL} -b ${COMMISSAIRE_REPO_BRANCH} --depth 1 /opt/stack/${COMMISSAIRE_COMP} && \
+    pip3 install -r /opt/stack/${COMMISSAIRE_COMP}/requirements.txt && \
+    pip3 install /opt/stack/${COMMISSAIRE_COMP} && \
     apk del build-deps
 
 COPY ./common-assets /opt/harbor/common-assets

@@ -16,4 +16,8 @@
 
 set -e
 set -x
-exec commissaire-server -c /etc/commissaire/config.conf --tls-pemfile /etc/commissaire/sever.pem
+exec commissaire-server \
+      --debug \
+      --listen-port 8001 \
+      --authentication-plugin-kwargs filepath=/opt/stack/commissaire-http/conf/users.json \
+      --tls-pemfile /etc/commissaire/sever.pem

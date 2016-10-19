@@ -26,3 +26,18 @@ cat > ~/.commissaire.json <<EOF
     "endpoint": "https://commissaire.os-commissaire.svc.build.harboros.net:8001"
 }
 EOF
+
+commctl cluster list
+
+
+
+curl -k https://commissaire-etcd.os-commissaire.svc.build.harboros.net:2379/v2/keys \
+ -v --key /run/harbor/auth/user/tls.key \
+ --cacert /run/harbor/auth/user/tls.ca \
+ --cert /run/harbor/auth/user/tls.crt
+
+
+"server_url": "",
+"certificate_ca_path": "${COMMISSAIRE_DB_CA}",
+"certificate_path": "${COMMISSAIRE_DB_CERT}",
+"certificate_key_path": "${COMMISSAIRE_DB_KEY}"

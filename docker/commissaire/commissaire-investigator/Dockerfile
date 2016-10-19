@@ -1,4 +1,4 @@
-FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%commissaire-alpine:%%DOCKER_TAG%%
+FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%commissaire-service:%%DOCKER_TAG%%
 
 COPY ./assets /opt/harbor/assets
 
@@ -18,6 +18,8 @@ RUN apk add --no-cache --virtual run-deps \
     apk del build-deps && \
     cp -rf /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
+
+ENTRYPOINT ["/usr/bin/commissaire-investigator-service"]
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
