@@ -38,7 +38,10 @@ ENV OS_COMP="horizon" \
     OS_REPO_BRANCH_11="master" \
     OS_COMP_12="python-mistralclient" \
     OS_REPO_URL_12="https://github.com/openstack/python-mistralclient.git" \
-    OS_REPO_BRANCH_12="master"
+    OS_REPO_BRANCH_12="master" \
+    OS_COMP_13="zun-ui" \
+    OS_REPO_URL_13="https://github.com/openstack/zun-ui.git" \
+    OS_REPO_BRANCH_13="master"
 
 RUN set -e && \
     set -x && \

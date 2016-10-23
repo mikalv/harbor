@@ -36,6 +36,7 @@ git clone ${OS_REPO_URL_9} -b ${OS_REPO_BRANCH_9} --depth 1 /opt/stack/${OS_COMP
 git clone ${OS_REPO_URL_10} -b ${OS_REPO_BRANCH_10} --depth 1 /opt/stack/${OS_COMP_10}
 git clone ${OS_REPO_URL_11} -b ${OS_REPO_BRANCH_11} --depth 1 /opt/stack/${OS_COMP_11}
 git clone ${OS_REPO_URL_12} -b ${OS_REPO_BRANCH_12} --depth 1 /opt/stack/${OS_COMP_12}
+git clone ${OS_REPO_URL_13} -b ${OS_REPO_BRANCH_13} --depth 1 /opt/stack/${OS_COMP_13}
 
 
 echo "${OS_DISTRO}: Sutting up source files ${OS_COMP}"
@@ -48,20 +49,22 @@ cp -f /opt/stack/${OS_COMP_1}/neutron_lbaas_dashboard/enabled/_1481_project_ng_l
 
 cp /opt/stack/${OS_COMP_2}/muranodashboard/local/enabled/_50_murano.py ${ENABLED_DIR}/
 
-cp -a /opt/stack/${OS_COMP_3}/app_catalog/enabled/* ${ENABLED_DIR}/
+cp -av /opt/stack/${OS_COMP_3}/app_catalog/enabled/* ${ENABLED_DIR}/
 
 rm -f /opt/stack/${OS_COMP_6}/magnum_ui/enabled/__init__.py
-cp -a /opt/stack/${OS_COMP_6}/magnum_ui/enabled/*.py ${ENABLED_DIR}/
+cp -av /opt/stack/${OS_COMP_6}/magnum_ui/enabled/*.py ${ENABLED_DIR}/
 
 rm -f /opt/stack/${OS_COMP_7}/designatedashboard/enabled/__init__.py
-cp -a /opt/stack/${OS_COMP_7}/designatedashboard/enabled/*.py ${ENABLED_DIR}/
+cp -av /opt/stack/${OS_COMP_7}/designatedashboard/enabled/*.py ${ENABLED_DIR}/
 
 rm -f /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/__init__.py
-cp -a /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/*.py ${ENABLED_DIR}/
+cp -av /opt/stack/${OS_COMP_8}/trove_dashboard/enabled/*.py ${ENABLED_DIR}/
 
 
-cp -a /opt/stack/${OS_COMP_11}/_50_mistral.py.example ${ENABLED_DIR}/_50_mistral.py
+cp -av /opt/stack/${OS_COMP_11}/_50_mistral.py.example ${ENABLED_DIR}/_50_mistral.py
 
+cp -av /opt/stack/${OS_COMP_13}/zun_ui/enabled/_1330_project_container_panelgroup.py ${ENABLED_DIR}/_1330_project_container_panelgroup.py
+cp -av /opt/stack/${OS_COMP_13}/zun_ui/enabled/_1331_project_container_containers_panel.py ${ENABLED_DIR}/_1331_project_container_containers_panel.py
 
 echo "${OS_DISTRO}: Installing ${OS_COMP}"
 ################################################################################
