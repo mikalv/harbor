@@ -109,7 +109,7 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: zun-keystone
-        - name: os-config-keystone-trustee
+        - name: os-config-keystone
           secret:
             secretName: zun-keystone-trustee
         - name: os-config-messaging-auth
@@ -319,6 +319,9 @@ spec:
         - name: os-config-keystone
           secret:
             secretName: zun-keystone
+        - name: os-config-keystone
+          secret:
+            secretName: zun-keystone-trustee
         - name: os-config-messaging-auth
           secret:
             secretName: messaging-auth
