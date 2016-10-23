@@ -1,6 +1,6 @@
 FROM %%DOCKER_NAMESPACE%%/%%DOCKER_PREFIX%%openstack-zun-alpine:%%DOCKER_TAG%%
 
-ENV OPENSTACK_COMPONENT="zun-api"
+ENV OPENSTACK_COMPONENT="zun-compute"
 
 COPY ./assets/ /opt/harbor/assets
 
@@ -8,8 +8,6 @@ RUN set -e && \
     set -x && \
     cp -rfav /opt/harbor/assets/* / && \
     rm -rf /opt/harbor/assets
-
-USER zun
 
 LABEL license="Apache-2.0" \
       vendor="Port Direct" \
