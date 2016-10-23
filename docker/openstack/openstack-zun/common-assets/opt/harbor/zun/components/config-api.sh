@@ -59,5 +59,6 @@ fi
 
 echo "${OS_DISTRO}: Configuring TLS params"
 ################################################################################
+crudini --set ${ZUN_CONFIG_FILE} api enable_ssl_api "True"
 crudini --set ${ZUN_CONFIG_FILE} DEFAULT ssl_cert_file "${ZUN_API_TLS_CERT}"
 crudini --set ${ZUN_CONFIG_FILE} DEFAULT ssl_key_file "${ZUN_API_TLS_KEY}"
