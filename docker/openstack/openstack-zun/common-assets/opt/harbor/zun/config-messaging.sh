@@ -26,30 +26,32 @@ echo "${OS_DISTRO}: Configuring messaging"
 ################################################################################
 check_required_vars ZUN_CONFIG_FILE \
                     OS_DOMAIN \
-                    AUTH_ZUN_RABBITMQ_USER \
-                    AUTH_ZUN_RABBITMQ_PASS \
-                    ZUN_RABBITMQ_SERVICE_HOST_SVC \
-                    ZUN_RABBITMQ_SERVICE_PORT
+                    AUTH_MESSAGING_PASS \
+                    AUTH_MESSAGING_USER \
+                    RABBITMQ_SERVICE_HOST_SVC \
+                    ZUN_DB_KEY \
+                    ZUN_DB_CERT \
+                    ZUN_DB_CA
 
 
-echo "${OS_DISTRO}: messaging: RPC backend"
+echo "${OS_DISTRO}: RPC Backend"
 ################################################################################
 crudini --set ${ZUN_CONFIG_FILE} DEFAULT rpc_backend "rabbit"
 
 
-echo "${OS_DISTRO}: messaging: connection"
+echo "${OS_DISTRO}: Connection"
 ################################################################################
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_use_ssl "True"
 
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_host "${RABBITMQ_SERVICE_HOST_SVC}"
-crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "${ZUN_RABBITMQ_SERVICE_PORT}"
-crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:${ZUN_RABBITMQ_SERVICE_PORT}"
+crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_port "5672"
+crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_hosts "${RABBITMQ_SERVICE_HOST_SVC}:5672"
 
-crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_ZUN_RABBITMQ_USER}"
-crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_ZUN_RABBITMQ_PASS}"
+crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_userid "${AUTH_MESSAGING_USER}"
+crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_password "${AUTH_MESSAGING_PASS}"
 
 
-echo "${OS_DISTRO}: messaging: TLS"
+echo "${OS_DISTRO}: TLS"
 ################################################################################
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_version "TLSv1_2"
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_keyfile "${ZUN_DB_KEY}"
@@ -57,8 +59,16 @@ crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_certfile "${ZUN
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit kombu_ssl_ca_certs "${ZUN_DB_CA}"
 
 
-echo "${OS_DISTRO}: messaging: config"
+echo "${OS_DISTRO}: Rabbit Config"
 ################################################################################
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_virtual_host "/"
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit rabbit_ha_queues "False"
 crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_rabbit amqp_durable_queues "False"
+
+
+echo "${OS_DISTRO}: Config"
+################################################################################
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT instance_usage_audit "True"
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT instance_usage_audit_period "hour"
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT notify_on_state_change "vm_and_task_state"
+crudini --set ${ZUN_CONFIG_FILE} oslo_messaging_notifications driver "messagingv2"

@@ -39,7 +39,6 @@ check_required_vars ZUN_CONFIG_FILE \
 
 ################################################################################
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
-crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken memcached_servers "memcached.os-memcached.svc.${OS_DOMAIN}:11211"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken project_domain_name "${AUTH_ZUN_KEYSTONE_PROJECT_DOMAIN}"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken project_name "${AUTH_ZUN_KEYSTONE_PROJECT}"
@@ -52,3 +51,19 @@ crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken auth_type "password"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken auth_version "v3"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken signing_dir "/var/cache/zun"
 crudini --set ${ZUN_CONFIG_FILE} keystone_authtoken cafile "${ZUN_DB_CA}"
+
+
+################################################################################
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth memcached_servers "${MEMCACHE_SERVICE_HOST_SVC}:11211"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth auth_uri "https://${KEYSTONE_API_SERVICE_HOST_SVC}:5000"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth project_domain_name "${AUTH_ZUN_KEYSTONE_PROJECT_DOMAIN}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth project_name "${AUTH_ZUN_KEYSTONE_PROJECT}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth user_domain_name "${AUTH_ZUN_KEYSTONE_DOMAIN}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth region_name "${AUTH_ZUN_KEYSTONE_REGION}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth password "${AUTH_ZUN_KEYSTONE_PASSWORD}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth username "${AUTH_ZUN_KEYSTONE_USER}"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth auth_url "https://${KEYSTONE_API_SERVICE_HOST_SVC}:35357/v3"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth auth_type "password"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth auth_version "v3"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth signing_dir "/var/cache/zun"
+crudini --set ${ZUN_CONFIG_FILE} keystone_auth cafile "${ZUN_DB_CA}"
