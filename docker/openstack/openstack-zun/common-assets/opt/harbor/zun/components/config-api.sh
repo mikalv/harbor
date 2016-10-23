@@ -37,8 +37,8 @@ echo "${OS_DISTRO}: Configuring worker params"
 echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
 echo "${OS_DISTRO}:    Port: ${ZUN_API_SVC_PORT}"
 echo "${OS_DISTRO}:    Listen: ${MY_IP}"
-crudini --set ${ZUN_CONFIG_FILE} DEFAULT bind_port "${ZUN_API_SVC_PORT}"
-crudini --set ${ZUN_CONFIG_FILE} zun api_workers "${API_WORKERS}"
+crudini --set ${ZUN_CONFIG_FILE} api port "${ZUN_API_SVC_PORT}"
+crudini --set ${ZUN_CONFIG_FILE} api workers "${API_WORKERS}"
 crudini --set ${ZUN_CONFIG_FILE} api host "${MY_IP}"
 
 
