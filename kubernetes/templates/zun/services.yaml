@@ -31,3 +31,25 @@ spec:
     targetPort: 9511
   selector:
     openstack-app: zun
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: zun-etcd
+  name: zun-etcd
+  namespace: os-zun
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 4004
+    protocol: TCP
+    targetPort: 4004
+    name: etcd
+  - port: 7004
+    protocol: TCP
+    targetPort: 7004
+    name: etcd-peers
+  selector:
+    openstack-app: zun-etcd

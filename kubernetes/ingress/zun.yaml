@@ -1,0 +1,35 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    openstack-app: zun
+    version: v0.1.0
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    ingress.kubernetes.io/secure-backends: "true"
+    ingress.kubernetes.io/rewrite-target: /
+  name: zun
+  namespace: os-zun
+spec:
+  tls:
+    - hosts:
+        - zun.{{ OS_DOMAIN }}
+      secretName: zun-ssl-secret
+    - hosts:
+        - zun.os-zun.svc.{{ OS_DOMAIN }}
+      secretName: zun-ssl-secret
+  rules:
+  - host: zun.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: zun
+          servicePort: 9511
+  - host: zun.os-zun.svc.{{ OS_DOMAIN }}
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: zun
+          servicePort: 9511

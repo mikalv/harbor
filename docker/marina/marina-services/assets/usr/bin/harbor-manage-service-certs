@@ -70,6 +70,8 @@ elif [ "$MARINA_SERVICE" = "gnocchi" ]; then
   SERVICE_SERVICES="HTTP etcd grafana pgsql"
 elif [ "$MARINA_SERVICE" = "ceilometer" ]; then
   SERVICE_SERVICES="HTTP etcd elasticsearch mysql"
+elif [ "$MARINA_SERVICE" = "zun" ]; then
+  SERVICE_SERVICES="HTTP etcd mysql"
 else
   SERVICE_SERVICES="HTTP mysql"
 fi;
