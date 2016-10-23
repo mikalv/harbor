@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: zun-db
+  name: zun-db
+  namespace: os-zun
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 3321
+    protocol: TCP
+    targetPort: 3321
+  selector:
+    openstack-app: zun-db
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    openstack-app: zun
+  name: zun
+  namespace: os-zun
+spec:
+  clusterIP: None
+  sessionAffinity: ClientIP
+  ports:
+  - port: 9511
+    protocol: TCP
+    targetPort: 9511
+  selector:
+    openstack-app: zun

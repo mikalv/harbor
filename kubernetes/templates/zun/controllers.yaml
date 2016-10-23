@@ -1,0 +1,330 @@
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: zun-db
+  name: os-zun-db
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /var/lib/harbor/zun/mysql
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  labels:
+    openstack-app: zun-db
+  name: os-zun-db
+  namespace: os-zun
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi
+---
+apiVersion: extensions/v1beta1
+kind: Job
+metadata:
+  labels:
+    openstack-app: zun-manager
+    version: v0.1.0
+  name: zun-manager
+  namespace: os-zun
+spec:
+  template:
+    metadata:
+      labels:
+        openstack-app: zun-manager
+        version: v0.1.0
+      name: zun-manager
+      namespace: os-zun
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: zun-manager
+          image: {{ IMAGE_ZUN_MANAGER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: os-config-kubecfg
+              mountPath: /var/run/harbor/secrets/config-kubecfg
+              readOnly: true
+            - name: os-config-user-ipa
+              mountPath: /var/run/harbor/secrets/config-user-ipa
+              readOnly: true
+            - name: os-config-host-ipa
+              mountPath: /var/run/harbor/secrets/config-host-ipa
+              readOnly: true
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-keystone
+              mountPath: /var/run/harbor/secrets/config-keystone
+              readOnly: true
+            - name: os-config-keystone-trustee
+              mountPath: /var/run/harbor/secrets/config-keystone-trustee
+              readOnly: true
+            - name: os-config-messaging-auth
+              mountPath: /var/run/harbor/secrets/config-messaging-auth
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-keystone-admin-user
+              mountPath: /var/run/harbor/secrets/config-keystone-admin-user
+              readOnly: true
+          securityContext:
+            privileged: false
+      restartPolicy: OnFailure
+      volumes:
+        - name: os-config-kubecfg
+          secret:
+            secretName: zun-kubecfg
+        - name: os-config-user-ipa
+          secret:
+            secretName: zun-user-ipa
+        - name: os-config-host-ipa
+          secret:
+            secretName: zun-host-ipa
+        - name: os-config-db-root
+          secret:
+            secretName: zun-db-root
+        - name: os-config-db
+          secret:
+            secretName: zun-db
+        - name: os-config-keystone
+          secret:
+            secretName: zun-keystone
+        - name: os-config-keystone-trustee
+          secret:
+            secretName: zun-keystone-trustee
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: zun-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: zun-user-ssl-secret
+        - name: os-config-keystone-admin-user
+          secret:
+            secretName: keystone-admin-user
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: zun-db
+    version: v0.1.0
+  name: zun-db
+  namespace: os-zun
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: zun-db
+        version: v0.1.0
+      name: zun-db
+      namespace: os-zun
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: zun-db
+          image: {{ IMAGE_MARIADB_SERVER }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 3321
+              hostPort: 3321
+              protocol: TCP
+              name: mysql
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+            - name: DB_PORT
+              value: '3321'
+            - name: DB_TLS
+              value: /run/harbor/auth/db
+            - name: DB_ROOT_PASSWORD
+              value: AUTH_ZUN_DB_ROOT_PASSWORD
+            - name: MARIADB_DATABASE
+              value: AUTH_ZUN_MARIADB_DATABASE
+            - name: MARIADB_USER
+              value: AUTH_ZUN_MARIADB_USER
+            - name: MARIADB_PASSWORD
+              value: AUTH_ZUN_MARIADB_PASSWORD
+            - name: DB_NAME
+              value: AUTH_ZUN_DB_NAME
+            - name: DB_USER
+              value: AUTH_ZUN_DB_USER
+            - name: DB_PASSWORD
+              value: AUTH_ZUN_DB_PASSWORD
+          volumeMounts:
+            - name: os-config-db-root
+              mountPath: /var/run/harbor/secrets/config-db-root
+              readOnly: true
+            - name: os-config-db
+              mountPath: /var/run/harbor/secrets/config-db
+              readOnly: true
+            - name: os-config-db-ssl-secret
+              mountPath: /run/harbor/auth/db
+              readOnly: true
+            - mountPath: /var/lib/mysql
+              name: os-zun-db
+              readOnly: false
+      volumes:
+        - name: os-config-db-root
+          secret:
+            secretName: zun-db-root
+        - name: os-config-db
+          secret:
+            secretName: zun-db
+        - name: os-config-db-ssl-secret
+          secret:
+            secretName: zun-db-ssl-secret
+        - name: os-zun-db
+          persistentVolumeClaim:
+            claimName: os-zun-db
+---
+apiVersion: v1
+kind: ReplicationController
+metadata:
+  labels:
+    openstack-app: zun
+    version: v0.1.0
+  name: zun-api-master
+  namespace: os-zun
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        openstack-app: zun
+        version: v0.1.0
+      name: zun-api-master
+      namespace: os-zun
+      annotations:
+        pod.alpha.kubernetes.io/init-containers: '[
+          {
+          	"name": "zun-api-init",
+          	"image": "{{ IMAGE_ZUN_INIT }}",
+          	"imagePullPolicy": "{{ IMAGE_PULL_POLICY }}",
+          	"env": [
+          		{
+          			"name": "OS_DOMAIN",
+          			"value": "{{ OS_DOMAIN }}"
+          		},
+          		{
+          			"name": "APP_COMPONENT",
+          			"value": "api"
+          		},
+          		{
+          			"name": "APP_USER",
+          			"value": "zun"
+          		}
+          	],
+          	"volumeMounts": [
+          		{
+          			"name": "os-config-db",
+          			"mountPath": "/var/run/harbor/secrets/config-db",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-keystone-trustee",
+          			"mountPath": "/var/run/harbor/secrets/config-keystone-trustee",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-messaging-auth",
+          			"mountPath": "/var/run/harbor/secrets/config-messaging-auth",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-secret",
+          			"mountPath": "/run/harbor/auth/ssl",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "os-config-ssl-user-secret",
+          			"mountPath": "/run/harbor/auth/user",
+          			"readOnly": true
+          		},
+          		{
+          			"name": "pod-etc-zun",
+          			"mountPath": "/pod/etc/zun",
+          			"readOnly": false
+          		}
+          	],
+          	"securityContext": {
+          		"privileged": false
+          	}
+          }
+        ]'
+    spec:
+      hostNetwork: true
+      nodeSelector:
+        harbor-role: master
+      containers:
+        - name: zun-api
+          image: {{ IMAGE_ZUN_API }}
+          imagePullPolicy: {{ IMAGE_PULL_POLICY }}
+          ports:
+            - containerPort: 9517
+              hostPort: 9517
+              protocol: TCP
+              name: m-api
+          env:
+            - name: OS_DOMAIN
+              value: {{ OS_DOMAIN }}
+          volumeMounts:
+            - name: pod-etc-zun
+              mountPath: /etc/zun
+              readOnly: true
+            - name: os-config-ssl-user-secret
+              mountPath: /run/harbor/auth/user
+              readOnly: true
+            - name: os-config-ssl-secret
+              mountPath: /run/harbor/auth/ssl
+              readOnly: true
+          securityContext:
+            privileged: false
+      volumes:
+        - name: pod-etc-zun
+          emptyDir: {}
+        - name: os-config-db
+          secret:
+            secretName: zun-db
+        - name: os-config-keystone
+          secret:
+            secretName: zun-keystone
+        - name: os-config-messaging-auth
+          secret:
+            secretName: messaging-auth
+        - name: os-config-ssl-secret
+          secret:
+            secretName: zun-ssl-secret
+        - name: os-config-ssl-user-secret
+          secret:
+            secretName: zun-user-ssl-secret
