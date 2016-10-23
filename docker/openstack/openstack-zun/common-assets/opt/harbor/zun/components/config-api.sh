@@ -36,7 +36,28 @@ echo "${OS_DISTRO}: Configuring worker params"
 ################################################################################
 echo "${OS_DISTRO}:    Workers: ${API_WORKERS}"
 echo "${OS_DISTRO}:    Port: ${ZUN_API_SVC_PORT}"
-echo "${OS_DISTRO}:    Listen: 127.0.0.1"
+echo "${OS_DISTRO}:    Listen: ${MY_IP}"
 crudini --set ${ZUN_CONFIG_FILE} DEFAULT bind_port "${ZUN_API_SVC_PORT}"
 crudini --set ${ZUN_CONFIG_FILE} zun api_workers "${API_WORKERS}"
-crudini --set ${ZUN_CONFIG_FILE} DEFAULT bind_host "127.0.0.1"
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT bind_host "${MY_IP}"
+
+
+echo "${OS_DISTRO}: Testing tls certs"
+################################################################################
+openssl verify -CAfile ${ZUN_API_TLS_CA} ${ZUN_API_TLS_CERT}
+CERT_MOD="$(openssl x509 -noout -modulus -in ${ZUN_API_TLS_CERT})"
+KEY_MOD="$(openssl rsa -noout -modulus -in ${ZUN_API_TLS_KEY})"
+if ! [ "${CERT_MOD}" = "${KEY_MOD}" ]; then
+  echo "${OS_DISTRO}: Failure: TLS private key does not match this certificate."
+  exit 1
+else
+  CERT_MOD=""
+  KEY_MOD=""
+  echo "${OS_DISTRO}: TLS certs: OK"
+fi
+
+
+echo "${OS_DISTRO}: Configuring TLS params"
+################################################################################
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT ssl_cert_file "${ZUN_API_TLS_CERT}"
+crudini --set ${ZUN_CONFIG_FILE} DEFAULT ssl_key_file "${ZUN_API_TLS_KEY}"
