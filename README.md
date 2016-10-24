@@ -36,6 +36,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 |               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
 | Compute       | Nova (docker)       | Native Cinder Support            | Active      |
 |               | Nova (KVM)          | Spice, NoVNC and Serial Consoles | To Process  |
+|               | Zun                 |                                  | WIP         |
 | Orchestration | Heat                | Docker 1.12 support              | Active      |
 |               | Murano              |                                  | Active      |
 |               | Mistral             |                                  | Active      |
@@ -143,6 +144,7 @@ ${HARBOR_HOST_IP} portal.${OS_DOMAIN}
 ${HARBOR_HOST_IP} gnocchi.${OS_DOMAIN}
 ${HARBOR_HOST_IP} grafana.${OS_DOMAIN}
 ${HARBOR_HOST_IP} ceilometer.${OS_DOMAIN}
+${HARBOR_HOST_IP} zun.${OS_DOMAIN}
 
 ${HARBOR_HOST_IP} ipsilon.os-ipsilon.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} api.os-api.svc.${OS_DOMAIN}
@@ -163,6 +165,7 @@ ${HARBOR_HOST_IP} portal.os-portal.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} gnocchi.os-gnocchi.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} grafana.os-gnocchi.svc.${OS_DOMAIN}
 ${HARBOR_HOST_IP} ceilometer.os-ceilometer.svc.${OS_DOMAIN}
+${HARBOR_HOST_IP} zun.os-zun.svc.${OS_DOMAIN}
 EOF
 ```
 After the "marina-master" pod is running, you can log into the cockpit dashboard @ https://$HARBOR_HOST_IP:9090, or you can enter it using:

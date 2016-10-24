@@ -25,11 +25,11 @@ spec:
       - path: /
         backend:
           serviceName: zun
-          servicePort: 9511
+          servicePort: 9517
   - host: zun.os-zun.svc.{{ OS_DOMAIN }}
     http:
       paths:
       - path: /
         backend:
           serviceName: zun
-          servicePort: 9511
+          servicePort: 9517

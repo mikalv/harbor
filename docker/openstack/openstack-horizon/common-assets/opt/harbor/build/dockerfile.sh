@@ -80,6 +80,7 @@ pip --no-cache-dir install /opt/stack/${OS_COMP_9}
 pip --no-cache-dir install /opt/stack/${OS_COMP_10}
 pip --no-cache-dir install /opt/stack/${OS_COMP_11}
 pip --no-cache-dir install /opt/stack/${OS_COMP_12}
+pip --no-cache-dir install /opt/stack/${OS_COMP_13}
 
 
 echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"
