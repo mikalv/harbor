@@ -15,6 +15,14 @@ RUN set -e && \
     container-base-systemd-reset.sh && \
     touch /init-ipa
 
+COPY ./assets/ /opt/harbor/assets
+
+RUN set -e && \
+    set -x && \
+    cp -rf /opt/harbor/assets/* / && \
+    rm -rf /opt/harbor/assets
+
+
 ENTRYPOINT []
 
 CMD ["/sbin/init"]
