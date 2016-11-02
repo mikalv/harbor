@@ -43,7 +43,7 @@ spec:
       name: mistral-manager
       namespace: os-mistral
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -125,7 +125,7 @@ spec:
       name: mistral-db
       namespace: os-mistral
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -260,7 +260,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -389,7 +389,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -494,7 +494,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -599,7 +599,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

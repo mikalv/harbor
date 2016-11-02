@@ -129,7 +129,9 @@ echo "${OS_DISTRO}: Managing User: ${IPA_USER}"
 ################################################################################
 freeipa_create_user () {
   freeipa_login
-  ipa user-del ${IPA_USER} || true
+  (ipa user-del ${IPA_USER} && \
+    echo "User already existed, we need to wait an hour before resetting the password again, sorry" && \
+    sleep 3600) || true
   echo $TMP_PASSWORD | ipa user-add --first=Keystone --last=LDAP --email ${IPA_USER_EMAIL} --password ${IPA_USER} && \
   harbor-user-password-reset ${IPA_USER} $TMP_PASSWORD ${PASSWORD}
   freeipa_logout

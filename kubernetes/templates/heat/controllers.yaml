@@ -43,7 +43,7 @@ spec:
       name: heat-manager
       namespace: os-heat
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -149,7 +149,7 @@ spec:
       name: heat-db
       namespace: os-heat
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -294,7 +294,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -431,7 +431,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -568,7 +568,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -700,7 +700,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

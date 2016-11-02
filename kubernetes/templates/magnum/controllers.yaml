@@ -43,7 +43,7 @@ spec:
       name: magnum-manager
       namespace: os-magnum
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -143,7 +143,7 @@ spec:
       name: magnum-db
       namespace: os-magnum
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -283,7 +283,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -420,7 +420,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

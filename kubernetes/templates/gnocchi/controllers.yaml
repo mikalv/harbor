@@ -127,7 +127,7 @@ spec:
       name: gnocchi-manager
       namespace: os-gnocchi
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -256,7 +256,7 @@ spec:
       name: gnocchi-db
       namespace: os-gnocchi
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -334,7 +334,7 @@ spec:
       name: gnocchi-etcd
       namespace: os-gnocchi
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -479,7 +479,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -638,7 +638,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -771,7 +771,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -850,7 +850,7 @@ spec:
       name: gnocchi-pgsql
       namespace: os-gnocchi
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -975,7 +975,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

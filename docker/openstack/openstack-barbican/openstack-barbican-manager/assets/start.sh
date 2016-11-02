@@ -34,7 +34,6 @@ echo "${OS_DISTRO}: Config Starting"
 
 : ${OS_MANAGEMENT_ACTION:="manage"}
 if ! [ $OS_MANAGEMENT_ACTION == "bootstrap" ]; then
-  tail -f /dev/null
   echo "${OS_DISTRO}: Managing database"
   ##############################################################################
   /opt/harbor/barbican/manage/bootstrap-database.sh

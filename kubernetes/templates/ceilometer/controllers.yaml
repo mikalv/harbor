@@ -99,7 +99,7 @@ spec:
       name: ceilometer-manager
       namespace: os-ceilometer
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -187,7 +187,7 @@ spec:
       name: ceilometer-etcd
       namespace: os-ceilometer
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -328,7 +328,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -393,7 +393,7 @@ spec:
       name: ceilometer-db
       namespace: os-ceilometer
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -538,7 +538,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -667,7 +667,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -897,7 +897,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -1010,7 +1010,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

@@ -43,7 +43,7 @@ spec:
       name: murano-manager
       namespace: os-murano
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -134,7 +134,7 @@ spec:
       name: murano-bootstrapper
       namespace: os-murano
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -216,7 +216,7 @@ spec:
       name: murano-db
       namespace: os-murano
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -351,7 +351,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -424,7 +424,7 @@ spec:
       name: murano-ampq
       namespace: os-murano
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:

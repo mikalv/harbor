@@ -71,7 +71,7 @@ spec:
       name: zun-manager
       namespace: os-zun
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -171,7 +171,7 @@ spec:
       name: zun-db
       namespace: os-zun
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -249,7 +249,7 @@ spec:
       name: zun-etcd
       namespace: os-zun
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
@@ -400,7 +400,7 @@ spec:
           }
         ]'
     spec:
-      hostNetwork: true
+#     hostNetwork: true
       nodeSelector:
         harbor-role: master
       containers:
