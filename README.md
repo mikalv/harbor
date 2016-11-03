@@ -18,12 +18,12 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 
 Harbor takes an extreme approach to security, in comparison with a typical OpenStack deployment:
  * All services run TLS both *internaly*, and externally
- * All Databases require PKI authentication in addion to password auth, and all transort is encapsulated in TLS
+ * All Databases require PKI authentication in addition to password auth, and all transport is encapsulated in TLS
  * Rabbitmq requires PKI authentication and uses TLS for transport
  * Each service is on a separate network (Using Geneve for Tunneling/Encapsulation)
- * Each service/pod is protected by security groups that:
+ * Each service/pod is protected by Neutron security groups that:
    * limit communication to within it's name-space for internal services
-   * Permit ingress to endpoints from the user-facing loadbalancers only.
+   * Permit ingress to endpoints from the user-facing load balancers only.
  * External access to the cluster is performed via Kubernetes Ingress Controllers, allowing simple enforcement of:
    * rate limiting
    * white/black listing
