@@ -17,7 +17,7 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 ## Security
 
 Harbor takes an extreme approach to security, in comparison with a typical OpenStack deployment:
- * All services run TLS both *internaly*, and externally
+ * All services run TLS both **internally**, and externally
  * All Databases require PKI authentication in addition to password auth, and all transport is encapsulated in TLS
  * Rabbitmq requires PKI authentication and uses TLS for transport
  * Each service is on a separate network (Using Geneve for Tunneling/Encapsulation)
