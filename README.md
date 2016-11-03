@@ -62,10 +62,9 @@ Harbor takes an extreme approach to security, in comparison with a typical OpenS
 |               | Magnum              |                                  | Neutron     | WIP         |
 
 
-[1] Network the service runs in
-[2] Dedicated Docker (native) Network for FreeIPA, Initial Keystone Pod runs in Host Network Namespace
-    subsequent pods run in Neutron
-[3] API and Worker's in Neutron, Hypervisors in Host Network name-space
+ 1. Network the service runs in
+ 2. Dedicated Docker (native) Network for FreeIPA, Initial Keystone pod runs in host network namespace, subsequent pods run in Neutron
+ 3. API and Worker's in Neutron, Hypervisors in Host Network name-space
 
 ## Screenshots
  * Cockpit
