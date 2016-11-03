@@ -14,6 +14,24 @@ Networking is provided by OVN from the [OpenvSwitch](https://github.com/openvswi
 
  This repo contains the Dockerfiles and build scripts for the Harbor platform containers and RPM-OSTREE repository (Used by Mandracchio), the [Mandracchio](https://github.com/portdirect/harbor/tree/latest/docker/mandracchio) contains the Build script for the Linux host, [Marina](https://github.com/portdirect/harbor/tree/latest/docker/marina) contains deployment script and helpers, while the [Intermodal](https://github.com/portdirect/intermodal) repo contains standardized container images for use within Harbor.
 
+## Security
+
+Harbor takes an extreme approach to security, in comparison with a typical OpenStack deployment:
+ * All services run TLS both *internaly*, and externally
+ * All Databases require PKI authentication in addion to password auth, and all transort is encapsulated in TLS
+ * Rabbitmq requires PKI authentication and uses TLS for transport
+ * Each service is on a separate network (Using Geneve for Tunneling/Encapsulation)
+ * Each service/pod is protected by security groups that:
+   * limit communication to within it's name-space for internal services
+   * Permit ingress to endpoints from the user-facing loadbalancers only.
+ * External access to the cluster is performed via Kubernetes Ingress Controllers, allowing simple enforcement of:
+   * rate limiting
+   * white/black listing
+   * header stripping
+ * All configuration params are encrypted and held in Dogtags KRA store
+ * End-User account details are held in FreeIPA, not Keystone, access and authentication is performed via SAML2 Federation.
+   * This is currently a work in progress as users can still access OpenStack directly via a domain created for LDAP access to FreeIPA.
+
 
 ## Components
 
