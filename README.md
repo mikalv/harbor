@@ -42,23 +42,30 @@ Harbor takes an extreme approach to security, in comparison with a typical OpenS
 |               | kube-proxy          | Neutron LBaaSv2                  | Active      |
 
 
-| Function      | OpenStack Component | Harbor Notes                     | Status      |
-|---------------|---------------------|----------------------------------|-------------|
-| Identity      | Keystone            | With FreeIPA & Ipsilon           | Active      |
-| Secrets       | Barbican            | Backed by FreeIPA                | Active      |
-| Block Storage | Cinder              | LVM Driver                       | Active      |
-| Networking    | Neutron             | OVN                              | Active      |
-|               | Designate (DNS)     | PowerDNS Backend                 | WIP         |
-|               | Neutron LBaaS       | HAProxy                          | Active      |
-|               | Kuryr               | Libnetwork Driver                | Active      |
-|               | Kube CNI Driver     | Raven Python3 Prototype          | Active      |
-| Compute       | Nova (docker)       | Native Cinder Support            | Active      |
-|               | Nova (KVM)          | Spice, NoVNC and Serial Consoles | To Process  |
-|               | Zun                 |                                  | WIP         |
-| Orchestration | Heat                | Docker 1.12 support              | Active      |
-|               | Murano              |                                  | Active      |
-|               | Mistral             |                                  | Active      |
-|               | Magnum              |                                  | WIP         |
+| Function      | OpenStack Component | Harbor Notes                     | Network [1] | Status      |
+|---------------|---------------------|----------------------------------|-------------|-------------|
+| Identity      | Keystone            | With FreeIPA & Ipsilon           | Mixed [2]   | Active      |
+| Secrets       | Barbican            | Backed by FreeIPA                | Neutron     | Active      |
+| Block Storage | Cinder              | LVM Driver                       | Host        | Active      |
+| Networking    | Neutron             | OVN                              | Host        | Active      |
+|               | Designate (DNS)     | PowerDNS Backend                 | Neutron     | WIP         |
+|               | Neutron LBaaS       | HAProxy                          | Neutron     | Active      |
+|               | Kuryr               | Libnetwork Driver                | Host        | Active      |
+|               | Kube CNI Driver     | Raven Python3 Prototype          | Host        | Active      |
+| Compute       | Nova (docker)       | Native Cinder Support            | Mixed [3]   | Active      |
+|               | Nova (KVM)          | Spice, NoVNC and Serial Consoles | Mixed [3]   | To Process  |
+|               | Zun                 |                                  | Neutron     | WIP         |
+| Orchestration | Heat                | Docker 1.12 support              | Neutron     | Active      |
+|               | Murano              |                                  | Neutron     | Active      |
+|               | Mistral             |                                  | Neutron     | Active      |
+|               | Senlin              |                                  | Neutron     | WIP         |
+|               | Magnum              |                                  | Neutron     | WIP         |
+
+
+[1] Network the service runs in
+[2] Dedicated Docker (native) Network for FreeIPA, Initial Keystone Pod runs in Host Network Namespace
+    subsequent pods run in Neutron
+[3] API and Worker's in Neutron, Hypervisors in Host Network name-space
 
 ## Screenshots
  * Cockpit
