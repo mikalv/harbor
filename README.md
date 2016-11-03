@@ -28,7 +28,9 @@ Harbor takes an extreme approach to security, in comparison with a typical OpenS
    * rate limiting
    * white/black listing
    * header stripping
- * All configuration params are encrypted and held in Dogtags KRA store
+ * All configuration params are salted,encrypted and accessed via FreeIPA's Vault API
+ * All pods access their configuration paramiters via a read only bind mount, prepared via an init container.
+  * This paves the way for all containers to launch with a read-only filesystem
  * End-User account details are held in FreeIPA, not Keystone, access and authentication is performed via SAML2 Federation.
    * This is currently a work in progress as users can still access OpenStack directly via a domain created for LDAP access to FreeIPA.
 
