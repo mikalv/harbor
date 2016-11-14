@@ -48,7 +48,7 @@ WORKDIR /home/build
 RUN set -e && \
     set -x && \
     cd /opt/stack/${OS_COMP} && \
-    make rpms
+    ./makerpms.sh
 
 USER root
 
