@@ -14,12 +14,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -e
-echo "${OS_DISTRO}: Launching"
-################################################################################
-. /opt/harbor/zun/vars.sh
-
-
-echo "${OS_DISTRO}: Starting container application"
-################################################################################
-exec zun-compute --config-file=${ZUN_CONFIG_FILE} --debug
+echo "started"

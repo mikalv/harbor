@@ -15,11 +15,14 @@
 # limitations under the License.
 
 set -e
-echo "${OS_DISTRO}: Launching"
-################################################################################
-. /opt/harbor/zun/vars.sh
+set -x
+echo "${OS_DISTRO}: ${OS_COMP}: Starting Container"
+source /etc/os-container.env
+. /opt/harbor/service-hosts.sh
+. /opt/harbor/harbor-common.sh
+# File path and name used by crudini tool
+export cfg=/etc/${OS_COMP}/${OS_COMP}.conf
 
 
-echo "${OS_DISTRO}: Starting container application"
-################################################################################
-exec zun-compute --config-file=${ZUN_CONFIG_FILE} --debug
+echo "${OS_DISTRO}: ${OS_COMP}: Launching"
+exec tail -f /dev/null

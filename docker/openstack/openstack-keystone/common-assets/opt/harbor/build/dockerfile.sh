@@ -16,38 +16,52 @@
 
 set -x
 set -e
-
+echo "${OS_DISTRO}: Building ${OS_COMP}"
+################################################################################
 mkdir -p /opt/stack
 
+
+echo "${OS_DISTRO}: Getting Sources for ${OS_COMP}"
+################################################################################
 git clone ${OS_REPO_URL} -b ${OS_REPO_BRANCH} --depth 1 /opt/stack/${OS_COMP}
 
+
+echo "${OS_DISTRO}: Installing ${OS_COMP}"
+################################################################################
 pip --no-cache-dir install /opt/stack/${OS_COMP}
-
 #pip --no-cache-dir install python-ldap
-
 #pip --no-cache-dir install ldappool
-
 mkdir -p /etc/${OS_COMP}
-
 cp -rfav /opt/stack/${OS_COMP}/etc/* /etc/${OS_COMP}/
-
 rm -rf /opt/stack/${OS_COMP}
 
-mkdir -p /var/log/${OS_COMP}
-mkdir -p /var/lib/${OS_COMP}
-mkdir -p /var/cache/${OS_COMP}
 
+echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"
+################################################################################
 if [ "$OS_DISTRO" = "HarborOS-Alpine" ]; then
   addgroup ${OS_COMP} -g 1000
   adduser -u 1000 -D -s /bin/false -G ${OS_COMP} ${OS_COMP}
+elif [ "$OS_DISTRO" = "HarborOS-Ubuntu" ]; then
+  groupadd ${OS_COMP} -g 1000
+  adduser -u 1000 --ingroup ${OS_COMP} --system ${OS_COMP}
 else
   groupadd ${OS_COMP} -g 1000
   adduser -u 1000 -g ${OS_COMP} --system ${OS_COMP}
 fi;
 
-mkdir -p /home/${OS_COMP}
-chown -R ${OS_COMP}:${OS_COMP} /home/${OS_COMP}
 
+echo "${OS_DISTRO}: Creating common data dirs for ${OS_COMP}"
+################################################################################
+mkdir -p /home/${OS_COMP}
+mkdir -p /var/log/${OS_COMP}
+mkdir -p /var/lib/${OS_COMP}
+mkdir -p /var/cache/${OS_COMP}
+
+chown -R ${OS_COMP}:${OS_COMP} /home/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/log/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/lib/${OS_COMP}
 chown -R ${OS_COMP}:${OS_COMP} /var/cache/${OS_COMP}
+
+
+################################################################################
+echo "${OS_DISTRO}: Finished installing ${OS_COMP}"

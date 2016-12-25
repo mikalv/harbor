@@ -39,7 +39,9 @@ echo "${OS_DISTRO}: Setting up user for ${OS_COMP}"
 if [ "$OS_DISTRO" = "HarborOS-Alpine" ]; then
   addgroup ${OS_COMP} -g 1000
   adduser -u 1000 -D -s /bin/false -G ${OS_COMP} ${OS_COMP}
-  ln -s /usr/sbin/iscsid /sbin/iscsid || true
+elif [ "$OS_DISTRO" = "HarborOS-Ubuntu" ]; then
+  groupadd ${OS_COMP} -g 1000
+  adduser -u 1000 --ingroup ${OS_COMP} --system ${OS_COMP}
 else
   groupadd ${OS_COMP} -g 1000
   adduser -u 1000 -g ${OS_COMP} --system ${OS_COMP}
