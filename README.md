@@ -117,7 +117,7 @@ From there you can install Harbor like any other CentOS based distro, with a few
  ``` Bash
  #!/bin/bash
  systemctl start docker
- harbor-host-update
+ harbor-master-host-update
  ```
  This will pull the rpm-ostree server image, start it and set up the host to use it as the remote, before running ```rpm-ostree upgrade```.
 
